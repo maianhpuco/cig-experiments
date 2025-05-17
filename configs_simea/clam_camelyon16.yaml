@@ -1,0 +1,24 @@
+paths:
+  pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
+  save_dir: "/home/mvu9/processing_datasets/processing_camelyon16"
+embed_dim: 1024
+max_epochs: 4 
+lr: 0.0001
+label_frac: 1.0
+reg: 0.00001
+seed: 42
+log_data: false
+testing: false
+early_stopping: false
+opt: adam
+drop_out: 0.25
+bag_loss: ce
+model_type: clam_sb
+exp_code: clam_camelyon16
+weighted_sample: false
+model_size: small
+no_inst_cluster: false
+inst_loss: null
+subtyping: false
+bag_weight: 0.7
+B: 8
