@@ -125,7 +125,9 @@ def seed_torch(seed=7):
         torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
-    if __name__ == "__main__":
+    
+    
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Configurations for WSI Training')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
     parser.add_argument('--embed_dim', type=int, default=1024)
