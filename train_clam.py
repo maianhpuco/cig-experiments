@@ -13,10 +13,12 @@ base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 # sys.path.append(base_path)
 sys.path.append(os.path.join("src/externals/CLAM"))
 # Internal imports
+
+from src.datasets.classification.camelyon16 import return_splits_custom
 from utils.file_utils import save_pkl
 from utils.utils import seed_torch
-from utils.core_utils import train
-from src.datasets.classification.camelyon16 import return_splits_custom
+from utils.core_utils import train 
+
 
 split_csv_path = "./camelyon16_csv_splits_camil/splits_test.csv" 
 
