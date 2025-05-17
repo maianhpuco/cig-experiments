@@ -1,6 +1,7 @@
 paths:
   pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
   save_dir: "/home/mvu9/processing_datasets/processing_camelyon16"
+task: 'task_1_tumor_vs_normal' 
 embed_dim: 1024
 max_epochs: 4 
 lr: 0.0001
