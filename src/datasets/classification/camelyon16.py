@@ -1,74 +1,3 @@
-# import os
-# import pandas as pd
-# from torch.utils.data import Dataset
-
-# class Generic_MIL_Dataset(Dataset):
-#     def __init__(self, 
-#                  csv_path=None, 
-#                  data_dir=None, 
-#                  label_dict=None, 
-#                  case_ids=None, 
-#                  labels=None,
-#                  shuffle=False, 
-#                  seed=1, 
-#                  print_info=False,
-#                  patient_strat=False,
-#                  ignore=[]):
-#         self.data_dir = data_dir
-#         self.label_dict = label_dict
-#         self.ignore = ignore
-#         self.seed = seed
-
-#         # Use provided case_ids and labels directly (custom split mode)
-#         if case_ids is not None and labels is not None:
-#             self.slides = case_ids
-#             self.targets = labels
-#         elif csv_path is not None:
-#             df = pd.read_csv(csv_path)
-#             self.slides = df['slide_id'].tolist()
-#             self.targets = df['label'].tolist()
-#         else:
-#             raise ValueError("Must provide either (csv_path) or (case_ids and labels).")
-
-#         if print_info:
-#             print("Loaded {} samples from {}".format(len(self.slides), data_dir))
-
-#     def __len__(self):
-#         return len(self.slides)
-
-#     def __getitem__(self, idx):
-#         slide_id = self.slides[idx]
-#         label = self.targets[idx]
-
-#         # Features are assumed to be stored as <slide_id>.pt in data_dir
-#         feat_path = os.path.join(self.data_dir, f"{slide_id}.pt")
-
-#         # torch.load here or np.load depending on your format
-#         import torch
-#         features = torch.load(feat_path)  # Should be a tensor
-
-#         return features, label
-
-
-# def return_splits_custom(csv_path, data_dir, label_dict, seed=1, print_info=False):
-#     df = pd.read_csv(csv_path)
-
-#     def create_dataset(col_case, col_label):
-#         case_ids = df[col_case].dropna().tolist()
-#         labels = df[col_label].dropna().astype(int).tolist()
-#         return Generic_MIL_Dataset(case_ids=case_ids, labels=labels,
-#                                    data_dir=data_dir,
-#                                    label_dict=label_dict,
-#                                    shuffle=False, seed=seed,
-#                                    print_info=print_info)
-
-#     train_dataset = create_dataset('train', 'train_label')
-#     val_dataset = create_dataset('val', 'val_label')
-#     test_dataset = create_dataset('test', 'test_label')
-
-#     return train_dataset, val_dataset, test_dataset 
-
-
 import os
 import pandas as pd
 import torch
@@ -152,7 +81,7 @@ class Generic_MIL_Dataset(Dataset):
 
         if not self.use_h5:
             full_path = os.path.join(data_dir, 'pt_files', f"{slide_id}.pt")
-            features = torch.load(full_path)
+            features = torch.load(full_path, weights_only=True)
             return features, label
         else:
             full_path = os.path.join(data_dir, 'h5_files', f"{slide_id}.h5")
