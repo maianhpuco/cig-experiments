@@ -11,7 +11,7 @@ import sys
 # Set base path for imports
 base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 # sys.path.append(base_path)
-sys.path.append(os.path.join(base_path, "src/externals/CLAM"))
+sys.path.append(os.path.join("src/externals/CLAM"))
 
 # Internal imports
 from utils.file_utils import save_pkl
