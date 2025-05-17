@@ -131,13 +131,15 @@ if __name__ == "__main__":
     parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
     args = parser.parse_args()
     
+    config_path = args.config 
     # Load YAML configuration
-    with open(args.config, 'r') as f:
+    with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
     
     # Convert config to argparse.Namespace
     from argparse import Namespace
     args = Namespace(**config)
+    args.config = config_path 
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     seed_torch(args.seed)
