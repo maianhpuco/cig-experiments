@@ -5,7 +5,7 @@ split_csv_path = "./camelyon16_csv_splits_camil/splits_test.csv"
 # Run the split function
 train_set, val_set, test_set = return_splits_custom(
     csv_path=split_csv_path,
-    data_dir='/home/mvu/processing_datasets/processing_camelyon16/features_fp',
+    data_dir='/home/mvu9/processing_datasets/processing_camelyon16/features_fp',
     label_dict={'normal': 0, 'tumor': 1},  # This won't affect direct labels
     seed=42,
     print_info=True
