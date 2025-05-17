@@ -1,7 +1,7 @@
 from src.datasets.classification.camelyon16 import Generic_MIL_Dataset, return_splits_custom
 
 
-split_csv_path = "./camelyon16_csv_splits_camil/split_0.csv"
+split_csv_path = "./camelyon16_csv_splits_camil/splits_0.csv"
 # Run the split function
 train_set, val_set, test_set = return_splits_custom(
     csv_path=split_csv_path,
