@@ -1,0 +1,21 @@
+paths:
+  source_dir: "/home/mvu9/datasets/TGCA-datasets/LUSC"
+  save_dir: "/home/mvu9/processing_datasets/processing_tgca/lusc"
+  patch_h5_dir: "/home/mvu9/processing_datasets/processing_tgca/lusc/patches_h5"
+  patch_png_dir: "/home/mvu9/processing_datasets/processing_tgca/lusc/patches_png"
+  mask_save_dir: "/home/mvu9/processing_datasets/processing_tgca/lusc/masks"
+  only_mask_save_dir: "/home/mvu9/processing_datasets/processing_tgca/lusc/only_masks"
+  stitch_save_dir: "/home/mvu9/processing_datasets/processing_tgca/lusc/graph_1024"
+  slide_name_file: "/home/mvu9/datasets/TGCA-metadata/LUSC/slides.xlsx"
+  uuid_name_file: "/home/mvu9/datasets/TGCA-metadata/LUSC/uuids.xlsx"
+  preset_file: "/home/mvu9/folder_04_ma/wsi-data/presets/tcga_vilamil.csv"
+
+# Processing parameters
+processing:
+  patch_size: 256
+  step_size: 256
+  patch_level: 0
+  seg: true
+  patch: true
+  stitch: false
+  auto_skip: true
