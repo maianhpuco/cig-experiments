@@ -1,5 +1,5 @@
 ,train,train_label,val,val_label,test,test_label
-0,normal_001,0.0,normal_132,0021test_014,1.0
+0,normal_001,0.0,normal_132,test_014,1.0
 1,normal_073,0.0,normal_140,0.0,test_021,1.0
 2,tumor_068,0.0,tumor_002,0.0,test_032,0.0
 3,tumor_009,0.0,tumor_057,0.0,test_072,0.0
