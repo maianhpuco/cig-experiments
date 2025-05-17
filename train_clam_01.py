@@ -125,94 +125,60 @@ def seed_torch(seed=7):
         torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
-    
-if __name__ == "__main__":
+    if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Configurations for WSI Training')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
+    parser.add_argument('--embed_dim', type=int, default=1024)
+    parser.add_argument('--max_epochs', type=int, default=200)
+    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--label_frac', type=float, default=1.0)
+    parser.add_argument('--reg', type=float, default=1e-5)
+    parser.add_argument('--seed', type=int, default=1)
+    parser.add_argument('--k', type=int, default=10)
+    parser.add_argument('--k_start', type=int, default=-1)
+    parser.add_argument('--k_end', type=int, default=-1)
+    parser.add_argument('--log_data', action='store_true', default=False)
+    parser.add_argument('--testing', action='store_true', default=False)
+    parser.add_argument('--early_stopping', action='store_true', default=False)
+    parser.add_argument('--opt', type=str, choices=['adam', 'sgd'], default='adam')
+    parser.add_argument('--drop_out', type=float, default=0.25)
+    parser.add_argument('--bag_loss', type=str, choices=['svm', 'ce'], default='ce')
+    parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
+    parser.add_argument('--exp_code', type=str, default='clam_camelyon16')
+    parser.add_argument('--weighted_sample', action='store_true', default=False)
+    parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
+    parser.add_argument('--no_inst_cluster', action='store_true', default=False)
+    parser.add_argument('--inst_loss', type=str, choices=['svm', 'ce', None], default=None)
+    parser.add_argument('--subtyping', action='store_true', default=False)
+    parser.add_argument('--bag_weight', type=float, default=0.7)
+    parser.add_argument('--B', type=int, default=8)
     args = parser.parse_args()
-    
-    config_path = args.config 
-    # Load YAML configuration
+
+    config_path = args.config
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
-    
-    # Convert config to argparse.Namespace
-    from argparse import Namespace
-    args = Namespace(**config)
-    args.config = config_path 
-    
+
+    # Merge YAML config into args
+    for key, value in config.items():
+        setattr(args, key, value)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     seed_torch(args.seed)
 
     print("################# Settings ###################")
     settings = vars(args).copy()
-    settings.pop('paths', None)  # Exclude paths for cleaner output
+    settings.pop('paths', None)
     for key, val in settings.items():
         print(f"{key}: {val}")
 
     main(args)
-    print("Finished!")
 
 
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser(description='Configurations for WSI Training')
-#     parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
-#     parser.add_argument('--embed_dim', type=int, default=1024)
-#     parser.add_argument('--max_epochs', type=int, default=200)
-#     parser.add_argument('--lr', type=float, default=1e-4)
-#     parser.add_argument('--label_frac', type=float, default=1.0)
-#     parser.add_argument('--reg', type=float, default=1e-5)
-#     parser.add_argument('--seed', type=int, default=1)
-#     parser.add_argument('--k', type=int, default=10)
-#     parser.add_argument('--k_start', type=int, default=-1)
-#     parser.add_argument('--k_end', type=int, default=-1)
-#     parser.add_argument('--log_data', action='store_true', default=False)
-#     parser.add_argument('--testing', action='store_true', default=False)
-#     parser.add_argument('--early_stopping', action='store_true', default=False)
-#     parser.add_argument('--opt', type=str, choices=['adam', 'sgd'], default='adam')
-#     parser.add_argument('--drop_out', type=float, default=0.25)
-#     parser.add_argument('--bag_loss', type=str, choices=['svm', 'ce'], default='ce')
-#     parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
-#     parser.add_argument('--exp_code', type=str, default='clam_camelyon16')
-#     parser.add_argument('--weighted_sample', action='store_true', default=False)
-#     parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
-#     parser.add_argument('--no_inst_cluster', action='store_true', default=False)
-#     parser.add_argument('--inst_loss', type=str, choices=['svm', 'ce', None], default=None)
-#     parser.add_argument('--subtyping', action='store_true', default=False)
-#     parser.add_argument('--bag_weight', type=float, default=0.7)
-#     parser.add_argument('--B', type=int, default=8)
-#     args = parser.parse_args()
-    
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#     seed_torch(args.seed)
 
-#     settings = {
-#         'num_splits': args.k,
-#         'k_start': args.k_start,
-#         'k_end': args.k_end,
-#         'task': args.task,
-#         'max_epochs': args.max_epochs,
-#         'results_dir': args.results_dir,
-#         'lr': args.lr,
-#         'experiment': args.exp_code,
-#         'reg': args.reg,
-#         'label_frac': args.label_frac,
-#         'bag_loss': args.bag_loss,
-#         'seed': args.seed,
-#         'model_type': args.model_type,
-#         'model_size': args.model_size,
-#         'use_drop_out': args.drop_out,
-#         'weighted_sample': args.weighted_sample,
-#         'opt': args.opt,
-#         'bag_weight': args.bag_weight,
-#         'inst_loss': args.inst_loss,
-#         'B': args.B
-#     }
 
-#     print("################# Settings ###################")
-#     for key, val in settings.items():
-#         print(f"{key}:  {val}")
 
-#     results = main(args)
-#     print("Finished!")
-#     print("End script")
+
+
+
+
+
