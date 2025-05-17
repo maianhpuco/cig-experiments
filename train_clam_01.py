@@ -26,7 +26,7 @@ from utils.core_utils import train
 
 from src.datasets.classification.camelyon16 import return_splits_custom 
 
-split_csv_path = "./camelyon16_csv_splits_camil/splits_test.csv" 
+split_csv_path = "./camelyon16_csv_splits_camil/splits_sanity_check.csv" 
 
 train_dataset, val_dataset, val_dataset = return_splits_custom(
     csv_path=split_csv_path,
