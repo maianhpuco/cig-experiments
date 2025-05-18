@@ -90,7 +90,7 @@ def main(args):
         #     print_info=True
         # )
         if dataset_name == 'camelyon16': 
-            split_csv_path = os.path.join(split_folder, 'splits_{i}.csv')
+            split_csv_path = os.path.join(split_folder, 'fold_{i}.csv')
 
             train_dataset, val_dataset, test_dataset = return_splits_custom(
                 csv_path=split_csv_path,
