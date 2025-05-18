@@ -12,7 +12,7 @@ import argparse
 
 
 ig_path = os.path.abspath(os.path.join("src/models/attr_method"))
-clf_path = os.path.abspath(os.path.join("src/models/classifier"))
+clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 sys.path.append(ig_path)   
 sys.path.append(clf_path)  
 
