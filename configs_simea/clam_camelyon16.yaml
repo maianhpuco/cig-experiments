@@ -4,6 +4,7 @@ paths:
   save_dir: "/home/mvu9/processing_datasets/processing_camelyon16"
   result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/results" # where we save all the check point
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
+  for_ig_checkpoint_path: "/processing_datasets/processing_camelyon16/result_2025-05-18_22-23-56/s_1_checkpoint.pt"
 
 embed_dim: 1024
 lr: 0.0001
