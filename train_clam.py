@@ -30,7 +30,7 @@ from datetime import datetime
 
 
 def get_timestamp_str():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
+    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  
 
 def main(args):
 
@@ -60,7 +60,7 @@ def main(args):
     label_dict = {'normal': 0, 'tumor': 1}
     
     start = args.k_start if args.k_start != -1 else 1
-    end = args.k_end if args.k_end != -1 else 5 
+    end = args.k_end if args.k_end != -1 else args.k -1
 
     all_test_auc = []
     all_val_auc = []
@@ -113,7 +113,9 @@ def main(args):
         'test_acc': all_test_acc,
         'val_acc': all_val_acc
     })
-
+    
+    print("=======Number of folds:", len(folds), "=========") 
+    
     if len(folds) != args.k:
         save_name = f'summary_partial_{start}_{end}.csv'
     else:
