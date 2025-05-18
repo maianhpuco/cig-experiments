@@ -69,7 +69,10 @@ def main(args):
     
     folds = np.arange(start, end+1)
     print("=======Number of folds:", len(folds), "=========")
+    start_time = time.time() 
     for i in folds:
+        import time
+        fold_start_time = time.time() 
         print("=======Start fold number:", i, "=========") 
         seed_torch(args.seed)
         if dataset_name == 'camelyon16': 
@@ -95,6 +98,8 @@ def main(args):
         filename = os.path.join(args.results_dir, f'split_{i}_results.pkl')
         save_pkl(filename, results)
         print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
+        fold_duration = time.time() - fold_start_time
+        print(f" --> Fold {i} finished in {fold_duration:.2f} seconds") 
         
     final_df = pd.DataFrame({
         'folds': folds,
@@ -112,8 +117,9 @@ def main(args):
         save_name = 'summary.csv'
     final_df.to_csv(os.path.join(args.results_dir, save_name))
     print(f"=========> [x] Summary saved at: {os.path.join(args.results_dir, save_name)}")
+    total_duration = time.time() - start_time
 
-
+    print(f"\n ----> All folds completed in {total_duration:.2f} seconds ({total_duration / 60:.2f} minutes)") 
 def seed_torch(seed=7):
     import random
     random.seed(seed)
