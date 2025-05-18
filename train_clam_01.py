@@ -29,6 +29,7 @@ from utils import get_timestamp_str
 from src.datasets.classification.camelyon16 import return_splits_custom 
 
 def main(args):
+
     # Load YAML configuration
     with open(args.config, 'r') as f:
         cfg = yaml.safe_load(f)
@@ -180,15 +181,5 @@ if __name__ == "__main__":
     settings.pop('paths', None)
     for key, val in settings.items():
         print(f"{key}: {val}")
-
+    print(f"[INFO] Max Epochs set to: {args.max_epochs}")
     main(args)
-
-
-
-
-
-
-
-
-
-
