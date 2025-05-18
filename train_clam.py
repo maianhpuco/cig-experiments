@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.nn.functional as F
 import sys
-
+import time
 
 # sys.path.append(base_path)
 sys.path.append(os.path.join("src/externals/CLAM")) 
@@ -71,7 +71,6 @@ def main(args):
     print("=======Number of folds:", len(folds), "=========")
     start_time = time.time() 
     for i in folds:
-        import time
         fold_start_time = time.time() 
         print("=======Start fold number:", i, "=========") 
         seed_torch(args.seed)
