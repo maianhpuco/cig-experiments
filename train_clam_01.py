@@ -21,12 +21,17 @@ sys.path.append(os.path.join("src/externals/CLAM"))
 from utils.file_utils import save_pkl, load_pkl
 from utils.utils import *
 from utils.core_utils import train
-
 # from dataset_modules.dataset_generic import Generic_MIL_Dataset, return_splits_custom
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")) 
-sys.path.append(base_path) 
-from utils import get_timestamp_str 
+# base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")) 
+# sys.path.append(base_path) 
+# from utils import get_timestamp_str 
 from src.datasets.classification.camelyon16 import return_splits_custom 
+from datetime import datetime
+
+
+
+def get_timestamp_str():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
 
 def main(args):
 
