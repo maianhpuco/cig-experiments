@@ -1,106 +1,191 @@
 from __future__ import print_function
+
 import argparse
 import os
+import math
 import yaml
 import pandas as pd
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+import torch.nn as nn
+import torch.nn.functional as F
 import sys
 
-# Set base path for imports
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+
 # sys.path.append(base_path)
-sys.path.append(os.path.join("src/externals/CLAM"))
+sys.path.append(os.path.join("src/externals/CLAM")) 
+
 # Internal imports
+from utils.file_utils import save_pkl, load_pkl
+from utils.utils import *
+from utils.core_utils import train
+# from dataset_modules.dataset_generic import Generic_MIL_Dataset, return_splits_custom
+# base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")) 
+# sys.path.append(base_path) 
+# from utils import get_timestamp_str 
+from src.datasets.classification.camelyon16 import return_splits_custom 
+from datetime import datetime
 
-from src.datasets.classification.camelyon16 import return_splits_custom
-from utils.file_utils import save_pkl
-from utils.utils import seed_torch
-from utils.core_utils import train 
 
 
-split_csv_path = "./camelyon16_csv_splits_camil/splits_test.csv" 
+def get_timestamp_str():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
 
-train_dataset, val_dataset, val_dataset = return_splits_custom(
-    csv_path=split_csv_path,
-    data_dir='/home/mvu9/processing_datasets/processing_camelyon16/features_fp',
-    label_dict={'normal': 0, 'tumor': 1},  # This won't affect direct labels
-    seed=42,
-    print_info=True
-)
- 
-print(len(train_dataset), len(val_dataset), len(val_dataset)) 
- 
-
- 
 def main(args):
-    # Set paths
-    args.data_root_dir = args.paths['pt_files']
-    args.results_dir = os.path.join(args.paths['save_dir'], 'results')
-    args.split_dir = os.path.join(args.paths['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
 
+    # Load YAML configuration
+    with open(args.config, 'r') as f:
+        cfg = yaml.safe_load(f)
+
+    timestamp = get_timestamp_str()
+
+    # Set paths from YAML
+    args.data_root_dir = cfg['paths']['pt_files']
+    args.results_dir = os.path.join(cfg['paths']['save_dir'], 'result_timestamp')
+    # args.split_dir = os.path.join(cfg['paths']['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
+    split_folder =cfg['paths']['split_folder']
+    data_dir = cfg['paths']['pt_files']
+    dataset_name = cfg['dataset_name'] 
+    
+    
     # Create results directory
-    os.makedirs(args.results_dir, exist_ok=True)
+    if not os.path.isdir(args.results_dir):
+        os.makedirs(args.results_dir)
 
     # Set task and classes
     args.task = 'task_1_tumor_vs_normal'
     args.n_classes = 2
+    
     label_dict = {'normal': 0, 'tumor': 1}
 
-    # Single split training
-    seed_torch(args.seed)
-    train_dataset, val_dataset, test_dataset = return_splits_custom(
-        csv_path=os.path.join(args.split_dir, 'split_0.csv'),
-        data_dir=args.data_root_dir,
-        label_dict=label_dict,
-        seed=args.seed,
-        print_info=True
-    )
+    if args.k_start == -1:
+        start = 0
+    else:
+        start = int(cfg['k_start'])
+    if args.k_end == -1:
+        end = args.k
+    else:
+        end = int(cfg['k_end'])
+
+    all_test_auc = []
+    all_val_auc = []
+    all_test_acc = []
+    all_val_acc = []
     
-    datasets = (train_dataset, val_dataset, test_dataset)
-    print("=============== Start running the CLAM training=================")
-    results, test_auc, val_auc, test_acc, val_acc = train(datasets, 0, args)
+    folds = np.arange(start, end+1)
+    print("=======Number of folds:", len(folds), "=========")
+    for i in folds:
+        print("=======Start fold number:", i, "=========") 
+        seed_torch(args.seed)
+
+        
+        # Use custom split loader
+        # train_dataset, val_dataset, test_dataset = return_splits_custom(
+        #     csv_path=os.path.join(args.split_dir, f'split_{i}.csv'),
+        #     data_dir=args.data_root_dir,
+        #     label_dict=label_dict,
+        #     seed=args.seed,
+        #     print_info=True
+        # )
+        if dataset_name == 'camelyon16': 
+            split_csv_path = os.path.join(split_folder, f'fold_{i}.csv')
+
+            train_dataset, val_dataset, test_dataset = return_splits_custom(
+                csv_path=split_csv_path,
+                data_dir=data_dir,
+                label_dict= label_dict,  # This won't affect direct labels
+                seed=42,
+                print_info=False
+            )
+        print(f"Train len: {len(train_dataset)} | Val len: {len(val_dataset)} | Test len: {len(test_dataset)}")
+          
+        datasets = (train_dataset, val_dataset, test_dataset)
+        results, test_auc, val_auc, test_acc, val_acc = train(datasets, i, args)
+        all_test_auc.append(test_auc)
+        all_val_auc.append(val_auc)
+        all_test_acc.append(test_acc)
+        all_val_acc.append(val_acc)
+        # Write results to pkl
     
-    # Save results
-    print("=============== Start running the CLAM training=================") 
-    filename = os.path.join(args.results_dir, 'split_0_results.pkl')
-    print("Result will be save to: ", filename)
-    
-    save_pkl(filename, results)
-    
+        filename = os.path.join(args.results_dir, f'split_{i}_results.pkl')
+        save_pkl(filename, results)
+        print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
+        
     final_df = pd.DataFrame({
-        'folds': [0],
-        'test_auc': [test_auc],
-        'val_auc': [val_auc],
-        'test_acc': [test_acc],
-        'val_acc': [val_acc]
+        'folds': folds,
+        'test_auc': all_test_auc,
+        'val_auc': all_val_auc,
+        'test_acc': all_test_acc,
+        'val_acc': all_val_acc
     })
 
-    print(final_df)
-    final_df.to_csv(os.path.join(args.results_dir, 'summary.csv'))
+    if len(folds) != args.k:
+        save_name = f'summary_partial_{start}_{end}.csv'
+    else:
+        save_name = 'summary.csv'
+    final_df.to_csv(os.path.join(args.results_dir, save_name))
+    print(f"=========> [x] Summary saved at: {os.path.join(args.results_dir, save_name)}")
+
+
+def seed_torch(seed=7):
+    import random
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Configurations for WSI Training')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
+    parser.add_argument('--embed_dim', type=int, default=1024)
+    parser.add_argument('--max_epochs', type=int, default=200)
+    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--label_frac', type=float, default=1.0)
+    parser.add_argument('--reg', type=float, default=1e-5)
+    parser.add_argument('--seed', type=int, default=1)
+    parser.add_argument('--k', type=int, default=10)
+    parser.add_argument('--k_start', type=int, default=-1)
+    parser.add_argument('--k_end', type=int, default=-1)
+    parser.add_argument('--log_data', action='store_true', default=False)
+    parser.add_argument('--testing', action='store_true', default=False)
+    parser.add_argument('--early_stopping', action='store_true', default=False)
+    parser.add_argument('--opt', type=str, choices=['adam', 'sgd'], default='adam')
+    parser.add_argument('--drop_out', type=float, default=0.25)
+    parser.add_argument('--bag_loss', type=str, choices=['svm', 'ce'], default='ce')
+    parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
+    parser.add_argument('--exp_code', type=str, default='clam_camelyon16')
+    parser.add_argument('--weighted_sample', action='store_true', default=False)
+    parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
+    parser.add_argument('--no_inst_cluster', action='store_true', default=False)
+    parser.add_argument('--inst_loss', type=str, choices=['svm', 'ce', None], default=None)
+    parser.add_argument('--subtyping', action='store_true', default=False)
+    parser.add_argument('--bag_weight', type=float, default=0.7)
+    parser.add_argument('--B', type=int, default=8)
     args = parser.parse_args()
-    
-    # Load YAML configuration
-    with open(args.config, 'r') as f:
+
+    config_path = args.config
+    with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
-    
-    # Convert config to argparse.Namespace
-    from argparse import Namespace
-    args = Namespace(**config)
-    
+
+    # Merge YAML config into args
+    for key, value in config.items():
+        setattr(args, key, value)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     seed_torch(args.seed)
 
     print("################# Settings ###################")
     settings = vars(args).copy()
-    settings.pop('paths', None)  # Exclude paths for cleaner output
+    settings.pop('paths', None)
     for key, val in settings.items():
         print(f"{key}: {val}")
-
+    print(f"[INFO] Max Epochs set to: {args.max_epochs}")
     main(args)
-    print("Finished!")
