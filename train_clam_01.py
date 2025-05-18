@@ -74,8 +74,6 @@ def main(args):
     all_val_acc = []
     
     folds = np.arange(start, end+1)
-    folds = ['test']
-    
     print("Number of folds:", len(folds))
     for i in folds:
         seed_torch(args.seed)
