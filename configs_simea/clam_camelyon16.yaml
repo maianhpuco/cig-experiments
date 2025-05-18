@@ -26,5 +26,4 @@ subtyping: false
 bag_weight: 0.7
 B: 8
 k_start: 1 
-k_end: 5 
-label_dict 
+k_end: 5
