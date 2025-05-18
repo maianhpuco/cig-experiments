@@ -14,7 +14,6 @@ import sys
 
 
 # sys.path.append(base_path)
-from src.datasets.classification.camelyon16 import return_splits_custom 
 sys.path.append(os.path.join("src/externals/CLAM")) 
 
 # Internal imports
