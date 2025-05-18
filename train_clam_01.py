@@ -17,9 +17,9 @@ import sys
 sys.path.append(os.path.join("src/externals/CLAM")) 
 
 # Internal imports
-from utils.file_utils import save_pkl, load_pkl
-from utils.utils import *
-from utils.core_utils import train
+from .utils.file_utils import save_pkl, load_pkl
+from .utils.utils import *
+from .utils.core_utils import train
 # from dataset_modules.dataset_generic import Generic_MIL_Dataset, return_splits_custom
 # base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")) 
 # sys.path.append(base_path) 
