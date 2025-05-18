@@ -42,7 +42,7 @@ def main(args):
 
     # Set paths from YAML
     args.data_root_dir = cfg['paths']['pt_files']
-    args.results_dir = os.path.join(cfg['paths']['save_dir'], 'result_timestamp')
+    args.results_dir = os.path.join(cfg['paths']['save_dir'], f'result_{timestamp}')
     # args.split_dir = os.path.join(cfg['paths']['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
     split_folder =cfg['paths']['split_folder']
     data_dir = cfg['paths']['pt_files']
