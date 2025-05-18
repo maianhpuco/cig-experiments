@@ -58,15 +58,9 @@ def main(args):
     args.n_classes = 2
     
     label_dict = {'normal': 0, 'tumor': 1}
-
-    if args.k_start == -1:
-        start = 0
-    else:
-        start = int(cfg['k_start'])
-    if args.k_end == -1:
-        end = args.k
-    else:
-        end = int(cfg['k_end'])
+    
+    start = args.k_start if args.k_start != -1 else 1
+    end = args.k_end if args.k_end != -1 else 5 
 
     all_test_auc = []
     all_val_auc = []
