@@ -72,16 +72,6 @@ def main(args):
     for i in folds:
         print("=======Start fold number:", i, "=========") 
         seed_torch(args.seed)
-
-        
-        # Use custom split loader
-        # train_dataset, val_dataset, test_dataset = return_splits_custom(
-        #     csv_path=os.path.join(args.split_dir, f'split_{i}.csv'),
-        #     data_dir=args.data_root_dir,
-        #     label_dict=label_dict,
-        #     seed=args.seed,
-        #     print_info=True
-        # )
         if dataset_name == 'camelyon16': 
             split_csv_path = os.path.join(split_folder, f'fold_{i}.csv')
 
