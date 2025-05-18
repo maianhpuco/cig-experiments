@@ -62,11 +62,11 @@ def main(args):
     if args.k_start == -1:
         start = 0
     else:
-        start = args.k_start
+        start = int(cfg['k_start'])
     if args.k_end == -1:
         end = args.k
     else:
-        end = args.k_end
+        end = int(cfg['k_end'])
 
     all_test_auc = []
     all_val_auc = []
