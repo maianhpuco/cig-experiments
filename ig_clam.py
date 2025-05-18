@@ -12,10 +12,10 @@ import argparse
 
 
 ig_path = os.path.abspath(os.path.join("src/models/attr_method"))
-clf_path = os.path.abspath(os.path.join("src/models/classifers"))
+clf_path = os.path.abspath(os.path.join("src/models/classifier"))
 sys.path.append(ig_path)   
 sys.path.append(clf_path)  
-print(os.path.exists("src/models/classifers/clam.py"))
+
 from clam import load_clam_model  
 from attr_method._common import (
     sample_random_features,
