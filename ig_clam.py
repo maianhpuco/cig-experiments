@@ -14,7 +14,7 @@ from attr_method._common import (
     call_model_function
 )
 
-ig_path = os.path.abspath(os.path.join("src/models/attr_methods"))
+ig_path = os.path.abspath(os.path.join("src/models/attr_method"))
 clf_path = os.path.abspath(os.path.join("src/classifers"))
 sys.path.append(ig_path)   
 sys.path.append(clf_path)  
@@ -32,7 +32,7 @@ from clam import load_clam_model
 
 
 
-from LoadClamModel import load_clam_model  # adjust if the function is in a different file
+# from LoadClamModel import load_clam_model  # adjust if the function is in a different file
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
