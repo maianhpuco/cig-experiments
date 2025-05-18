@@ -1,9 +1,12 @@
+dataset_name: 'camelyon16'
 paths:
   pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
   save_dir: "/home/mvu9/processing_datasets/processing_camelyon16"
-task: 'task_1_tumor_vs_normal' 
+  result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/results" # where we save all the check point
+  split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
+
 embed_dim: 1024
-max_epochs: 4
+max_epochs: 2
 lr: 0.0001
 label_frac: 1.0
 reg: 0.00001
@@ -23,3 +26,6 @@ inst_loss: null
 subtyping: false
 bag_weight: 0.7
 B: 8
+k_start: 1 
+k_end: 5 
+label_dict 

@@ -12,31 +12,38 @@ import torch.nn as nn
 import torch.nn.functional as F
 import sys
 
-# Set base path for imports
-# base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+
 # sys.path.append(base_path)
 from src.datasets.classification.camelyon16 import return_splits_custom 
-
 sys.path.append(os.path.join("src/externals/CLAM")) 
+
 # Internal imports
 from utils.file_utils import save_pkl, load_pkl
 from utils.utils import *
 from utils.core_utils import train
+
 # from dataset_modules.dataset_generic import Generic_MIL_Dataset, return_splits_custom
-
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")) 
+sys.path.append(base_path) 
+from utils import get_timestamp_str 
 from src.datasets.classification.camelyon16 import return_splits_custom 
-
 
 def main(args):
     # Load YAML configuration
     with open(args.config, 'r') as f:
         cfg = yaml.safe_load(f)
 
+    timestamp = get_timestamp_str()
+
     # Set paths from YAML
     args.data_root_dir = cfg['paths']['pt_files']
-    args.results_dir = os.path.join(cfg['paths']['save_dir'], 'results')
-    args.split_dir = os.path.join(cfg['paths']['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
-
+    args.results_dir = os.path.join(cfg['paths']['save_dir'], 'result_timestamp')
+    # args.split_dir = os.path.join(cfg['paths']['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
+    split_folder =cfg['paths']['split_folder']
+    data_dir = cfg['paths']['pt_files']
+    dataset_name = cfg['dataset_name'] 
+    
+    
     # Create results directory
     if not os.path.isdir(args.results_dir):
         os.makedirs(args.results_dir)
@@ -44,6 +51,7 @@ def main(args):
     # Set task and classes
     args.task = 'task_1_tumor_vs_normal'
     args.n_classes = 2
+    
     label_dict = {'normal': 0, 'tumor': 1}
 
     if args.k_start == -1:
@@ -59,10 +67,11 @@ def main(args):
     all_val_auc = []
     all_test_acc = []
     all_val_acc = []
-    folds = np.arange(start, end)
+    
+    folds = np.arange(start, end+1)
     folds = ['test']
     
-    
+    print("Number of folds:", len(folds))
     for i in folds:
         seed_torch(args.seed)
 
@@ -75,20 +84,18 @@ def main(args):
         #     seed=args.seed,
         #     print_info=True
         # )
-        split_csv_path = "./camelyon16_csv_splits_camil/splits_sanity_check.csv" 
+        if dataset_name == 'camelyon16': 
+            split_csv_path = os.path.join(split_folder, 'splits_{i}.csv')
 
-        train_dataset, val_dataset, test_dataset = return_splits_custom(
-            csv_path=split_csv_path,
-            data_dir='/home/mvu9/processing_datasets/processing_camelyon16/features_fp',
-            label_dict={'normal': 0, 'tumor': 1},  # This won't affect direct labels
-            seed=42,
-            print_info=True
-        )
-        
-        print(len(train_dataset), len(val_dataset), len(test_dataset)) 
-
- 
-        
+            train_dataset, val_dataset, test_dataset = return_splits_custom(
+                csv_path=split_csv_path,
+                data_dir=data_dir,
+                label_dict= label_dict,  # This won't affect direct labels
+                seed=42,
+                print_info=True
+            )
+        print(f"Train len: {len(train_dataset)} | Val len: {len(val_dataset)} | Test len: {len(test_dataset)}")
+          
         datasets = (train_dataset, val_dataset, test_dataset)
         results, test_auc, val_auc, test_acc, val_acc = train(datasets, i, args)
         all_test_auc.append(test_auc)
@@ -96,7 +103,7 @@ def main(args):
         all_test_acc.append(test_acc)
         all_val_acc.append(val_acc)
         # Write results to pkl
-        i = 1
+    
         filename = os.path.join(args.results_dir, f'split_{i}_results.pkl')
         save_pkl(filename, results)
 
@@ -127,6 +134,7 @@ def seed_torch(seed=7):
     torch.backends.cudnn.deterministic = True
     
     
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Configurations for WSI Training')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
