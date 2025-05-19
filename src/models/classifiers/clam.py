@@ -40,7 +40,7 @@ def load_clam_model(args, ckpt_path, device='cuda'):
     print_network(model)
 
     # Load checkpoint
-    ckpt = torch.load(ckpt_path, map_location=device)
+    ckpt = torch.load(ckpt_path, map_location=device, weights_only=True)
     ckpt_clean = {}
     for key in ckpt.keys():
         if 'instance_loss_fn' in key:
