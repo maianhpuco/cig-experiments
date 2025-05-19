@@ -45,7 +45,9 @@ class IntegratedDecisionGradients(CoreSaliency):
             model_output = model(x_step_batch)  # Single bag, shape (N, D)
             logit = model_output[0, target_class_idx] if model_output.dim() == 2 else model_output[target_class_idx]
             logits[step_idx] = logit
-
+            print("==== DEBUG ==== ")
+            print("model_output shape:", model_output.shape)
+            print("logit shape:", logit.shape) 
         x_diff_value = float(alphas[1] - alphas[0])
         slopes[1:] = (logits[1:] - logits[:-1]) / (x_diff_value + 1e-9)
         slopes[0] = 0
@@ -127,7 +129,7 @@ class IntegratedDecisionGradients(CoreSaliency):
         )):
             x_step_batch = x_baseline_batch + alpha * x_diff
             x_step_batch = x_step_batch.clone().detach().requires_grad_(True)
-
+            print("x_step_batch shape:", x_step_batch.shape, "device:", x_step_batch.device)
             call_model_output = call_model_function(
                 x_step_batch,
                 model,
@@ -141,7 +143,7 @@ class IntegratedDecisionGradients(CoreSaliency):
 
             gradients_batch = call_model_output[INPUT_OUTPUT_GRADIENTS]  # Shape: (N, D)
             gradients_avg = gradients_batch  # Already averaged if necessary
-
+            print("gradients_batch shape:", gradients_batch.shape) 
             if prev_logit is not None:
                 alpha_diff = alpha - new_alphas[step_idx - 1]
                 slopes[step_idx] = (logit - prev_logit) / (alpha_diff + 1e-9)
@@ -151,4 +153,4 @@ class IntegratedDecisionGradients(CoreSaliency):
             integrated_gradient += weighted_grad
 
         attribution_values = integrated_gradient * x_diff  # Element-wise
-        return attribution_values
+        return attribution_values 
