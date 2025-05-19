@@ -132,9 +132,9 @@ def main(args):
         scores = attribution_values.mean(1)
         print("- Score result shape: ", scores.shape)
         
-        # _save_path = os.path.join(score_save_path, f'{basename}.npy')
-        # np.save(_save_path, scores)
-        # print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
+        _save_path = os.path.join(score_save_path, f'{basename}.npy')
+        np.save(_save_path, scores)
+        print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
