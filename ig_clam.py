@@ -114,9 +114,9 @@ def main(args):
             "call_model_function": call_model_function,
             "model": model,
             "baseline_features": stacked_features_baseline,
-            "memmap_path": args.memmap_path,
+            "memmap_path": args.paths['mempath'],
             "x_steps": 50,
-        }
+        }th
 
         attribution_values = attribution_method.GetMask(**kwargs)
         scores = attribution_values.mean(1)
