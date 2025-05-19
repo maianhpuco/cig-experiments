@@ -159,6 +159,11 @@ if __name__ == "__main__":
                             'optim_square_integrated_gradient'
                         ],
                         help='Choose the attribution method to use.')
+    
+    parser.add_argument('--device', type=str, default=None,
+                    choices=['cuda', 'cpu'], help='Device to run the model on')
+
+    
     args = parser.parse_args()
 
     with open(f'{args.config}', 'r') as f:
@@ -170,7 +175,8 @@ if __name__ == "__main__":
         else:
             setattr(args, key, val)
 
-    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    # args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
