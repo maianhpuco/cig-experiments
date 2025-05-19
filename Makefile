@@ -70,16 +70,16 @@ dr_osig:
 	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
 
 # ----- Grouped Methods -----
-group_basic: #done 
+group_basic: #done, done , done 
 	make ig_clam_integrated_gradient
 	make ig_clam_vanilla_gradient
 	make ig_clam_expected_gradient
 
-group_adv: #error, running 
+group_adv: #error, done  
 	make ig_clam_integrated_decision_gradient
 	make ig_clam_contrastive_gradient 
 
-group_square: #running, checking
+group_square: #running runing  
 	make ig_clam_square_integrated_gradient
 	make ig_clam_optim_square_integrated_gradient
 # # error make ig_clam_integrated_decision_gradient, ig_clam_contrastive_gradientig_clam_square_integrated_gradient Run all methods
