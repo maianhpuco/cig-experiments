@@ -37,7 +37,7 @@ class IntegratedGradients(CoreSaliency):
         x_baseline_batch = baseline_features[sampled_indices]     
         x_diff = x_value - x_baseline_batch   
         
-        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
+        for step_idx, alpha in enumerate(tqdm(alphas, desc = "Computing:", ncols=100), start=1):
 
             x_step_batch = x_baseline_batch + alpha * x_diff
             
@@ -57,8 +57,8 @@ class IntegratedGradients(CoreSaliency):
             baseline_num = 1 
             gradients_batch = call_model_output[INPUT_OUTPUT_GRADIENTS].reshape(baseline_num, x_value.shape[0], x_value.shape[1])
             
-            gradients_avg = gradients_batch.reshape(-1, x_value.shape[-1])
-            attribution_values += gradients_avg 
+            gradients_avg = gradients_batch.reshape(-1, x_value.shape[-1]).to(device) 
+            attribution_values += gradients_avg
         
         
         x_diff = x_diff.reshape(-1, x_value.shape[-1])
