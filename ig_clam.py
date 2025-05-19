@@ -40,7 +40,7 @@ def sample_random_features(dataset, num_files=20):
 
     padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
     flattened = padded.view(-1, padded.size(-1))
-    return flattened, selected_idsurn flattened, selected_ids
+    return flattened, selected_ids
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
