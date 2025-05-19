@@ -105,7 +105,6 @@ class IntegratedDecisionGradients(CoreSaliency):
             alpha_start_value += step_size
 
         return alphas, alpha_substep_size
-
     def GetMask(self, **kwargs):
         x_value = kwargs.get("x_value")  # Shape: (N, D)
         call_model_function = kwargs.get("call_model_function")
@@ -118,14 +117,15 @@ class IntegratedDecisionGradients(CoreSaliency):
 
         # Ensure inputs are tensors on the correct device
         x_value = (x_value.to(device, dtype=torch.float32) if isinstance(x_value, torch.Tensor) 
-                   else torch.tensor(x_value, dtype=torch.float32, device=device))
+                else torch.tensor(x_value, dtype=torch.float32, device=device))
         baseline_features = (baseline_features.to(device, dtype=torch.float32) if isinstance(baseline_features, torch.Tensor) 
-                             else torch.tensor(baseline_features, dtype=torch.float32, device=device))
+                            else torch.tensor(baseline_features, dtype=torch.float32, device=device))
 
         # Sample baseline features with shape (N, D)
         sampled_indices = torch.randint(0, baseline_features.shape[0], (x_value.shape[0],), device=device)
         x_baseline_batch = baseline_features[sampled_indices]  # [N, D]
 
+        # Step 1: Estimate slope profile
         slopes, x_diff_value, _ = self.getSlopes(
             x_baseline_batch,
             x_value,
@@ -135,18 +135,21 @@ class IntegratedDecisionGradients(CoreSaliency):
             target_class_idx
         )
 
+        # Step 2: Generate redistributed alphas
         new_alphas, alpha_substep_size = self.getAlphaParameters(slopes, x_steps, 1.0 / x_steps)
         x_diff = x_value - x_baseline_batch  # [N, D]
         integrated_gradient = torch.zeros_like(x_value, dtype=torch.float32, device=device)
         prev_logit = None
         slopes = torch.zeros(x_steps, device=device)
 
+        # Step 3: Compute Integrated Decision Gradient
         for step_idx, (alpha, substep_size) in enumerate(tqdm(
             zip(new_alphas, alpha_substep_size), total=x_steps, desc="Computing IG²", ncols=100
         )):
             x_step_batch = x_baseline_batch + alpha * x_diff
-            x_step_batch = x_step_batch.clone().detach().requires_grad_(True)
-            print("x_step_batch shape:", x_step_batch.shape, "device:", x_step_batch.device)
+            x_step_batch = x_step_batch.clone().detach().requires_grad_(True).to(device)
+
+            # Attribution gradients
             call_model_output = call_model_function(
                 x_step_batch,
                 model,
@@ -154,20 +157,26 @@ class IntegratedDecisionGradients(CoreSaliency):
                 expected_keys=self.expected_keys
             )
 
+            # Get logit for current step (for slope computation)
             model_output = model(x_step_batch)
-            logit = model_output[0, target_class_idx] if model_output.dim() == 2 else model_output[target_class_idx]
+            logits_tensor = model_output[0] if isinstance(model_output, tuple) else model_output
+            logit = logits_tensor[0, target_class_idx] if logits_tensor.dim() == 2 else logits_tensor[target_class_idx]
             logit = logit.detach()
 
+            # Attribution gradient
             gradients_batch = call_model_output[INPUT_OUTPUT_GRADIENTS]  # Shape: (N, D)
-            gradients_avg = gradients_batch  # Already averaged if necessary
-            print("gradients_batch shape:", gradients_batch.shape) 
+            gradients_avg = gradients_batch  # Assumed averaged already if necessary
+
+            # Finite difference slope
             if prev_logit is not None:
                 alpha_diff = alpha - new_alphas[step_idx - 1]
                 slopes[step_idx] = (logit - prev_logit) / (alpha_diff + 1e-9)
             prev_logit = logit
 
+            # Weight gradients and accumulate
             weighted_grad = gradients_avg * slopes[step_idx] * substep_size
             integrated_gradient += weighted_grad
 
-        attribution_values = integrated_gradient * x_diff  # Element-wise
-        return attribution_values 
+        # Final attribution
+        attribution_values = integrated_gradient * x_diff
+        return attribution_values
