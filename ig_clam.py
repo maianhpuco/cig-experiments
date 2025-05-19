@@ -31,7 +31,7 @@ def sample_random_features(dataset, num_files=20):
     selected_ids = []
 
     for idx in indices:
-        features, _ = dataset[idx]
+        features, _, _ = dataset[idx]
         features = features if isinstance(features, torch.Tensor) else torch.tensor(features)
         if features.size(0) > 128:
             features = features[:128]
