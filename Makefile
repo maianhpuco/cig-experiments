@@ -52,6 +52,7 @@ ig_clam_square_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
 
 ig_clam_optim_square_integrated_gradient:
+	conda activate clam_env && \
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
 
 dr_integrated_decision_gradient:
