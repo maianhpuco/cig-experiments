@@ -79,7 +79,7 @@ def main(args):
 
     # print(">>>>>>>>>>>----- Total number of sample in test set:", len(test_dataset))
 
-    for idx, (features, label, basename) in enumerate(test_dataset):
+    for idx, (features, label) in enumerate(test_dataset):
         print(f"Processing the file number {idx+1}/{len(test_dataset)}")
         start = time.time()
 
