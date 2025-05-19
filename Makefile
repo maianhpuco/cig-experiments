@@ -59,17 +59,22 @@ dr_integrated_decision_gradient:
 
 
 dr_cig:
-	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
+	python ig_clam_test.py -sig-config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
+
+
+dr_sig:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
+
 
 # ----- Grouped Methods -----
-group_basic:
+group_basic: #done 
 	make ig_clam_integrated_gradient
 	make ig_clam_vanilla_gradient
 	make ig_clam_expected_gradient
 
-group_adv:
+group_adv: #error, running 
 	make ig_clam_integrated_decision_gradient
-	make ig_clam_contrastive_gradient
+	make ig_clam_contrastive_gradient 
 
 group_square:
 	make ig_clam_square_integrated_gradient
