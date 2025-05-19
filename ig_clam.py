@@ -66,26 +66,26 @@ def main(args):
         print_info=False
     )
 
-    if args.do_normalizing:
-        print("[INFO] Recomputing mean and std from train set")
-        # Aggregate all feature rows from train set
-        all_feats = []
-        for feats, _ in train_dataset:
-            feats = np.atleast_2d(feats)
-            all_feats.append(feats)
-        all_feats = np.concatenate(all_feats, axis=0)
-        mean = all_feats.mean(axis=0)
-        std = all_feats.std(axis=0)
+    # if args.do_normalizing:
+    #     print("[INFO] Recomputing mean and std from train set")
+    #     # Aggregate all feature rows from train set
+    #     all_feats = []
+    #     for feats, _ in train_dataset:
+    #         feats = np.atleast_2d(feats)
+    #         all_feats.append(feats)
+    #     all_feats = np.concatenate(all_feats, axis=0)
+    #     mean = all_feats.mean(axis=0)
+    #     std = all_feats.std(axis=0)
 
-    print(">>>>>>>>>>>----- Total number of sample in test set:", len(test_dataset))
+    # print(">>>>>>>>>>>----- Total number of sample in test set:", len(test_dataset))
 
     for idx, (features, label, basename) in enumerate(test_dataset):
         print(f"Processing the file number {idx+1}/{len(test_dataset)}")
         start = time.time()
 
-        if args.do_normalizing:
-            print("----- normalizing")
-            features = (features - mean) / (std + 1e-8)
+        # if args.do_normalizing:
+        #     print("----- normalizing")
+        #     features = (features - mean) / (std + 1e-8)
 
         stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
         stacked_features_baseline = stacked_features_baseline.numpy()
