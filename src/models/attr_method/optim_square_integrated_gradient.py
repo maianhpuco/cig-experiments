@@ -19,136 +19,107 @@ def normalize_by_2norm(x):
 
 
 class OptimSquareIntegratedGradients(CoreSaliency):
-    """Efficient Integrated Gradients with Counterfactual Attribution"""
+    """Efficient Integrated Gradients with GradPath (IG²)"""
 
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
     def GetMask(self, **kwargs): 
-        """Computes the integrated gradient attributions using GradPath (IG²)."""
-        x_value = kwargs.get("x_value")
+        x_value = kwargs.get("x_value").to(kwargs.get("device", "cpu"))
         call_model_function = kwargs.get("call_model_function")
         model = kwargs.get("model")
         call_model_args = kwargs.get("call_model_args", None)
-        baseline_features = kwargs.get("baseline_features", None)
+        baseline_features = kwargs.get("baseline_features").to(x_value.device)
         x_steps = kwargs.get("x_steps", 5)
-        eta = kwargs.get("eta", 1 ) 
+        eta = kwargs.get("eta", 1)
         memmap_path = kwargs.get("memmap_path")
-        
 
-        # Sample reference points (baseline)
+        device = x_value.device
         sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
-        x_baseline_batch = baseline_features[sampled_indices] 
+        x_baseline_batch = baseline_features[sampled_indices].squeeze(0)
 
-        # 🔥 **Compute GradPath (returns path and counterfactual gradients)**
-        path, counterfactual_gradients_memmap = self.Get_GradPath(x_value, x_baseline_batch, model, x_steps, memmap_path)
+        path, counterfactual_gradients_memmap = self.Get_GradPath(x_value, x_baseline_batch, model, x_steps, memmap_path, device)
 
-        # Ensure first step in path is close to original input
-        np.testing.assert_allclose(x_value, path[0], rtol=0.01)
+        np.testing.assert_allclose(x_value.cpu().numpy(), path[0], rtol=0.01)
 
-        # 🔥 **Integrate Gradients on GradPath (IG²)**
         print('Integrating gradients on GradPath...')
-        attr = np.zeros_like(x_value, dtype=np.float32)
-        x_old = x_value
+        attr = torch.zeros_like(x_value, dtype=torch.float32, device=device)
+        x_old = x_value.clone()
 
         for i, x_step in enumerate(path[1:]):
+            x_old_tensor = x_old.clone().detach().requires_grad_(True).to(device)
+
             call_model_output = call_model_function(
-                x_old,
-                model, 
+                x_old_tensor,
+                model,
                 call_model_args=call_model_args,
-                expected_keys=[INPUT_OUTPUT_GRADIENTS]
-                )
-            self.format_and_check_call_model_output(call_model_output, x_old.shape, self.expected_keys)
-            
-            baseline_num = 1 
-            feature_gradient = call_model_output[INPUT_OUTPUT_GRADIENTS].reshape(baseline_num, x_value.shape[0], x_value.shape[1]) 
-            feature_gradient = feature_gradient.mean(axis=0) 
-            # print("feature_gradient", feature_gradient.shape)
+                expected_keys=self.expected_keys
+            )
+            self.format_and_check_call_model_output(call_model_output, x_old_tensor.shape, self.expected_keys)
 
-            #  Feature Gradient: dF/dX
-            # feature_gradient = call_model_output[INPUT_OUTPUT_GRADIENTS]
+            feature_gradient = torch.tensor(
+                call_model_output[INPUT_OUTPUT_GRADIENTS],
+                dtype=torch.float32,
+                device=device
+            ).mean(dim=0)  # shape: [N, D]
 
-            #  Retrieve Precomputed Counterfactual Gradient
-            counterfactual_gradient = counterfactual_gradients_memmap[i]
-            # print("counterfactual_gradient", counterfactual_gradient.shape) 
-            # print("(x_old - x_step).shape", (x_old - x_step).shape)
-            #  Apply IG² Equation
-            W_j = np.linalg.norm(feature_gradient) + 1e-8  # Avoid division by zero
-            attr += (x_old - x_step) * feature_gradient * counterfactual_gradient * (eta / W_j)
-            x_old = x_step  # Move to next step
-        return attr
-     
+            counterfactual_gradient = torch.tensor(counterfactual_gradients_memmap[i], device=device)
+
+            W_j = torch.norm(feature_gradient) + 1e-8
+            attr += (x_old - torch.tensor(x_step, device=device)) * feature_gradient * counterfactual_gradient * (eta / W_j)
+            x_old = torch.tensor(x_step, device=device)
+
+        return attr.detach().cpu().numpy()
+
     @staticmethod
-    def Get_GradPath(x_value, baselines, model, x_steps, memmap_path):
-        """Computes the iterative GradPath using gradient-based perturbations."""
-
-        # Initialize memmap for storing GradPath and Counterfactual Gradients
+    def Get_GradPath(x_value, baselines, model, x_steps, memmap_path, device):
         path_filename = f"{memmap_path}/grad_path_memmap.npy"
         counterfactual_grad_filename = f"{memmap_path}/counterfactual_gradients_memmap.npy"
-        path_shape = (x_steps, *x_value.shape)  
-        grad_shape = (x_steps-1, *x_value.shape)  # One less step for gradients
+        path_shape = (x_steps, *x_value.shape)
+        grad_shape = (x_steps - 1, *x_value.shape)
 
         path_memmap = np.memmap(path_filename, dtype=np.float32, mode='w+', shape=path_shape)
         counterfactual_gradients_memmap = np.memmap(counterfactual_grad_filename, dtype=np.float32, mode='w+', shape=grad_shape)
 
-        # Compute logits for baseline (counterfactual reference)
-        x_baseline_torch = torch.tensor(baselines.copy(), dtype=torch.float32, requires_grad=False)
+        x_baseline_torch = baselines.clone().detach().to(device)
         logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])
 
-        # Initialize perturbation delta
-        delta = np.zeros_like(x_value)
-        path_memmap[0] = x_value  
+        delta = torch.zeros_like(x_value, device=device)
+        path_memmap[0] = x_value.detach().cpu().numpy()
 
         progress_bar = tqdm(range(1, x_steps), desc="Searching GradPath", ncols=100)
-        step_size = 1.0  # Initial step size
+        step_size = 1.0
         prev_loss = float('inf')
 
         for i in progress_bar:
-            # Perturb the input
-            x_step_batch = x_value + delta
-            x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True)
+            x_step_batch = (x_value + delta).clone().detach().requires_grad_(True)
 
-            # Compute logits for perturbed input
-            logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])
-
-            # Compute counterfactual gradient: Norm of logits difference
+            logits_x_step = model(x_step_batch, [x_step_batch.shape[0]])
             logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
 
-            # Compute Counterfactual Gradients Once and Store
-            grad_logits_diff = torch.autograd.grad(logits_difference, x_step_batch_torch, retain_graph=True)[0]
+            grad_logits_diff = torch.autograd.grad(logits_difference, x_step_batch, retain_graph=True)[0]
 
             if grad_logits_diff is None:
                 raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.")
 
-            # Convert gradients to numpy and normalize
-            grad_logits_diff = grad_logits_diff.detach().cpu().numpy()  
-            grad_logits_diff = normalize_by_2norm(grad_logits_diff)
+            grad_logits_diff_np = grad_logits_diff.detach().cpu().numpy()
+            grad_logits_diff_np = normalize_by_2norm(grad_logits_diff_np)
 
-            # Store counterfactual gradients in memmap
-            counterfactual_gradients_memmap[i-1] = grad_logits_diff  # i-1 since gradient is computed after 1st step
+            counterfactual_gradients_memmap[i - 1] = grad_logits_diff_np
 
-            # Adjust step size dynamically
             if logits_difference.item() < prev_loss:
-                step_size *= 1.1  # Increase step size if loss is decreasing
+                step_size *= 1.1
             else:
-                step_size *= 0.9  # Reduce step size smoothly
-
+                step_size *= 0.9
             prev_loss = logits_difference.item()
 
-            # Update delta using normalized gradients (No Clipping)
-            with torch.no_grad():
-                delta = delta + grad_logits_diff * step_size
-                x_adv = x_value + delta  # Update perturbed input
+            delta = delta + torch.tensor(grad_logits_diff_np, device=device) * step_size
+            x_adv = x_value + delta
 
-            # Save new perturbed input in memmap (disk instead of RAM)
-            path_memmap[i] = x_adv
-            path_memmap.flush()  
-            counterfactual_gradients_memmap.flush()  
+            path_memmap[i] = x_adv.detach().cpu().numpy()
+            path_memmap.flush()
+            counterfactual_gradients_memmap.flush()
 
-            # Update tqdm progress bar dynamically
             progress_bar.set_postfix({"Loss": logits_difference.item(), "Step Size": step_size})
+            torch.cuda.empty_cache()
 
-            # Free memory of tensors no longer needed
-            del x_step_batch_torch, logits_x_step, logits_difference
-            torch.cuda.empty_cache()  
-
-        return path_memmap, counterfactual_gradients_memmap  
+        return path_memmap, counterfactual_gradients_memmap

@@ -8,6 +8,7 @@ import torch
 import yaml
 import pickle
 from torch import nn
+import shutil
 
 ig_path = os.path.abspath(os.path.join("src/models"))
 clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
@@ -73,10 +74,20 @@ def main(args):
 
     attribution_method = AttrMethod()
 
+    # Create directory for attribution scores
     score_save_path = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}')
+    if os.path.exists(score_save_path):
+        shutil.rmtree(score_save_path)  # Remove if exists
     os.makedirs(score_save_path, exist_ok=True)
 
+    # Create directory for memmap files
+    memmap_path = os.path.join(args.paths['memmap_path'], f'{args.ig_name}')
+    if os.path.exists(memmap_path):
+        shutil.rmtree(memmap_path)  # Remove if exists
+    os.makedirs(memmap_path, exist_ok=True) 
+    
     model = load_clam_model(args, args.paths['for_ig_checkpoint_path'], device=args.device)
+    
 
     split_csv_path = os.path.join(args.paths['split_folder'], 'fold_1.csv')
     train_dataset, _, test_dataset = return_splits_custom(
@@ -87,18 +98,7 @@ def main(args):
         print_info=False, 
         use_h5=True
     )
-
-    # if args.do_normalizing:
-    #     print("[INFO] Recomputing mean and std from train set")
-    #     all_feats = []
-    #     for feats, _ in train_dataset:
-    #         feats = feats if isinstance(feats, np.ndarray) else feats.numpy()
-    #         all_feats.append(feats)
-    #     all_feats = np.concatenate(all_feats, axis=0)
-    #     mean = all_feats.mean(axis=0)
-    #     std = all_feats.std(axis=0)
-
-    print(">>>>>>>>>>>----- Total number of sample in test set:", len(test_dataset))
+    print("-- Total number of sample in test set:", len(test_dataset))
 
     for idx, (features, label, coords) in enumerate(test_dataset):
         print("- Feature shape", features.shape)
@@ -118,9 +118,9 @@ def main(args):
             "call_model_function": call_model_function,
             "model": model,
             "baseline_features": stacked_features_baseline,
-            "memmap_path": args.paths['memmap_path'],
+            "memmap_path": memmap_path,
             "x_steps": 50,
-
+            "device": args.device
         }
 
         attribution_values = attribution_method.GetMask(**kwargs)
@@ -134,7 +134,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry_run', type=int, default=0)
-    parser.add_argument('--config_file', default='clam_camelyon16.yaml')
+    parser.add_argument('--config', default='clam_camelyon16.yaml')
     parser.add_argument('--ig_name',
                         default='integrated_gradient',
                         choices=[
@@ -159,7 +159,6 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
-    args.do_normalizing = False 
 
     os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
