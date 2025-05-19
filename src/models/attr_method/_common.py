@@ -31,7 +31,9 @@ def PreprocessInputs(inputs):
 
 def call_model_function(images, model, call_model_args=None, expected_keys=None):
     """Compute model logits and gradients for saliency"""
-    images = PreprocessInputs(images)
+    device = next(model.parameters()).device  # Get model's device (e.g., cuda:0)
+
+    images = PreprocessInputs(images).to(device)  # Ensure images on same device
     model.eval()
 
     model_output = model(images, [images.shape[0]])
@@ -53,8 +55,8 @@ def call_model_function(images, model, call_model_args=None, expected_keys=None)
     )[0]
 
     gradients = grads.detach().cpu().numpy()
-
     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
+
 
 def get_mean_std_for_normal_dist(dataset):
     # Initialize accumulators
