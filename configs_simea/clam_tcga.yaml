@@ -1,8 +1,8 @@
 dataset_name: 'tcga'
 paths:
   data_dir:
-    kich: "/home/mvu9/processing_datasets/processing_tcga/kich/features_fp",
-    kirc: "/home/mvu9/processing_datasets/processing_tcga/kirc/features_fp",
+    kich: "/home/mvu9/processing_datasets/processing_tcga/kich/features_fp"
+    kirc: "/home/mvu9/processing_datasets/processing_tcga/kirc/features_fp"
     kirp: "/home/mvu9/processing_datasets/processing_tcga/kirp/features_fp"
   save_dir: "/home/mvu9/processing_datasets/processing_tcga/"
   result_dir: "/home/mvu9/processing_datasets/processing_tcga/results" # where we save all the check point
