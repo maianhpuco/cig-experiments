@@ -20,27 +20,32 @@ def PreprocessInputs(inputs):
 #     gradients = grads[0].detach().cpu().numpy()
 #     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
-def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-    if not torch.is_tensor(inputs):
-        inputs = torch.tensor(inputs, dtype=torch.float32).clone().detach()
-    inputs = inputs.requires_grad_(True)
+def call_model_function(images, model, call_model_args=None, expected_keys=None):
+    """Compute model logits and gradients for saliency"""
+    images = PreprocessInputs(images)
+    model.eval()
 
-    # Forward pass: returns a tuple in CLAM, so unpack appropriately
-    model_output = model(inputs, [inputs.shape[0]])
-    
+    model_output = model(images, [images.shape[0]])
+
+    # CLAM returns tuple: logits, probs, pred, etc.
     if isinstance(model_output, tuple):
-        logits = model_output[0]  # or whichever output you want to use
+        logits = model_output[0]
     else:
         logits = model_output
 
+    # Choose class index (here: class 1)
+    target_logit = logits[:, 1].sum()
+
     grads = torch.autograd.grad(
-        logits,
-        inputs,
-        grad_outputs=torch.ones_like(logits),
+        outputs=target_logit,
+        inputs=images,
+        grad_outputs=torch.ones_like(target_logit),
         create_graph=False
     )[0]
 
-    return {saliency.base.INPUT_OUTPUT_GRADIENTS: grads}
+    gradients = grads.detach().cpu().numpy()
+
+    return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
 def get_mean_std_for_normal_dist(dataset):
     # Initialize accumulators
