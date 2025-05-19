@@ -115,7 +115,7 @@ def main(args):
         #     features = (features - mean) / (std + 1e-8)
 
         stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
-        stacked_features_baseline = stacked_features_baseline.numpy()
+        # stacked_features_baseline = stacked_features_baseline.numpy()
 
         kwargs = {
             "x_value": features,
