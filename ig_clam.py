@@ -111,12 +111,7 @@ def main(args):
         
         start = time.time()
 
-        # if args.do_normalizing:
-        #     print("----- normalizing")
-        #     features = (features - mean) / (std + 1e-8)
-
         stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
-        # stacked_features_baseline = stacked_features_baseline.numpy()
         print("stack features ", stacked_features_baseline.shape)
         kwargs = {
             "x_value": features,
