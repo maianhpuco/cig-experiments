@@ -1,0 +1,31 @@
+dataset_name: 'tcga'
+paths:
+  data_dir:
+    kich: "/home/mvu9/processing_datasets/processing_tcga/kich/features_fp"
+    kirc: "/home/mvu9/processing_datasets/processing_tcga/kirc/features_fp"
+    kirp: "/home/mvu9/processing_datasets/processing_tcga/kirp/features_fp"
+  save_dir: "/home/mvu9/processing_datasets/processing_tcga/"
+  result_dir: "/home/mvu9/processing_datasets/processing_tcga/results" # where we save all the check point
+  split_folder: "/home/mvu9/processing_datasets/processing_tcga/splits_csv"
+  for_ig_checkpoint_path: "/home/mvu9/processing_datasets/processing_tcga/result_2025-05-19_15-16-56/s_1_checkpoint.pt"
+embed_dim: 1024
+lr: 0.0001
+label_frac: 1.0
+reg: 0.00001
+seed: 42
+log_data: false
+testing: false
+early_stopping: false
+opt: adam
+drop_out: 0.25
+bag_loss: ce
+model_type: clam_sb
+exp_code: clam_tcga
+weighted_sample: false
+model_size: small
+no_inst_cluster: false
+inst_loss: null
+subtyping: false
+bag_weight: 0.7
+B: 8
+n_classes: 2
