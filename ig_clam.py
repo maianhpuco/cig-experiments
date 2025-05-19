@@ -55,12 +55,10 @@ def main(args):
     score_save_path = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}')
     os.makedirs(score_save_path, exist_ok=True)
 
-    # Load model from checkpoint using args and CLAM loader
     model = load_clam_model(args, args.paths['for_ig_checkpoint_path'], device=args.device)
 
-    # === Use split file to get test dataset only === #
     split_csv_path = os.path.join(args.paths['split_folder'], 'fold_1.csv')
-    _, _, test_dataset = return_splits_custom(
+    train_dataset, _, test_dataset = return_splits_custom(
         csv_path=split_csv_path,
         data_dir=args.paths['pt_files'],
         label_dict={'normal': 0, 'tumor': 1},
@@ -69,9 +67,11 @@ def main(args):
     )
 
     if args.do_normalizing:
-        with h5py.File(args.feature_mean_std_path, "r") as f:
-            mean = f["mean"][:]
-            std = f["std"][:]
+        print("[INFO] Recomputing mean and std from train set")
+        all_feats = [features for features, _, _ in train_dataset]
+        all_feats = np.concatenate([f[np.newaxis, ...] for f in all_feats], axis=0)
+        mean = all_feats.mean(axis=0)
+        std = all_feats.std(axis=0)
 
     print(">>>>>>>>>>>----- Total number of sample in test set:", len(test_dataset))
 
