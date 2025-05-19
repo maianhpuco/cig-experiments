@@ -114,7 +114,7 @@ def main(args):
             "call_model_function": call_model_function,
             "model": model,
             "baseline_features": stacked_features_baseline,
-            "memmap_path": args.paths['mempath'],
+            "memmap_path": args.paths['memmap_path'],
             "x_steps": 50,
         }
 
