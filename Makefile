@@ -76,7 +76,7 @@ group_adv: #error, running
 	make ig_clam_integrated_decision_gradient
 	make ig_clam_contrastive_gradient 
 
-group_square:
+group_square: #running, checking
 	make ig_clam_square_integrated_gradient
 	make ig_clam_optim_square_integrated_gradient
 # # error make ig_clam_integrated_decision_gradient, ig_clam_contrastive_gradientig_clam_square_integrated_gradient Run all methods
