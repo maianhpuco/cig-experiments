@@ -22,7 +22,8 @@ class IntegratedGradients(CoreSaliency):
         model = kwargs.get("model") 
         call_model_args = kwargs.get("call_model_args", None)
         baseline_features = kwargs.get("baseline_features", None)
-        x_steps = kwargs.get("x_steps", 25) 
+        x_steps = kwargs.get("x_steps", 25)
+        device = kwargs.get("device", "cpu")  
         
         attribution_values =  np.zeros_like(x_value, dtype=np.float32)
         # total_grad =  np.zeros_like(x_value, dtype=np.float32) 
@@ -37,8 +38,8 @@ class IntegratedGradients(CoreSaliency):
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
 
             x_step_batch = x_baseline_batch + alpha * x_diff
-            x_step_batch_tensor = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True)
-
+            x_step_batch_tensor = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True, device=device)
+            
             call_model_output = call_model_function(
                 x_step_batch_tensor,
                 model,
