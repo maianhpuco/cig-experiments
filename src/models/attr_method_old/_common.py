@@ -29,11 +29,6 @@ def PreprocessInputs(inputs):
 #     gradients = grads[0].detach().cpu().numpy()
 #     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
-
-'''
-FOR CLAM MODEL: 
-        # logits, Y_prob, Y_hat, _, instance_dict = model(data, label=label, instance_eval=True)  
-'''
 def call_model_function(images, model, call_model_args=None, expected_keys=None):
     """Compute model logits and gradients for saliency"""
     device = next(model.parameters()).device  # Get model's device (e.g., cuda:0)

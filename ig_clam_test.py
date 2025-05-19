@@ -137,7 +137,7 @@ def main(args):
         np.save(_save_path, scores.detach().cpu().numpy())
         # np.save(_save_path, scores)
         print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
-        # break
+        break
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -49,7 +49,7 @@ class IntegratedGradients(CoreSaliency):
 
             attribution_values += gradients_avg
 
-        x_diff = x_diff.reshape(-1, x_value.shape[-1]).to(device)  # (N, D)
+        x_diff = x_diff.reshape(-1, x_value.shape[-1])  # (N, D)
         attribution_values = attribution_values * x_diff
 
         return attribution_values.cpu().numpy() / x_steps

@@ -113,11 +113,6 @@ def main(args):
 
         stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
         print("stack features ", stacked_features_baseline.shape)
-        
-        stacked_features_baseline = (stacked_features_baseline.to(args.device, dtype=torch.float32) 
-                                    if isinstance(stacked_features_baseline, torch.Tensor) 
-                                    else torch.tensor(stacked_features_baseline, dtype=torch.float32, device=args.device))
-        
         kwargs = {
             "x_value": features,
             "call_model_function": call_model_function,
@@ -125,8 +120,7 @@ def main(args):
             "baseline_features": stacked_features_baseline,
             "memmap_path": memmap_path,
             "x_steps": 50,
-            "device": args.device, 
-            "call_model_args": {"target_class_idx": int(label)}
+            "device": args.device
         }
 
         attribution_values = attribution_method.GetMask(**kwargs)
@@ -134,11 +128,9 @@ def main(args):
         print("- Score result shape: ", scores.shape)
         
         _save_path = os.path.join(score_save_path, f'{basename}.npy')
-        np.save(_save_path, scores.detach().cpu().numpy())
-        # np.save(_save_path, scores)
+        np.save(_save_path, scores)
         print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
         # break
-    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry_run', type=int, default=0)
@@ -172,5 +164,4 @@ if __name__ == "__main__":
 
     main(args)
 
-        # CLAM model 
-        # logits, Y_prob, Y_hat, _, instance_dict = model(data, label=label, instance_eval=True) 
+
