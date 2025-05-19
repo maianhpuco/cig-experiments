@@ -38,7 +38,11 @@ class IntegratedGradients(CoreSaliency):
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
 
             x_step_batch = x_baseline_batch + alpha * x_diff
-            x_step_batch_tensor = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True, device=device)
+            
+            x_step_batch = x_step_batch.squeeze(0)   
+            x_step_batch_tensor = x_step_batch.clone().detach().requires_grad_(True).to(device)
+
+            # x_step_batch_tensor = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True, device=device)
             
             call_model_output = call_model_function(
                 x_step_batch_tensor,
