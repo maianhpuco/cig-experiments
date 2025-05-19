@@ -101,12 +101,12 @@ def main(args):
     print("-- Total number of sample in test set:", len(test_dataset))
 
     for idx, (features, label, coords) in enumerate(test_dataset):
-        # print("- Feature shape", features.shape)
-        # print("- label", label)
-        # print("- coords", coords)
+        print("- Feature shape", features.shape)
+        print("- label", label)
+        print("- coords", coords)
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         
-        # print("basename", basename)
+        print("basename", basename)
         print(f"Processing the file number {idx+1}/{len(test_dataset)}")
         
         start = time.time()
@@ -130,7 +130,7 @@ def main(args):
         _save_path = os.path.join(score_save_path, f'{basename}.npy')
         np.save(_save_path, scores)
         print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
-        # break
+        break
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry_run', type=int, default=0)
