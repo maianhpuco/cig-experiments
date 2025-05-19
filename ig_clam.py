@@ -16,10 +16,30 @@ sys.path.append(clf_path)
 
 from clam import load_clam_model  
 from attr_method._common import (
-    # sample_random_features,
     call_model_function
 ) 
 from src.datasets.classification.camelyon16 import return_splits_custom
+# from utils.utils import load_config
+
+def sample_random_features(dataset, num_files=20):
+    """
+    Randomly sample feature arrays from the dataset and stack them.
+    Returns:
+        stacked_features: torch.Tensor of shape (N, D)
+        selected_ids: list of sampled slide IDs
+    """
+    indices = np.random.choice(len(dataset), num_files, replace=False)
+    feature_list = []
+    selected_ids = []
+
+    for idx in indices:
+        features, _ = dataset[idx]
+        features = features if isinstance(features, torch.Tensor) else torch.tensor(features)
+        feature_list.append(features)
+        selected_ids.append(dataset.slide_data['slide_id'].iloc[idx])
+
+    stacked_features = torch.cat(feature_list, dim=0)
+    return stacked_features, selected_ids
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
@@ -67,7 +87,6 @@ def main(args):
 
     if args.do_normalizing:
         print("[INFO] Recomputing mean and std from train set")
-        # Aggregate all feature rows from train set
         all_feats = []
         for feats, _ in train_dataset:
             feats = feats if isinstance(feats, np.ndarray) else feats.numpy()
@@ -87,7 +106,7 @@ def main(args):
             print("----- normalizing")
             features = (features - mean) / (std + 1e-8)
 
-        stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=30)
+        stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
         stacked_features_baseline = stacked_features_baseline.numpy()
 
         kwargs = {
@@ -133,7 +152,7 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
-    args.do_normalizing = False
+    args.do_normalizing = True
 
     os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
