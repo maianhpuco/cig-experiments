@@ -39,7 +39,7 @@ ig_clam_expected_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name expected_gradient
 
 ig_clam_integrated_decision_gradient:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient 
 
 ig_clam_contrastive_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
@@ -48,6 +48,7 @@ ig_clam_vanilla_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name vanilla_gradient
 
 ig_clam_square_integrated_gradient:
+	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
 
 ig_clam_optim_square_integrated_gradient:

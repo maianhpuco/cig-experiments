@@ -56,7 +56,8 @@ def call_model_function(images, model, call_model_args=None, expected_keys=None)
         outputs=target_logit,
         inputs=images,
         grad_outputs=torch.ones_like(target_logit),
-        create_graph=False
+        create_graph=False, 
+        retain_graph=False
     )[0]
 
     gradients = grads.detach().cpu().numpy()
