@@ -130,7 +130,7 @@ def main(args):
         _save_path = os.path.join(score_save_path, f'{basename}.npy')
         np.save(_save_path, scores)
         print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
-
+        break
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry_run', type=int, default=0)

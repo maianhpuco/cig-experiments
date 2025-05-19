@@ -43,3 +43,21 @@ ig_clam_square_integrated_gradient:
 
 ig_clam_optim_square_integrated_gradient:
 	python ig_clam.py --config $(CONFIG_CAM) --ig_name optim_square_integrated_gradient
+
+
+# ----- Grouped Methods -----
+group_basic:
+	make ig_clam_integrated_gradient
+	make ig_clam_vanilla_gradient
+	make ig_clam_expected_gradient
+
+group_advanced:
+	make ig_clam_integrated_decision_gradient
+	make ig_clam_contrastive_gradient
+
+group_square:
+	make ig_clam_square_integrated_gradient
+	make ig_clam_optim_square_integrated_gradient
+
+# Run all methods
+all_ig_methods: group_basic group_advanced group_square
