@@ -51,7 +51,7 @@ group_basic:
 	make ig_clam_vanilla_gradient
 	make ig_clam_expected_gradient
 
-group_advanced:
+group_adv:
 	make ig_clam_integrated_decision_gradient
 	make ig_clam_contrastive_gradient
 
