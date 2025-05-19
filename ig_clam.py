@@ -20,7 +20,6 @@ from attr_method._common import (
     call_model_function
 ) 
 from src.datasets.classification.camelyon16 import return_splits_custom
-from utils.utils import load_config
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
