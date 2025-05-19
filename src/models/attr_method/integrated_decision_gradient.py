@@ -165,8 +165,8 @@ class IntegratedDecisionGradients(CoreSaliency):
 
             # Attribution gradient
             gradients_batch = call_model_output[INPUT_OUTPUT_GRADIENTS]  # Shape: (N, D)
-            gradients_avg = gradients_batch  # Assumed averaged already if necessary
-
+            # gradients_avg = gradients_batch  # Assumed averaged already if necessary
+            gradients_avg = torch.tensor(gradients_batch, dtype=torch.float32, device=device)
             # Finite difference slope
             if prev_logit is not None:
                 alpha_diff = alpha - new_alphas[step_idx - 1]
