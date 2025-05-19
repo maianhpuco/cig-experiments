@@ -66,6 +66,9 @@ dr_sig:
 	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
 
 
+dr_osig:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
+
 # ----- Grouped Methods -----
 group_basic: #done 
 	make ig_clam_integrated_gradient
