@@ -149,7 +149,7 @@ if __name__ == "__main__":
                         help='Choose the attribution method to use.')
     args = parser.parse_args()
 
-    with open(f'./configs_simea/{args.config}', 'r') as f:
+    with open(f'{args.config}', 'r') as f:
         config = yaml.safe_load(f)
 
     for key, val in config.items():
