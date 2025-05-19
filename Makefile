@@ -15,8 +15,6 @@ train_clam_camelyon16_4fold:
 
 train_clam_tcga_1fold:
 	@echo "Activating conda environment for simea .."
-	conda init && \
-	conda activate clam_env && \
 	python train_tcga.py --config configs_simea/clam_tcga.yaml --max_epochs 200 --k_start 1 --k_end 1
 
 train_clam_tcga_4fold:
