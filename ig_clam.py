@@ -20,6 +20,7 @@ from attr_method._common import (
     call_model_function
 ) 
 from src.datasets.classification.camelyon16 import return_splits_custom
+from utils.utils import load_config
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
@@ -51,17 +52,17 @@ def main(args):
 
     attribution_method = AttrMethod()
 
-    score_save_path = os.path.join(args.attribution_scores_folder, f'{args.ig_name}')
+    score_save_path = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}')
     os.makedirs(score_save_path, exist_ok=True)
 
     # Load model from checkpoint using args and CLAM loader
-    model = load_clam_model(args, args.checkpoint_path, device=args.device)
+    model = load_clam_model(args, args.paths['for_ig_checkpoint_path'], device=args.device)
 
     # === Use split file to get test dataset only === #
-    split_csv_path = os.path.join(args.split_folder, 'fold_1.csv')
+    split_csv_path = os.path.join(args.paths['split_folder'], 'fold_1.csv')
     _, _, test_dataset = return_splits_custom(
         csv_path=split_csv_path,
-        data_dir=args.pt_files,
+        data_dir=args.paths['pt_files'],
         label_dict={'normal': 0, 'tumor': 1},
         seed=args.seed,
         print_info=False
@@ -121,10 +122,15 @@ if __name__ == "__main__":
     with open(f'./configs_simea/{args.config_file}', 'r') as f:
         config = yaml.safe_load(f)
 
-    args.__dict__.update(config)
+    for key, val in config.items():
+        if key == 'paths':
+            args.paths = val
+        else:
+            setattr(args, key, val)
+
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     args.do_normalizing = True
 
-    os.makedirs(args.attribution_scores_folder, exist_ok=True)
+    os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
     main(args)
