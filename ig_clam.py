@@ -16,11 +16,10 @@ sys.path.append(clf_path)
 
 from clam import load_clam_model  
 from attr_method._common import (
-    sample_random_features,
+    # sample_random_features,
     call_model_function
 ) 
 from src.datasets.classification.camelyon16 import return_splits_custom
-# from utils.utils import load_config
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
@@ -88,7 +87,7 @@ def main(args):
             print("----- normalizing")
             features = (features - mean) / (std + 1e-8)
 
-        stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
+        stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=30)
         stacked_features_baseline = stacked_features_baseline.numpy()
 
         kwargs = {
