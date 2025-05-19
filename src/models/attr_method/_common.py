@@ -52,9 +52,9 @@ def call_model_function(images, model, call_model_args=None, expected_keys=None)
         create_graph=False
     )[0]
 
-    gradients = grads.detach().cpu().numpy()
+    # gradients = grads.detach().cpu().numpy()
 
-    return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
+    return {saliency.base.INPUT_OUTPUT_GRADIENTS: grads}
 
 def get_mean_std_for_normal_dist(dataset):
     # Initialize accumulators
