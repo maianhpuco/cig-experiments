@@ -9,6 +9,24 @@ import matplotlib.pyplot as plt
 # from attr_method._common import PreprocessInputs, call_model_function 
 
 
+def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
+    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor) 
+              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
+    
+    # CLAM model expects a single bag of features (N, D)
+    logits = model(inputs)  # Shape: (B, 2) or (2,)
+    
+    if INPUT_OUTPUT_GRADIENTS in expected_keys:
+        target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
+        if logits.dim() == 2:
+            target_output = logits[:, target_class_idx].sum()
+        else:
+            target_output = logits[target_class_idx].sum()
+        gradients = torch.autograd.grad(target_output, inputs)[0]
+        return {INPUT_OUTPUT_GRADIENTS: gradients}
+    
+    return logits
+
 def normalize_by_2norm(x):
     """Normalize gradients using L2 norm."""
     batch_size = x.shape[0]
