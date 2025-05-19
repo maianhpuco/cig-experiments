@@ -117,7 +117,7 @@ def main(args):
 
         stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
         # stacked_features_baseline = stacked_features_baseline.numpy()
-
+        print("stack features ", stacked_features_baseline.shape)
         kwargs = {
             "x_value": features,
             "call_model_function": call_model_function,

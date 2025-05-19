@@ -20,7 +20,6 @@ def call_model_function(images, model, call_model_args=None, expected_keys=None)
     gradients = grads[0].detach().cpu().numpy()
     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
-
 def get_mean_std_for_normal_dist(dataset):
     # Initialize accumulators
     feature_sum = None
