@@ -1,117 +1,141 @@
 import os
-import pandas as pd
-import torch
+import sys 
+import argparse
+import time
+import numpy as np
 import h5py
-from torch.utils.data import Dataset
+import torch
+import yaml
+import pickle
+from torch import nn
 
-class Generic_MIL_Dataset(Dataset):
-    def __init__(self,
-                 data_dir,
-                 csv_path=None,
-                 label_dict=None,
-                 case_ids=None,
-                 labels=None,
-                 seed=1,
-                 print_info=False,
-                 ignore=[],
-                 **kwargs):
-        """
-        Initialize the dataset for MIL classification, supporting .pt and .h5 feature files.
-        
-        Args:
-            data_dir (str or dict): Directory containing feature files (.pt or .h5).
-                                   If dict, maps source names to paths (e.g., {'camelyon16': 'path'}).
-            csv_path (str, optional): Path to CSV with 'slide_id' and 'label' columns.
-            label_dict (dict): Maps label strings to integers (e.g., {'normal': 0, 'tumor': 1}).
-            case_ids (list, optional): List of slide IDs (used with return_splits_custom).
-            labels (list, optional): List of labels (used with return_splits_custom).
-            shuffle (bool): Shuffle data (not used).
-            seed (int): Random seed.
-            print_info (bool): Print dataset info.
-            patient_strat (bool): Stratify by patient (not used).
-            ignore (list): Slides to ignore.
-            **kwargs: Additional arguments (for compatibility).
-        """
-        self.data_dir = data_dir
-        self.label_dict = label_dict
-        self.ignore = ignore
-        self.seed = seed
-        self.use_h5 = False
-        self.kwargs = kwargs
+ig_path = os.path.abspath(os.path.join("src/models"))
+clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
+sys.path.append(ig_path)   
+sys.path.append(clf_path)  
 
-        # Load slides and labels
-        if case_ids is not None and labels is not None:
-            self.slide_data = pd.DataFrame({
-                'slide_id': case_ids,
-                'label': labels
-            })
-        elif csv_path is not None:
-            df = pd.read_csv(csv_path)
-            self.slide_data = df[['slide_id', 'label']].copy()
+from clam import load_clam_model  
+from attr_method._common import (
+    sample_random_features,
+    call_model_function
+) 
+from src.datasets.classification.camelyon16 import return_splits_custom
+# from utils.utils import load_config
+
+def get_dummy_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--drop_out', type=float, default=0.25)
+    parser.add_argument('--n_classes', type=int, default=2)
+    parser.add_argument('--embed_dim', type=int, default=1024)
+    parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
+    parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
+    args = parser.parse_args(args=[])  # empty args for testing
+    return args
+
+def main(args):
+    if args.ig_name == 'integrated_gradient':
+        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
+    elif args.ig_name == 'vanilla_gradient':
+        from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
+    elif args.ig_name == 'contrastive_gradient':
+        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
+    elif args.ig_name == 'expected_gradient':
+        from attr_method.expected_gradient import ExpectedGradients as AttrMethod
+    elif args.ig_name == 'integrated_decision_gradient':
+        from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
+    elif args.ig_name == 'optim_square_integrated_gradient':
+        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
+    elif args.ig_name == 'square_integrated_gradient':
+        from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
+
+    print(f"Running for {args.ig_name} Attribution method")
+
+    attribution_method = AttrMethod()
+
+    score_save_path = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}')
+    os.makedirs(score_save_path, exist_ok=True)
+
+    model = load_clam_model(args, args.paths['for_ig_checkpoint_path'], device=args.device)
+
+    split_csv_path = os.path.join(args.paths['split_folder'], 'fold_1.csv')
+    train_dataset, _, test_dataset = return_splits_custom(
+        csv_path=split_csv_path,
+        data_dir=args.paths['pt_files'],
+        label_dict={'normal': 0, 'tumor': 1},
+        seed=args.seed,
+        print_info=False
+    )
+
+    if args.do_normalizing:
+        print("[INFO] Recomputing mean and std from train set")
+        # Aggregate all feature rows from train set
+        all_feats = []
+        for feats, _ in train_dataset:
+            feats = feats if isinstance(feats, np.ndarray) else feats.numpy()
+            all_feats.append(feats)
+        all_feats = np.concatenate(all_feats, axis=0)
+        mean = all_feats.mean(axis=0)
+        std = all_feats.std(axis=0)
+
+    print(">>>>>>>>>>>----- Total number of sample in test set:", len(test_dataset))
+
+    for idx, (features, label) in enumerate(test_dataset):
+        basename = test_dataset.slide_data['slide_id'].iloc[idx]
+        print(f"Processing the file number {idx+1}/{len(test_dataset)}")
+        start = time.time()
+
+        if args.do_normalizing:
+            print("----- normalizing")
+            features = (features - mean) / (std + 1e-8)
+
+        stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
+        stacked_features_baseline = stacked_features_baseline.numpy()
+
+        kwargs = {
+            "x_value": features,
+            "call_model_function": call_model_function,
+            "model": model,
+            "baseline_features": stacked_features_baseline,
+            "memmap_path": args.memmap_path,
+            "x_steps": 50,
+        }
+
+        attribution_values = attribution_method.GetMask(**kwargs)
+        scores = attribution_values.mean(1)
+        _save_path = os.path.join(score_save_path, f'{basename}.npy')
+        np.save(_save_path, scores)
+        print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dry_run', type=int, default=0)
+    parser.add_argument('--config_file', default='clam_camelyon16.yaml')
+    parser.add_argument('--ig_name',
+                        default='integrated_gradient',
+                        choices=[
+                            'integrated_gradient',
+                            'expected_gradient',
+                            'integrated_decision_gradient',
+                            'contrastive_gradient',
+                            'vanilla_gradient',
+                            'square_integrated_gradient',
+                            'optim_square_integrated_gradient'
+                        ],
+                        help='Choose the attribution method to use.')
+    args = parser.parse_args()
+
+    with open(f'./configs_simea/{args.config_file}', 'r') as f:
+        config = yaml.safe_load(f)
+
+    for key, val in config.items():
+        if key == 'paths':
+            args.paths = val
         else:
-            raise ValueError("Must provide either (csv_path) or (case_ids and labels).")
+            setattr(args, key, val)
 
-        # Filter out ignored slides
-        self.slide_data = self.slide_data[~self.slide_data['slide_id'].isin(ignore)]
+    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.do_normalizing = True
 
-        if print_info:
-            print("Loaded {} samples from {}".format(len(self.slide_data), data_dir))
+    os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
-    def load_from_h5(self, toggle):
-        """Toggle between .pt and .h5 file loading."""
-        self.use_h5 = toggle
-
-    def __len__(self):
-        return len(self.slide_data)
-
-    def __getitem__(self, idx):
-        slide_id = self.slide_data['slide_id'].iloc[idx]
-        label = self.slide_data['label'].iloc[idx]
-
-        # Determine data directory
-        if isinstance(self.data_dir, dict):
-            # Assume single source for simplicity; extend if needed
-            source = self.kwargs.get('source', list(self.data_dir.keys())[0])
-            data_dir = self.data_dir[source]
-        else:
-            data_dir = self.data_dir
-
-        if not data_dir:
-            return slide_id, label
-
-        if not self.use_h5:
-            full_path = os.path.join(data_dir, 'pt_files', f"{slide_id}.pt")
-            features = torch.load(full_path, weights_only=True)
-            return features, label
-        else:
-            full_path = os.path.join(data_dir, 'h5_files', f"{slide_id}.h5")
-            with h5py.File(full_path, 'r') as hdf5_file:
-                features = hdf5_file['features'][:]
-                coords = hdf5_file['coords'][:]
-            features = torch.from_numpy(features)
-            return features, label, coords
-
-def return_splits_custom(csv_path, data_dir, label_dict, seed=1, print_info=False):
-    """Create train, val, and test datasets from a custom split CSV."""
-    df = pd.read_csv(csv_path)
-
-    def create_dataset(col_case, col_label):
-        case_ids = df[col_case].dropna().tolist()
-        labels = df[col_label].dropna().astype(int).tolist()
-        return Generic_MIL_Dataset(
-            data_dir=data_dir,
-            case_ids=case_ids,
-            labels=labels,
-            label_dict=label_dict,
-            shuffle=False,
-            seed=seed,
-            print_info=print_info
-        )
-
-    train_dataset = create_dataset('train', 'train_label')
-    val_dataset = create_dataset('val', 'val_label')
-    test_dataset = create_dataset('test', 'test_label')
-
-    return train_dataset, val_dataset, test_dataset
-
-
+    main(args)
