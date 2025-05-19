@@ -13,6 +13,7 @@ class Generic_MIL_Dataset(Dataset):
                  labels=None,
                  seed=1,
                  print_info=False,
+                 use_h5=False, 
                  ignore=[],
                  **kwargs):
         """
@@ -36,7 +37,7 @@ class Generic_MIL_Dataset(Dataset):
         self.label_dict = label_dict
         self.ignore = ignore
         self.seed = seed
-        self.use_h5 = False
+        self.use_h5 = use_h5
         self.kwargs = kwargs
 
         # Load slides and labels
@@ -91,7 +92,7 @@ class Generic_MIL_Dataset(Dataset):
             features = torch.from_numpy(features)
             return features, label, coords
 
-def return_splits_custom(csv_path, data_dir, label_dict, seed=1, print_info=False):
+def return_splits_custom(csv_path, data_dir, label_dict, seed=1, print_info=False, use_h5=False):
     """Create train, val, and test datasets from a custom split CSV."""
     df = pd.read_csv(csv_path)
 
@@ -105,7 +106,8 @@ def return_splits_custom(csv_path, data_dir, label_dict, seed=1, print_info=Fals
             label_dict=label_dict,
             shuffle=False,
             seed=seed,
-            print_info=print_info
+            print_info=print_info, 
+            use_h5=use_h5
         )
 
     train_dataset = create_dataset('train', 'train_label')

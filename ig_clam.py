@@ -83,7 +83,8 @@ def main(args):
         data_dir=args.paths['pt_files'],
         label_dict={'normal': 0, 'tumor': 1},
         seed=args.seed,
-        print_info=False
+        print_info=False, 
+        use_h5=True
     )
 
     # if args.do_normalizing:
@@ -99,12 +100,12 @@ def main(args):
     print(">>>>>>>>>>>----- Total number of sample in test set:", len(test_dataset))
 
     for idx, (features, label, coords) in enumerate(test_dataset):
-        print(features)
-        print(label)
-        print(coords)
+        print("- Feature shape", features.shape)
+        print("- label", label)
+        print("- coords", coords)
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         
-        print(basename)
+        print("basename", basename)
         print(f"Processing the file number {idx+1}/{len(test_dataset)}")
         
         start = time.time()
