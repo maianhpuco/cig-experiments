@@ -125,7 +125,7 @@ def main(args):
             "baseline_features": stacked_features_baseline,
             "memmap_path": args.paths['memmap_path'],
             "x_steps": 50,
-            "device": args.device 
+
         }
 
         attribution_values = attribution_method.GetMask(**kwargs)
