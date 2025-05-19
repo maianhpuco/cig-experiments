@@ -41,7 +41,6 @@ def main(args):
     timestamp = get_timestamp_str()
 
     # Set paths from YAML
-    args.data_root_dir = cfg['paths']['pt_files']
     args.results_dir = os.path.join(cfg['paths']['save_dir'], f'result_{timestamp}_ep{args.max_epochs}')
     # args.split_dir = os.path.join(cfg['paths']['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
     split_folder =cfg['paths']['split_folder']
