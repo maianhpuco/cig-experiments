@@ -10,15 +10,37 @@ def PreprocessInputs(inputs):
     inputs = torch.tensor(inputs, dtype=torch.float32).clone().detach()
     return inputs.requires_grad_(True)
  
-def call_model_function(images, model, call_model_args=None, expected_keys=None):
-    """ Compute model logits and gradients """
-    images = PreprocessInputs(images)
-    model.eval()
-    logits = model(images, [images.shape[0]])
-    output = logits
-    grads = torch.autograd.grad(output, images, grad_outputs=torch.ones_like(output), create_graph=False)
-    gradients = grads[0].detach().cpu().numpy()
-    return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
+# def call_model_function(images, model, call_model_args=None, expected_keys=None):
+#     """ Compute model logits and gradients """
+#     images = PreprocessInputs(images)
+#     model.eval()
+#     logits = model(images, [images.shape[0]])
+#     output = logits
+#     grads = torch.autograd.grad(output, images, grad_outputs=torch.ones_like(output), create_graph=False)
+#     gradients = grads[0].detach().cpu().numpy()
+#     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
+
+def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
+    if not torch.is_tensor(inputs):
+        inputs = torch.tensor(inputs, dtype=torch.float32).clone().detach()
+    inputs = inputs.requires_grad_(True)
+
+    # Forward pass: returns a tuple in CLAM, so unpack appropriately
+    model_output = model(inputs, [inputs.shape[0]])
+    
+    if isinstance(model_output, tuple):
+        logits = model_output[0]  # or whichever output you want to use
+    else:
+        logits = model_output
+
+    grads = torch.autograd.grad(
+        logits,
+        inputs,
+        grad_outputs=torch.ones_like(logits),
+        create_graph=False
+    )[0]
+
+    return {saliency.base.INPUT_OUTPUT_GRADIENTS: grads}
 
 def get_mean_std_for_normal_dist(dataset):
     # Initialize accumulators
