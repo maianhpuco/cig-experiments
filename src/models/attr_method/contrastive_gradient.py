@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from attr_method._common import PreprocessInputs, call_model_function 
 
 class ContrastiveGradients(CoreSaliency):
-    """Efficient Integrated Gradients with Counterfactual Attribution"""
+    """Contrastive Gradient Attribution using counterfactual loss."""
 
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
@@ -28,22 +28,29 @@ class ContrastiveGradients(CoreSaliency):
         attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
         alphas = np.linspace(0, 1, x_steps)
 
+        # Sample random baseline for each patch
         sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
-        x_baseline_batch = baseline_features[sampled_indices]  # [1, N, D]
-        x_baseline_batch = x_baseline_batch.squeeze(0)         # [N, D]
-        x_diff = x_value - x_baseline_batch                    # [N, D]
+        x_baseline_batch = baseline_features[sampled_indices].squeeze(0)  # [N, D]
+        x_diff = x_value - x_baseline_batch                                # [N, D]
 
-        for alpha in tqdm(alphas, desc="Computing:", ncols=100):
-            # ------------ Counterfactual Gradient ------------ 
-            x_step_batch = x_baseline_batch + alpha * x_diff   # [N, D]
+        for alpha in tqdm(alphas, desc="Computing Contrastive Gradients", ncols=100):
+            # Interpolate
+            x_step_batch = x_baseline_batch + alpha * x_diff
             x_step_batch = x_step_batch.clone().detach().requires_grad_(True).to(device)
 
-            logits_x_r = model(x_baseline_batch, [x_baseline_batch.shape[0]])
-            logits_x_step = model(x_step_batch, [x_step_batch.shape[0]])
+            # Forward passes
+            logits_r = model(x_baseline_batch)
+            logits_step = model(x_step_batch)
 
-            logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
+            # Safely extract logits from tuple
+            logits_r = logits_r[0] if isinstance(logits_r, tuple) else logits_r
+            logits_step = logits_step[0] if isinstance(logits_step, tuple) else logits_step
+
+            # Compute contrastive loss: ||logits_diff||²
+            logits_difference = torch.norm(logits_step - logits_r, p=2) ** 2
             logits_difference.backward()
 
+            # Get gradients
             if x_step_batch.grad is None:
                 raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.")
 
@@ -51,10 +58,10 @@ class ContrastiveGradients(CoreSaliency):
             counterfactual_gradients = grad_logits_diff.mean(dim=0)  # [D]
             attribution_values += counterfactual_gradients
 
+        # Apply attribution
         x_diff_mean = x_diff.mean(dim=0)  # [D]
-        attribution_values = attribution_values * x_diff_mean
+        attribution_values = attribution_values * x_diff_mean  # [D]
 
         return attribution_values.detach().cpu().numpy() / x_steps
-
 
 

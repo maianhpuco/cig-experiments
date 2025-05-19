@@ -46,6 +46,9 @@ dr_integrated_decision_gradient:
 	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient
 
 
+dr_cig:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient
+
 # ----- Grouped Methods -----
 group_basic:
 	make ig_clam_integrated_gradient
