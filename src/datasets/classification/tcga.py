@@ -52,14 +52,14 @@ class Generic_MIL_Dataset(Dataset):
             full_path = os.path.join(data_dir, 'pt_files', f"{slide_id}.pt")
             print("Loading from: ", full_path)
             features = torch.load(full_path, weights_only=True)
-            return features, label
+            return features, self.label_dict[label], label
         else:
             full_path = os.path.join(data_dir, 'h5_files', f"{slide_id}.h5")
             with h5py.File(full_path, 'r') as hdf5_file:
                 features = hdf5_file['features'][:]
                 coords = hdf5_file['coords'][:]
             features = torch.from_numpy(features)
-            return features, label, coords
+            return features, self.label_dict[label], coords
 
 def return_splits_custom(
         train_csv_path, 
