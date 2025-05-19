@@ -101,12 +101,12 @@ def main(args):
     print("-- Total number of sample in test set:", len(test_dataset))
 
     for idx, (features, label, coords) in enumerate(test_dataset):
-        print("- Feature shape", features.shape)
-        print("- label", label)
-        print("- coords", coords)
+        # print("- Feature shape", features.shape)
+        # print("- label", label)
+        # print("- coords", coords)
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         
-        print("basename", basename)
+        # print("basename", basename)
         print(f"Processing the file number {idx+1}/{len(test_dataset)}")
         
         start = time.time()

@@ -11,7 +11,6 @@ from attr_method._common import PreprocessInputs, call_model_function
 
 class IntegratedDecisionGradients(CoreSaliency):
     """Integrated Decision Gradients with alpha redistribution and slope-weighted integration."""
-
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
     @staticmethod
@@ -20,16 +19,18 @@ class IntegratedDecisionGradients(CoreSaliency):
         logits = torch.zeros(x_steps, device=device)
         slopes = torch.zeros(x_steps, device=device)
 
-        x_diff = x_value - x_baseline_batch  # shape: [N, D]
+        x_diff = x_value - x_baseline_batch  # [N, D]
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing IG", ncols=100)):
             x_step_batch = x_baseline_batch + alpha * x_diff
             x_step_batch_tensor = x_step_batch.clone().detach().requires_grad_(True).to(device)
-            logit = model(x_step_batch_tensor, [x_step_batch_tensor.shape[0]])
+
+            model_output = model(x_step_batch_tensor, [x_step_batch_tensor.shape[0]])
+            logit = model_output[0] if isinstance(model_output, tuple) else model_output
             logits[step_idx] = logit.squeeze()
 
         x_diff_value = float(alphas[1] - alphas[0])
-        slopes[1:] = (logits[1:] - logits[:-1]) / x_diff_value
+        slopes[1:] = (logits[1:] - logits[:-1]) / (x_diff_value + 1e-9)
         slopes[0] = 0
         return slopes, x_diff_value, logits
 
@@ -37,9 +38,9 @@ class IntegratedDecisionGradients(CoreSaliency):
     def getAlphaParameters(slopes, steps, step_size):
         slopes_0_1_norm = (slopes - torch.min(slopes)) / (torch.max(slopes) - torch.min(slopes) + 1e-8)
         slopes_0_1_norm[0] = 0
-        slopes_sum_1_norm = slopes_0_1_norm / torch.sum(slopes_0_1_norm + 1e-8)
+        slopes_sum_1_norm = slopes_0_1_norm / (torch.sum(slopes_0_1_norm) + 1e-8)
 
-        sample_placements_float = torch.mul(slopes_sum_1_norm, steps)
+        sample_placements_float = slopes_sum_1_norm * steps
         sample_placements_int = sample_placements_float.floor().int()
         remaining_to_fill = steps - torch.sum(sample_placements_int)
 
@@ -79,10 +80,13 @@ class IntegratedDecisionGradients(CoreSaliency):
 
         sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
         x_baseline_batch = baseline_features[sampled_indices].squeeze(0)  # [N, D]
-        x_value_flat = x_value.reshape(-1, x_value.shape[-1])
-        x_baseline_batch_flat = x_baseline_batch.reshape(-1, x_baseline_batch.shape[-1])
 
-        slopes, x_diff_value, logits = self.getSlopes(x_baseline_batch_flat, x_value_flat, model, x_steps, device)
+        slopes, x_diff_value, _ = self.getSlopes(
+            x_baseline_batch.reshape(-1, x_baseline_batch.shape[-1]),
+            x_value.reshape(-1, x_value.shape[-1]),
+            model, x_steps, device
+        )
+
         new_alphas, alpha_substep_size = self.getAlphaParameters(slopes, x_steps, 1.0 / x_steps)
         alphas_np = new_alphas.detach().cpu().numpy()
         alpha_substep_size_np = alpha_substep_size.detach().cpu().numpy()
@@ -103,8 +107,11 @@ class IntegratedDecisionGradients(CoreSaliency):
                 expected_keys=self.expected_keys
             )
 
-            logit = model(x_step_batch_tensor, [x_step_batch_tensor.shape[0]]).detach().squeeze()
-            gradients_batch = call_model_output[INPUT_OUTPUT_GRADIENTS]  # expected: np.ndarray
+            model_output = model(x_step_batch_tensor, [x_step_batch_tensor.shape[0]])
+            logit = model_output[0] if isinstance(model_output, tuple) else model_output
+            logit = logit.detach().squeeze()
+
+            gradients_batch = call_model_output[INPUT_OUTPUT_GRADIENTS]
             gradients_avg = torch.tensor(gradients_batch, device=device).mean(dim=0)
 
             idx = step_idx - 1
@@ -116,5 +123,5 @@ class IntegratedDecisionGradients(CoreSaliency):
             weighted_grad = gradients_avg * slopes_np[idx] * alpha_substep_size_np[idx]
             _integrated_gradient += weighted_grad
 
-        attribution_values = _integrated_gradient * x_diff  # element-wise mult
+        attribution_values = _integrated_gradient * x_diff  # element-wise
         return attribution_values.detach().cpu().numpy()

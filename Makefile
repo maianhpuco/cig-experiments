@@ -42,6 +42,9 @@ ig_clam_square_integrated_gradient:
 ig_clam_optim_square_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
 
+dr_integrated_decision_gradient:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient
+
 
 # ----- Grouped Methods -----
 group_basic:
@@ -56,6 +59,5 @@ group_adv:
 group_square:
 	make ig_clam_square_integrated_gradient
 	make ig_clam_optim_square_integrated_gradient
-# error make ig_clam_integrated_decision_gradient, ig_clam_contrastive_gradient 
-# Run all methods
-all_ig_methods: group_basic group_advanced group_square
+# # error make ig_clam_integrated_decision_gradient, ig_clam_contrastive_gradientig_clam_square_integrated_gradient Run all methods
+# all_ig_methods: group_basic group_advanced group_square
