@@ -1,8 +1,9 @@
 import os 
 import sys 
 import torch
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")) 
-clam_path = os.path.join(base_path,"src/externals/CLAM")
+# base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")) 
+# clam_path = os.path.join(base_path,"src/externals/CLAM")
+clam_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../externals/CLAM"))
 
 sys.path.append(clam_path)
 
