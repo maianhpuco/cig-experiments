@@ -134,8 +134,13 @@ def main(args):
         print("- Score result shape: ", scores.shape)
         
         _save_path = os.path.join(score_save_path, f'{basename}.npy')
-        np.save(_save_path, scores.detach().cpu().numpy())
+        # np.save(_save_path, scores.detach().cpu().numpy())
         # np.save(_save_path, scores)
+        
+        if isinstance(scores, torch.Tensor):
+            scores = scores.detach().cpu().numpy()
+        np.save(_save_path, scores)
+
         print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
         break
     
