@@ -17,10 +17,10 @@ sys.path.append(ig_path)
 sys.path.append(clf_path)  
 
 from clam import load_clam_model  
-from attr_method._common import (
-    sample_random_features,
-    call_model_function
-) 
+# from attr_method._common import (
+#     sample_random_features,
+#     call_model_function
+# ) 
 # from data.ig_dataset import IG_dataset
 # from utils.utils import load_pkl
 # from utils.models.model_utils import get_clam_model
