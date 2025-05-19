@@ -44,13 +44,10 @@ class Generic_MIL_Dataset(Dataset):
         slide_id = self.slide_data['slide_id'].iloc[idx]
         label = self.slide_data['label'].iloc[idx]
 
-        print("Loading slide_id: ", idx, label, slide_id)
-
         data_dir = self.data_dir_map[label.lower()]
 
         if not self.use_h5:
             full_path = os.path.join(data_dir, 'pt_files', f"{slide_id}.pt")
-            print("Loading from: ", full_path)
             features = torch.load(full_path, weights_only=True)
             return features, self.label_dict[label], label
         else:
