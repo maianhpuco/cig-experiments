@@ -36,25 +36,38 @@ class IntegratedDecisionGradients(CoreSaliency):
         logits = torch.zeros(x_steps, device=device)
         slopes = torch.zeros(x_steps, device=device)
 
-        x_diff = x_value - x_baseline_batch  # [N, D]
+        x_diff = x_value - x_baseline_batch  # Shape: [N, D]
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing Slopes", ncols=100)):
+            # Interpolate between baseline and input
             x_step_batch = x_baseline_batch + alpha * x_diff
-            x_step_batch = x_step_batch.clone().detach().requires_grad_(True)
+            x_step_batch = x_step_batch.clone().detach().requires_grad_(True).to(device)
 
-            model_output = model(x_step_batch)  # Single bag, shape (N, D)
-            print("====== debug ======")
-            print(len(model_output))
-            
-            logit = model_output[0, target_class_idx] if model_output.dim() == 2 else model_output[target_class_idx]
+            # Forward pass: CLAM returns a tuple
+            model_output = model(x_step_batch)
+
+            # Safely extract logits from model output tuple
+            if isinstance(model_output, tuple):
+                logits_tensor = model_output[0]  # shape: (1, num_classes)
+            else:
+                logits_tensor = model_output
+
+            # Select the target class logit
+            if logits_tensor.dim() == 2:
+                logit = logits_tensor[0, target_class_idx]
+            else:
+                logit = logits_tensor[target_class_idx]
+
             logits[step_idx] = logit
-            print("==== DEBUG ==== ")
-            print("model_output shape:", model_output.shape)
-            print("logit shape:", logit.shape) 
+
+            # Optional debug
+            # print(f"step {step_idx} | logit: {logit.item()} | shape: {logits_tensor.shape}")
+
+        # Compute slopes with finite differences
         x_diff_value = float(alphas[1] - alphas[0])
         slopes[1:] = (logits[1:] - logits[:-1]) / (x_diff_value + 1e-9)
-        slopes[0] = 0
-        
+        slopes[0] = 0  # first slope is 0
+
         return slopes, x_diff_value, logits
 
     @staticmethod

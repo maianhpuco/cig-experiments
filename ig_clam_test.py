@@ -171,4 +171,5 @@ if __name__ == "__main__":
 
     main(args)
 
-
+        # CLAM model 
+        # logits, Y_prob, Y_hat, _, instance_dict = model(data, label=label, instance_eval=True) 
