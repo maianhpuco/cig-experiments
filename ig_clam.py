@@ -68,7 +68,7 @@ def main(args):
 
     if args.do_normalizing:
         print("[INFO] Recomputing mean and std from train set")
-        all_feats = [features for features, _, _ in train_dataset]
+        all_feats = [features for features, _ in train_dataset]
         all_feats = np.concatenate([f[np.newaxis, ...] for f in all_feats], axis=0)
         mean = all_feats.mean(axis=0)
         std = all_feats.std(axis=0)
