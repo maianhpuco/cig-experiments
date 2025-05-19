@@ -20,7 +20,7 @@ from attr_method._common import (
     call_model_function
 ) 
 from src.datasets.classification.camelyon16 import return_splits_custom
-# from utils.utils import load_config
+from utils.utils import load_config
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
@@ -68,8 +68,11 @@ def main(args):
 
     if args.do_normalizing:
         print("[INFO] Recomputing mean and std from train set")
-        all_feats = [features for features, _ in train_dataset]
-        all_feats = np.concatenate([f[np.newaxis, ...] for f in all_feats], axis=0)
+        all_feats = []
+        for f, _, _ in train_dataset:
+            f = f.astype(np.float32)
+            all_feats.append(f[np.newaxis, :])
+        all_feats = np.concatenate(all_feats, axis=0)
         mean = all_feats.mean(axis=0)
         std = all_feats.std(axis=0)
 
