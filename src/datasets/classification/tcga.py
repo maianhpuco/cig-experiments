@@ -50,6 +50,7 @@ class Generic_MIL_Dataset(Dataset):
 
         if not self.use_h5:
             full_path = os.path.join(data_dir, 'pt_files', f"{slide_id}.pt")
+            print("Loading from: ", full_path)
             features = torch.load(full_path, weights_only=True)
             return features, label
         else:
