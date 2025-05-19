@@ -5,13 +5,12 @@ import torch
 # clam_path = os.path.join(base_path,"src/externals/CLAM")
 clam_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../externals/CLAM"))
 sys.path.append(clam_path)
-
+print("CLAM path added:", clam_path)
 from models.model_clam import CLAM_SB, CLAM_MB
 from models.model_mil import MIL_fc, MIL_fc_mc
 from utils.utils import print_network
 
-print("CLAM path added:", base_path)
-print("Files:", os.listdir(base_path)) 
+
 
 def load_clam_model(args, ckpt_path, device='cuda'):
     print('[INFO] Initializing CLAM model from checkpoint:', ckpt_path)
