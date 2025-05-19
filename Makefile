@@ -56,7 +56,7 @@ ig_clam_optim_square_integrated_gradient:
 
 dr_idg:
 	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --device cpu
 
 
 dr_cig:

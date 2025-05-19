@@ -172,7 +172,7 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
-
+    args.device = "cpu"
     os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
     main(args)
