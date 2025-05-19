@@ -14,7 +14,7 @@ from utils.utils import print_network
 
 def load_clam_model(args, ckpt_path, device='cuda'):
     print('[INFO] Initializing CLAM model from checkpoint:', ckpt_path)
-
+    
     model_dict = {
         "dropout": args.drop_out,
         "n_classes": args.n_classes,
