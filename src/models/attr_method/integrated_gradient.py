@@ -24,8 +24,10 @@ class IntegratedGradients(CoreSaliency):
         baseline_features = kwargs.get("baseline_features", None)
         x_steps = kwargs.get("x_steps", 25)
         device = kwargs.get("device", "cpu")  
-        
-        attribution_values =  np.zeros_like(x_value, dtype=np.float32)
+
+        attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
+ 
+        # attribution_values =  np.zeros_like(x_value, dtype=np.float32)
         # total_grad =  np.zeros_like(x_value, dtype=np.float32) 
         alphas = np.linspace(0, 1, x_steps)
         # print(">>>> Use the zero baseline")
@@ -57,9 +59,14 @@ class IntegratedGradients(CoreSaliency):
             
             gradients_avg = gradients_batch.reshape(-1, x_value.shape[-1])
             attribution_values += gradients_avg 
-            
-        x_diff = x_diff.reshape(-1, x_value.shape[-1])  
         
-        attribution_values = attribution_values * x_diff 
+        
+        x_diff = x_diff.reshape(-1, x_value.shape[-1])
+        attribution_values = attribution_values * x_diff
+        return attribution_values.cpu().numpy() / x_steps
+     
+        # x_diff = x_diff.reshape(-1, x_value.shape[-1])  
+        
+        # attribution_values = attribution_values * x_diff 
             
-        return attribution_values / x_steps
+        # return attribution_values / x_steps

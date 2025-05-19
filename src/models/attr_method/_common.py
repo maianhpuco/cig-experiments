@@ -5,11 +5,20 @@ import numpy as np
 from tqdm import tqdm 
 import random 
 
+# def PreprocessInputs(inputs):
+#     """ Convert inputsa to a PyTorch tensor and enable gradient tracking """
+#     inputs = torch.tensor(inputs, dtype=torch.float32).clone().detach()
+#     return inputs.requires_grad_(True)
 def PreprocessInputs(inputs):
-    """ Convert inputsa to a PyTorch tensor and enable gradient tracking """
-    inputs = torch.tensor(inputs, dtype=torch.float32).clone().detach()
-    return inputs.requires_grad_(True)
- 
+    """
+    Convert inputs to a PyTorch tensor with gradient tracking.
+    This avoids unnecessary use of `torch.tensor()` on a tensor and ensures safe usage.
+    """
+    if isinstance(inputs, torch.Tensor):
+        return inputs.clone().detach().requires_grad_(True)
+    else:
+        return torch.tensor(inputs, dtype=torch.float32, requires_grad=True)
+  
 # def call_model_function(images, model, call_model_args=None, expected_keys=None):
 #     """ Compute model logits and gradients """
 #     images = PreprocessInputs(images)
