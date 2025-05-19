@@ -24,9 +24,7 @@ from src.datasets.classification.camelyon16 import return_splits_custom
 def sample_random_features(dataset, num_files=20):
     """
     Randomly sample feature arrays from the dataset and stack them.
-    Returns:
-        stacked_features: torch.Tensor of shape (N, D)
-        selected_ids: list of sampled slide IDs
+    Handles variable-length inputs by selecting a fixed number of patches from each.
     """
     indices = np.random.choice(len(dataset), num_files, replace=False)
     feature_list = []
@@ -35,12 +33,14 @@ def sample_random_features(dataset, num_files=20):
     for idx in indices:
         features, _ = dataset[idx]
         features = features if isinstance(features, torch.Tensor) else torch.tensor(features)
+        if features.size(0) > 128:
+            features = features[:128]
         feature_list.append(features)
         selected_ids.append(dataset.slide_data['slide_id'].iloc[idx])
 
     padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
     flattened = padded.view(-1, padded.size(-1))
-    return flattened, selected_ids
+    return flattened, selected_idsurn flattened, selected_ids
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
