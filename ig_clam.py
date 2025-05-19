@@ -31,8 +31,8 @@ def sample_random_features(dataset, num_files=20):
     selected_ids = []
 
     for idx in indices:
-        features, _, _ = dataset[idx]
-        features = features if isinstance(features, torch.Tensor) else torch.tensor(features)
+        features, _, _ = dataset[idx]  # Unpack three elements
+        features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
         if features.size(0) > 128:
             features = features[:128]
         feature_list.append(features)
@@ -41,6 +41,7 @@ def sample_random_features(dataset, num_files=20):
     padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
     flattened = padded.view(-1, padded.size(-1))
     return flattened, selected_ids
+
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
