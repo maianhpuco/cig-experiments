@@ -40,9 +40,11 @@ class Generic_MIL_Dataset(Dataset):
         return len(self.slide_data)
 
     def __getitem__(self, idx):
-        print("Loading slide_id: ", idx, self.slide_data['slide_id'].iloc[idx])
+        
         slide_id = self.slide_data['slide_id'].iloc[idx]
         label = self.slide_data['label'].iloc[idx]
+
+        print("Loading slide_id: ", idx, label, slide_id)
 
         data_dir = self.data_dir_map[label.lower()]
 
