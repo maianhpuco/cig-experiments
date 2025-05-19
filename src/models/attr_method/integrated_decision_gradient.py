@@ -43,6 +43,9 @@ class IntegratedDecisionGradients(CoreSaliency):
             x_step_batch = x_step_batch.clone().detach().requires_grad_(True)
 
             model_output = model(x_step_batch)  # Single bag, shape (N, D)
+            print("====== debug ======")
+            print(model_output.shape)
+            
             logit = model_output[0, target_class_idx] if model_output.dim() == 2 else model_output[target_class_idx]
             logits[step_idx] = logit
             print("==== DEBUG ==== ")
@@ -51,6 +54,7 @@ class IntegratedDecisionGradients(CoreSaliency):
         x_diff_value = float(alphas[1] - alphas[0])
         slopes[1:] = (logits[1:] - logits[:-1]) / (x_diff_value + 1e-9)
         slopes[0] = 0
+        
         return slopes, x_diff_value, logits
 
     @staticmethod
