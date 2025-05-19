@@ -44,7 +44,7 @@ class IntegratedDecisionGradients(CoreSaliency):
 
             model_output = model(x_step_batch)  # Single bag, shape (N, D)
             print("====== debug ======")
-            print(model_output.shape)
+            print(len(model_output))
             
             logit = model_output[0, target_class_idx] if model_output.dim() == 2 else model_output[target_class_idx]
             logits[step_idx] = logit
