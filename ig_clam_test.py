@@ -113,6 +113,11 @@ def main(args):
 
         stacked_features_baseline, _ = sample_random_features(test_dataset, num_files=20)
         print("stack features ", stacked_features_baseline.shape)
+        
+        stacked_features_baseline = (stacked_features_baseline.to(args.device, dtype=torch.float32) 
+                                    if isinstance(stacked_features_baseline, torch.Tensor) 
+                                    else torch.tensor(stacked_features_baseline, dtype=torch.float32, device=args.device))
+        
         kwargs = {
             "x_value": features,
             "call_model_function": call_model_function,
@@ -120,7 +125,8 @@ def main(args):
             "baseline_features": stacked_features_baseline,
             "memmap_path": memmap_path,
             "x_steps": 50,
-            "device": args.device
+            "device": args.device, 
+            "call_model_args": {"target_class_idx": int(label)}
         }
 
         attribution_values = attribution_method.GetMask(**kwargs)
@@ -131,6 +137,7 @@ def main(args):
         np.save(_save_path, scores)
         print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
         break
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry_run', type=int, default=0)
