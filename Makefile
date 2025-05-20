@@ -169,15 +169,15 @@ group_cam_basic:
 	make ig_clam_integrated_decision_gradient
 	
 group_cam_adv:
-	make ig_clam_contrastive_gradient
-	make ig_clam_square_integrated_gradient
-	make ig_clam_optim_square_integrated_gradient
+	make ig_clam_contrastive_gradient # 
+	make ig_clam_square_integrated_gradient # 
+	make ig_clam_optim_square_integrated_gradient # 
 
 #===========PLOT IG ============== 
-plot_cam_contrastive_gradient: 
+plot_cam_integrated_gradient: 
 	python ig_clam_plot.py \
 	--config configs_simea/clam_camelyon16.yaml \
-	--ig_name contrastive_gradient \
+	--ig_name integrated_gradient \
 	--start_fold 1 \
 	--end_fold 1 
 
