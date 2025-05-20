@@ -45,11 +45,11 @@ def inspect_scores_for_class(args, method, fold, class_id, score_dir):
             continue
 
         raw_scores = np.load(score_path)
-        normalized_scores = min_max_scale(replace_outliers_with_bounds(raw_scores.copy()))        print(f"  📐 Shape         : {normalized_scores.shape}")
-        
-        print(f"  🔢 First 3 values: {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
-        print(f"  🧮 Average       : {np.mean(normalized_scores):.6f}")
-        print(f"  🔎 Non-zero count: {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}")
+        normalized_scores = min_max_scale(replace_outliers_with_bounds(raw_scores.copy()))        
+        print(f"  >  Shape          : {normalized_scores.shape}")
+        print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
+        print(f"  >  Average        : {np.mean(normalized_scores):.6f}")
+        print(f"  >  Non-zero count : {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}")
 
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
