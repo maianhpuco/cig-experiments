@@ -420,7 +420,7 @@ def plot_heatmap_nobbox(
     patch_size=256):  # <-- Default patch size in pixels
     
     # Define colormap
-    cmap = cm.get_cmap('jet')
+    cmap = cm.get_cmap('coolwarm')
     norm = plt.Normalize(vmin=np.min(scores), vmax=np.max(scores))
 
     # Create figure and white canvas
@@ -449,7 +449,7 @@ def plot_heatmap_nobbox(
             facecolor=color,
         )
         ax.add_patch(rect)
-
+        ax.axis('off')
     # Add colorbar
     # fig.colorbar(cm.ScalarMappable(cmap=cmap, norm=norm), ax=ax, label='Score Value')
 
@@ -460,3 +460,4 @@ def plot_heatmap_nobbox(
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(save_path, bbox_inches='tight', dpi=300)
         print(f"✅ Saved heatmap to {save_path}")   
+    plt.close(fig) 

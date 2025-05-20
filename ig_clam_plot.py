@@ -64,9 +64,9 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         scores = np.load(score_path)
 
         # ✅ Apply preprocessing: clip outliers and scale to [0, 1]
-        clipped_scores = replace_outliers_with_bounds(scores.copy())
-        scaled_scores = min_max_scale(clipped_scores)
-
+        # clipped_scores = replace_outliers_with_bounds(scores.copy())
+        # scaled_scores = min_max_scale(clipped_scores)
+        scaled_scores = scores.copy() 
         # ✅ Plot heatmap
         save_path = os.path.join(plot_dir, f"{basename}.png")
         plot_heatmap_nobbox(
