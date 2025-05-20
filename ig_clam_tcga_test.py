@@ -196,15 +196,19 @@ def main(args):
             }
 
             attribution_values = attribution_method.GetMask(**kwargs)
+            print("====> investigate result of attribution method") 
+            print(attribution_values.shape)        
+        
+        
             scores = attribution_values.mean(1)
             print("- Score result shape: ", scores.shape)
             # ==========saving the score result ============== 
               # Create directory for attribution scores
-            score_save_path = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{i}')
+            score_save_path = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{fold_id}')
             if os.path.exists(score_save_path):
                 shutil.rmtree(score_save_path)  # Remove if exists
             os.makedirs(score_save_path, exist_ok=True)
- 
+            
             # print("- Score result mean: ", scores.mean())
             _save_path = os.path.join(score_save_path, f'{basename}.npy')
             # np.save(_save_path, scores.detach().cpu().numpy())
@@ -212,7 +216,7 @@ def main(args):
             
             if isinstance(scores, torch.Tensor):
                 scores = scores.detach().cpu().numpy()
-            np.save(_save_path, scores)
+            # np.save(_save_path, scores)
 
             print(f"Done save result numpy file at shape {scores.shape} at {_save_path}")
             # ==========saving the score result ==============  
