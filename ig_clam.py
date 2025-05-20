@@ -132,7 +132,7 @@ def main(args):
 
                     print(f"✅ Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
-                break
+                # break
 
     elif args.dataset_name == 'camelyon16':
         for fold_id in range(1, 2):
@@ -184,7 +184,7 @@ def main(args):
 
                     print(f"✅ Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
-                break
+                # break
 
 
 
