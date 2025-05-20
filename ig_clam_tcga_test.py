@@ -120,22 +120,38 @@ def main(args):
             test_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
 
             train_dataset, val_dataset, test_dataset = return_splits_custom(
-                            train_csv_path,
-                            val_csv_path,
-                            test_csv_path,
-                            data_dir_map=data_dir_map,
-                            label_dict= label_dict,  # This won't affect direct labels
-                            # seed=42,
-                            print_info=False
-                        )
+                train_csv_path,
+                val_csv_path,
+                test_csv_path,
+                data_dir_map=data_dir_map,
+                label_dict= label_dict,  # This won't affect direct labels
+                # seed=42,
+                print_info=False
+                )
             print("-- Total number of samples in test set:", len(test_dataset)) 
             args.n_classes = 3  
             
             # ====== load the clam model's weight base in the fold id ======
             model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
             # ====== load the clam model's weight base in the fold id ====== 
+        
+        #======= check dataset
+        for idx, (features, label, coords) in enumerate(test_dataset):
+            basename = test_dataset.slide_data['slide_id'].iloc[idx]
+            print(f"\n Processing sample {idx+1}/{len(test_dataset)}: {basename}")
             
-             
+            features = features.to(args.device, dtype=torch.float32).unsqueeze(0)  # shape: [1, N, D]
+            
+            with torch.no_grad():
+                logits, Y_prob, Y_hat, _, instance_dict = model(features, label=torch.tensor([label]))
+            
+            print("Logits:        ", logits.cpu().numpy())
+            print("Probabilities: ", Y_prob.cpu().numpy())
+            print("Prediction:    ", Y_hat.cpu().item())
+            print("Ground truth:  ", label)
+            break
+        #======= check dataset
+        
         for idx, (features, label, coords) in enumerate(test_dataset):
             # print("- Feature shape", features.shape)
             # print("- label", label)
