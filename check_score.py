@@ -12,6 +12,26 @@ def load_config(config_file):
         config = yaml.safe_load(f)
     return config 
 
+def replace_outliers_with_bounds(array):
+    q1 = np.percentile(array, 25)
+    q3 = np.percentile(array, 75)
+    iqr = q3 - q1
+
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+
+    array = np.where(array < lower_bound, lower_bound, array)
+    array = np.where(array > upper_bound, upper_bound, array)
+
+    return array
+
+def min_max_scale(array):
+    min_val = np.min(array)
+    max_val = np.max(array)
+    if max_val - min_val == 0:
+        return np.zeros_like(array)
+    return (array - min_val) / (max_val - min_val)
+
 def inspect_scores_for_class(args, method, fold, class_id, score_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))[:3]  # only first 3
     print(f"[Fold {fold} | Class {class_id}] Inspecting {len(all_scores_paths)} score files")
@@ -24,12 +44,12 @@ def inspect_scores_for_class(args, method, fold, class_id, score_dir):
             print(f"  ⚠️  Score file not found: {score_path}, skipping.")
             continue
 
-        scores = np.load(score_path)
-
-        print(f"  📐 Shape         : {scores.shape}")
-        print(f"  🔢 First 3 values: {[float(f'{s:.6f}') for s in scores[:3]]}")
-        print(f"  🧮 Average       : {np.mean(scores):.6f}")
-        print(f"  🔎 Non-zero count: {np.count_nonzero(scores)} / {len(scores)}")
+        raw_scores = np.load(score_path)
+        normalized_scores = min_max_scale(replace_outliers_with_bounds(raw_scores.copy()))        print(f"  📐 Shape         : {normalized_scores.shape}")
+        
+        print(f"  🔢 First 3 values: {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
+        print(f"  🧮 Average       : {np.mean(normalized_scores):.6f}")
+        print(f"  🔎 Non-zero count: {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}")
 
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
