@@ -135,7 +135,7 @@ def main(args):
             # ====== load the clam model's weight base in the fold id ======
             model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
             # ====== load the clam model's weight base in the fold id ====== 
-        
+                    
             #======= check dataset
             for idx, (features, label, coords) in enumerate(test_dataset):
                 basename = test_dataset.slide_data['slide_id'].iloc[idx]
@@ -144,23 +144,25 @@ def main(args):
                 # Inspect feature and coordinate shapes
                 print(">>> Features shape:", features.shape)  # [N, D]
                 print(">>> Label (raw):", label)
+                # print(">>> Coords shape:", coords.shape)
+                # print(">>> First 5 Coords:\n", coords[:5])
 
-                # Move features and label to device
-                features = features.to(args.device, dtype=torch.float32).unsqueeze(0)  # [1, N, D]
-                label = torch.tensor([label], dtype=torch.long, device=args.device)
+                # Move to device
+                features = features.to(args.device, dtype=torch.float32)  # shape: [N, D]
+                label = torch.tensor(label, dtype=torch.long, device=args.device)
 
                 # Run model
                 with torch.no_grad():
                     logits, Y_prob, Y_hat, _, instance_dict = model(features, label=label)
 
                 # Print results
-                print("Logits:        ", logits.squeeze(0).cpu().numpy())
-                print("Probabilities: ", Y_prob.squeeze(0).cpu().numpy())
+                print("Logits:        ", logits.cpu().numpy())
+                print("Probabilities: ", Y_prob.cpu().numpy())
                 print("Prediction:    ", Y_hat.item())
                 print("Ground Truth:  ", label.item())
-
                 break
             #======= check dataset
+            
             
 
         
