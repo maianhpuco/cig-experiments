@@ -174,9 +174,10 @@ group_cam_adv:
 	make ig_clam_optim_square_integrated_gradient
 
 #===========PLOT IG ============== 
-python ig_clam_plot.py \
-  --config config/camelyon16.yaml \
-  --ig_name contrastive_gradient \
-  --start_fold 1 \
-  --end_fold 1 
- 
+plot_cam_contrastive_gradient: 
+	python ig_clam_plot.py \
+	--config config/camelyon16.yaml \
+	--ig_name contrastive_gradient \
+	--start_fold 1 \
+	--end_fold 1 
+	
