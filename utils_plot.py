@@ -135,8 +135,8 @@ def plot_image_with_bboxes(basename, SLIDE_PATH, coordinates, scores, figsize=(2
     scale_x = new_width / original_width
     scale_y = new_height / original_height
 
-    # Normalize the scores to the range [0, 1] for color mapping
-    norm_scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
+    # Normalize the scores to the range [0, 1] for color mappingnorm
+    _scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
 
     # Set the figure size for the 2 subplots
     fig, axes = plt.subplots(1, 2, figsize=figsize)
