@@ -407,3 +407,47 @@ def plot_anno_with_mask(basename, SLIDE_PATH, df_mask, save_dir=None, figsize=(2
     if save_dir:
         plt.savefig(save_path, bbox_inches='tight', dpi=100)
         print(f"Saved WSI image to {save_path}")
+        
+        
+def plot_heatmap_nobbox(
+    scale_x, scale_y, 
+    new_height, new_width, 
+    coordinates, 
+    scores, 
+    figsize=(10, 10), 
+    name="", 
+    save_path=None):
+    
+    norm_scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
+
+    # Define colormap
+    cmap = cm.get_cmap('jet')
+    norm = plt.Normalize(vmin=np.min(scores), vmax=np.max(scores))
+
+    # Create figure and white canvas
+    fig, ax = plt.subplots(figsize=figsize)
+    white_background = np.ones((new_height, new_width, 3))
+    ax.imshow(white_background)
+    ax.axis('off')
+
+    # Plot dots at patch centers
+    for i, bbox in tqdm(enumerate(coordinates), total=len(coordinates), desc="Plotting heatmap dots"):
+        ymax, xmax, ymin, xmin = bbox.astype('int')
+
+        # Calculate scaled center of patch
+        center_x = ((xmin + xmax) / 2) * scale_x
+        center_y = ((ymin + ymax) / 2) * scale_y
+
+        color = cmap(norm_scores[i])
+        ax.plot(center_x, center_y, 'o', markersize=3, color=color, alpha=0.8)
+
+    # Add colorbar
+    fig.colorbar(cm.ScalarMappable(cmap=cmap, norm=norm), ax=ax, label='Score Value')
+
+    plt.title(name, fontsize=10, fontweight='bold') 
+
+    if save_path:
+        save_dir = os.path.dirname(save_path)
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        print(f"✅ Saved heatmap to {save_path}")

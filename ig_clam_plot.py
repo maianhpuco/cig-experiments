@@ -8,7 +8,7 @@ import numpy as np
 import openslide
 
 from utils_plot import (
-    plot_heatmap_with_bboxes_nobar,
+    plot_heatmap_nobbox,
     rescaling_stat_for_segmentation, 
     min_max_scale, 
     replace_outliers_with_bounds 
@@ -56,13 +56,14 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             continue
 
         with h5py.File(h5_path, "r") as f:
-            coordinates = f['coords'][:]
+            coordinates = f['coordinates'][:]
 
         scores = np.load(score_path)
         scaled_scores = min_max_scale(replace_outliers_with_bounds(scores.copy()))
 
         save_path = os.path.join(plot_dir, f"{basename}.png")
-        plot_heatmap_with_bboxes_nobar(
+
+        plot_heatmap_nobbox(
             scale_x, scale_y, new_height, new_width,
             coordinates, scaled_scores, name="", save_path=save_path
         )
