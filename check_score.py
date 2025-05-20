@@ -33,9 +33,11 @@ def inspect_scores_for_class(args, method, fold, class_id, score_dir):
         normalized_scores = raw_scores 
         print(f"  >  Shape          : {normalized_scores.shape}")
         print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
-        print(f"  >  Average        : {np.mean(normalized_scores):.6f}")
+        print(f"  >  Sum            : {np.sum(normalized_scores):.6f}")
+        print(f"  >  Min value      : {np.min(normalized_scores):.6f}")
+        print(f"  >  Max value      : {np.max(normalized_scores):.6f}")
         print(f"  >  Non-zero count : {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}")
-
+ 
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
     paths = config["paths"]
