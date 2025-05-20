@@ -444,7 +444,7 @@ def plot_heatmap_nobbox(
             (scaled_x, scaled_y),
             scaled_patch_w,
             scaled_patch_h,
-            linewidth=0.5,
+            linewidth=0.0,
             edgecolor=color,
             facecolor=color,
             alpha=0.5  # Transparency
