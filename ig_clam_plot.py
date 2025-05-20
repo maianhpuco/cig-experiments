@@ -23,7 +23,9 @@ def load_config(config_file):
     return config 
 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
-    all_scores_paths = glob.glob(os.path.join(score_dir, "*.npy"))
+    # all_scores_paths = glob.glob(os.path.join(score_dir, "*.npy"))
+    all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
+  
     os.makedirs(plot_dir, exist_ok=True)
 
     already_plotted = {f.split(".")[0] for f in os.listdir(plot_dir) if f.endswith(".png")}
