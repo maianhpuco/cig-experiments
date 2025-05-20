@@ -125,7 +125,7 @@ def main(args):
                 test_csv_path,
                 data_dir_map=data_dir_map,
                 label_dict= label_dict,  # This won't affect direct labels
-                # seed=42,
+                seed=42,
                 print_info=False
                 )
             print("-- Total number of samples in test set:", len(test_dataset)) 
