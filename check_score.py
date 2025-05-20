@@ -44,19 +44,17 @@ def main(args, config):
     else:
         raise ValueError(f"Unsupported dataset_name: {dataset_name}")
 
-    # Only inspect the first class
-    class_id = classes[0]
-
     for fold in range(args.start_fold, args.end_fold + 1):
-        score_dir = os.path.join(
-            base_score_folder, args.ig_name,
-            f"fold_{fold}", f"class_{class_id}"
-        )
-        if not os.path.exists(score_dir):
-            print(f"\n⚠️  Score folder not found: {score_dir}, skipping...")
-            continue
+        for class_id in classes:
+            score_dir = os.path.join(
+                base_score_folder, args.ig_name,
+                f"fold_{fold}", f"class_{class_id}"
+            )
+            if not os.path.exists(score_dir):
+                print(f"\n⚠️  Score folder not found: {score_dir}, skipping...")
+                continue
 
-        inspect_scores_for_class(args, args.ig_name, fold, class_id, score_dir)
+            inspect_scores_for_class(args, args.ig_name, fold, class_id, score_dir)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -64,7 +62,7 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    # Defaults (can be edited as needed)
+    # Defaults
     args.start_fold = 1
     args.end_fold = 1
     args.ig_name = "contrastive_gradient" 
