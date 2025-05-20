@@ -114,21 +114,19 @@ def main(args):
             print(f"Processing Fold {fold_id}")
             
                 
-            train_csv = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
-            val_csv = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
-            test_csv = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
+            train_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
+            val_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
+            test_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
 
             train_dataset, val_dataset, test_dataset = return_splits_custom(
-                train_csv_path=train_csv,
-                val_csv_path=val_csv,
-                test_csv_path=test_csv,
-                data_dir_map=data_dir_map,
-                label_dict=label_dict,
-                seed=args.seed,
-                print_info=False,
-                use_h5=True
-            )
-
+                            train_csv_path,
+                            val_csv_path,
+                            test_csv_path,
+                            data_dir_map=data_dir_map,
+                            label_dict= label_dict,  # This won't affect direct labels
+                            seed=42,
+                            print_info=False
+                        )
             print("-- Total number of samples in test set:", len(test_dataset)) 
             
             
