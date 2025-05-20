@@ -68,7 +68,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         )
         print(f"  ✅ Saved to {save_path}")
 
-def main(args):
+def main(args, config):
     
     dataset_name = config.get("dataset_name", "").lower()
     paths = config["paths"]
