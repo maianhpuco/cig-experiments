@@ -203,6 +203,8 @@ if __name__ == "__main__":
                             'square_integrated_gradient',
                             'optim_square_integrated_gradient'
                         ])
+    parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'], help='Device to run the model on')
+
     args = parser.parse_args()
 
     with open(f'{args.config}', 'r') as f:
@@ -216,7 +218,9 @@ if __name__ == "__main__":
 
     args.dataset_name = config['dataset_name']
     args.data_dir_map = config['paths']['data_dir'] 
-    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    # args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+
     os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
     print(" > Start compute IG for dataset: ", args.dataset_name)
