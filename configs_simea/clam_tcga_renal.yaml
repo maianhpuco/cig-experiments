@@ -8,7 +8,7 @@ paths:
   result_dir: "/home/mvu9/processing_datasets/processing_tcga_256/results" # where we save all the check point
   split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
   # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-19_15-16-56/s_1_checkpoint.pt"
-  for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-20_03-31-00_ep200/s_1_checkpoint.pt'/
+  for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-20_03-31-00_ep200/s_1_checkpoint.pt'
   attribution_scores_folder: "/home/mvu9/cig_attributions/tgca_renal/attr_scores"
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp"
 
