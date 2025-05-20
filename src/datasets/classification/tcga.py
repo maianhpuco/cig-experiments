@@ -21,7 +21,7 @@ class Generic_MIL_Dataset(Dataset):
         self.label_dict = label_dict
         self.ignore = ignore
         self.seed = seed
-        self.use_h5 = False
+        self.use_h5 = use_h5
         self.kwargs = kwargs
 
         self.slide_data = pd.DataFrame({
