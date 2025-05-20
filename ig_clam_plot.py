@@ -89,7 +89,7 @@ def main(args, config):
     for fold in range(args.start_fold, args.end_fold + 1):
         for class_id in classes:
             score_dir = os.path.join(
-                base_score_folder, dataset_name, args.ig_name,
+                base_score_folder, args.ig_name,
                 f"fold_{fold}", f"class_{class_id}"
             )
             plot_dir = os.path.join(
