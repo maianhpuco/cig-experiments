@@ -98,7 +98,8 @@ def main(args):
             use_h5=True
         )
         print("-- Total number of sample in test set:", len(test_dataset))
-    
+        args.n_classes=2 
+        model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)  
     # =========== config for tgca renal ============  
     elif args.dataset_name=='tcga_renal':
         split_folder = args.paths['split_folder']
@@ -128,7 +129,7 @@ def main(args):
                             print_info=False
                         )
             print("-- Total number of samples in test set:", len(test_dataset)) 
-            
+            args.n_classes = 3  
             
             # ====== load the clam model's weight base in the fold id ======
             model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
