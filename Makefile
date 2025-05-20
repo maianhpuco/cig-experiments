@@ -176,7 +176,7 @@ group_cam_adv:
 #===========PLOT IG ============== 
 plot_cam_contrastive_gradient: 
 	python ig_clam_plot.py \
-	--config config/camelyon16.yaml \
+	--config configs_simea/clam_camelyon16.yaml \
 	--ig_name contrastive_gradient \
 	--start_fold 1 \
 	--end_fold 1 
