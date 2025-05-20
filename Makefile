@@ -15,20 +15,23 @@ train_clam_camelyon16_4fold:
 
 train_clam_tcga_1fold:
 	@echo "Activating conda environment for simea .."
-	python train_tcga.py --config configs_simea/clam_tcga.yaml --max_epochs 200 --k_start 1 --k_end 1
+	python train_tcga.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 1 --k_end 1
 
 train_clam_tcga_4fold:
 	@echo "Activating conda environment for simea .."
-	python train_tcga.py --config configs_simea/clam_tcga.yaml --max_epochs 200 --k_start 2 --k_end 5
+	python train_tcga.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 2 --k_end 5
 
 
-test_ig_clam:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml  
+# test_ig_clam_camelyon16:
+# 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml  
+
+test_ig_clam_tcga:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient 
 
 
+# Makefile for running different IG variants ===== on TCGA-Renal
 
-
- # Makefile for running different IG variants
+# Makefile for running different IG variants ===== on camelyon16 
 
 ig_clam_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_gradient
