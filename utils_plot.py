@@ -216,7 +216,7 @@ def plot_heatmap_with_bboxes(
 
     # Define colormap
     # cmap = cm.get_cmap('coolwarm')
-    cmap=cm.get_cmap('jet')
+    cmap=cm.get_cmap('coolwarm')
     norm = plt.Normalize(vmin=np.min(scores), vmax=np.max(scores))
 
     # Create a figure for the heatmap
