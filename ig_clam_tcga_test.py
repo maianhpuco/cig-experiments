@@ -144,8 +144,6 @@ def main(args):
                 # Inspect feature and coordinate shapes
                 print(">>> Features shape:", features.shape)  # [N, D]
                 print(">>> Label (raw):", label)
-                print(">>> Coords shape:", coords.shape)
-                print(">>> First 5 Coords:\n", coords[:5])
 
                 # Move features and label to device
                 features = features.to(args.device, dtype=torch.float32).unsqueeze(0)  # [1, N, D]
