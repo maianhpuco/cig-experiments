@@ -26,7 +26,7 @@ train_clam_tcga_4fold:
 # 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml  
 
 test_ig_clam_tcga:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient 
+	python ig_clam_tcga_test.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient 
 
 
 # Makefile for running different IG variants ===== on TCGA-Renal

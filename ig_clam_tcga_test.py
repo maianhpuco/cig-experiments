@@ -1,3 +1,6 @@
+'''
+this code is to test ig's model on tcga-renal + clam
+'''
 import os
 import sys 
 import argparse
@@ -83,9 +86,9 @@ def main(args):
         shutil.rmtree(memmap_path)  # Remove if exists
     os.makedirs(memmap_path, exist_ok=True) 
     
-    
+    # =========== config for camelyon16 ============ 
     if args.dataset_name == 'camelyon16':   
-        split_csv_path = os.path.join(args.paths['split_folder'], 'fold_1.ctcga
+        split_csv_path = os.path.join(args.paths['split_folder'], 'fold_1.csv') 
         train_dataset, _, test_dataset = return_splits_custom(
             csv_path=split_csv_path,
             data_dir=args.paths['pt_files'],
@@ -95,6 +98,8 @@ def main(args):
             use_h5=True
         )
         print("-- Total number of sample in test set:", len(test_dataset))
+    
+    # =========== config for tgca renal ============  
     elif args.dataset_name=='tcga_renal':
         split_folder = args.paths['split_folder']
         data_dir_map = {

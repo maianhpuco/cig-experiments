@@ -1,3 +1,6 @@
+'''
+this code is to test ig's model on camelyon16 + clam
+''' 
 import os
 import sys 
 import argparse
