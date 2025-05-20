@@ -131,7 +131,7 @@ def main(args):
 
                     print(f"✅ Saved scores for class {class_idx} at {save_path}")
 
-                break
+                # break
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

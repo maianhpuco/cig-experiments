@@ -17,8 +17,9 @@ sys.path.append(ig_path)
 sys.path.append(clf_path)  
 
 from clam import load_clam_model  
-from attr_method._common import call_model_function
+from attr_method_tcga_renal._common import call_model_function
 from src.datasets.classification.tcga import return_splits_custom  
+from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon
 
 def sample_random_features(dataset, num_files=20):
     indices = np.random.choice(len(dataset), num_files, replace=False)
@@ -44,19 +45,19 @@ def get_dummy_args():
 
 def main(args):
     if args.ig_name == 'integrated_gradient':
-        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
+        from attr_method_tcga_renal.integrated_gradient import IntegratedGradients as AttrMethod
     elif args.ig_name == 'vanilla_gradient':
-        from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
+        from attr_method_tcga_renal.vanilla_gradient import VanillaGradients as AttrMethod
     elif args.ig_name == 'contrastive_gradient':
-        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
+        from attr_method_tcga_renal.contrastive_gradient import ContrastiveGradients as AttrMethod
     elif args.ig_name == 'expected_gradient':
-        from attr_method.expected_gradient import ExpectedGradients as AttrMethod
+        from attr_method_tcga_renal.expected_gradient import ExpectedGradients as AttrMethod
     elif args.ig_name == 'integrated_decision_gradient':
-        from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
+        from attr_method_tcga_renal.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
     elif args.ig_name == 'optim_square_integrated_gradient':
-        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
+        from attr_method_tcga_renal.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
     elif args.ig_name == 'square_integrated_gradient':
-        from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
+        from attr_method_tcga_renal.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
 
     print(f"Running for {args.ig_name} Attribution method")
     attribution_method = AttrMethod()
@@ -131,7 +132,59 @@ def main(args):
 
                     print(f"✅ Saved scores for class {class_idx} at {save_path}")
 
-                # break
+                break
+
+    elif args.dataset_name == 'camelyon16':
+        split_csv_path = os.path.join(args.paths['split_folder'], 'fold_1.csv')
+        train_dataset, _, test_dataset = return_splits_camelyon(
+            csv_path=split_csv_path,
+            data_dir=args.paths['pt_files'],
+            label_dict={'normal': 0, 'tumor': 1},
+            seed=args.seed,
+            print_info=False,
+            use_h5=True
+        )
+        print("-- Total number of sample in test set:", len(test_dataset))
+        args.n_classes = 2
+        model = load_clam_model(args, args.paths['for_ig_checkpoint_path'], device=args.device)
+
+        for idx, (features, label, coords) in enumerate(test_dataset):
+            basename = test_dataset.slide_data['slide_id'].iloc[idx]
+            print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
+
+            features = features.to(args.device, dtype=torch.float32)
+            stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
+
+            for class_idx in range(args.n_classes):
+                print(f"⮕ Attribution for class {class_idx}")
+                kwargs = {
+                    "x_value": features,
+                    "call_model_function": call_model_function,
+                    "model": model,
+                    "baseline_features": stacked_features_baseline,
+                    "memmap_path": memmap_path,
+                    "x_steps": 50,
+                    "device": args.device,
+                    "call_model_args": {"target_class_idx": class_idx}
+                }
+
+                attribution_values = attribution_method.GetMask(**kwargs)
+                scores = attribution_values.mean(1)
+                print(f"- Score shape: {scores.shape}")
+
+                score_save_path = os.path.join(
+                    args.paths['attribution_scores_folder'], f'{args.ig_name}', 'fold_1', f'class_{class_idx}'
+                )
+                os.makedirs(score_save_path, exist_ok=True)
+                save_path = os.path.join(score_save_path, f'{basename}.npy')
+
+                if isinstance(scores, torch.Tensor):
+                    scores = scores.detach().cpu().numpy()
+                np.save(save_path, scores)
+
+                print(f"✅ Saved scores for class {class_idx} at {save_path}")
+
+            break
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

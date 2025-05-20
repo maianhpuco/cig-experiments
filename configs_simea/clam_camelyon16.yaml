@@ -5,7 +5,7 @@ paths:
   result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/results" # where we save all the check point
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
   for_ig_checkpoint_path: "/home/mvu9/processing_datasets/processing_camelyon16/result_2025-05-18_22-23-56/s_1_checkpoint.pt"
-  attribution_scores_folder: "/home/mvu9/cig_attributions/camelyon16/attr_scores"
+  attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/camelyon16"
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp"
 embed_dim: 1024
 lr: 0.0001

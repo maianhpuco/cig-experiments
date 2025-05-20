@@ -59,18 +59,6 @@ dr_idg:
 	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --device cpu
 
-
-dr_cig:
-	python ig_clam_test.py -sig-config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
-
-
-dr_sig:
-	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
-
-
-dr_osig:
-	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
-
 # ----- Grouped Methods -----
 group_basic: #done, done , done 
 	make ig_clam_integrated_gradient
@@ -84,5 +72,68 @@ group_adv: #error_oomr, done
 group_square: #done  runing  
 	make ig_clam_square_integrated_gradient
 	make ig_clam_optim_square_integrated_gradient
+
+
+	 
+
+dr_cig:
+	python ig_clam_test.py -sig-config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
+
+
+dr_sig:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
+
+
+dr_osig:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
+
+
 # # error make ig_clam_integrated_decision_gradient, ig_clam_contrastive_gradientig_clam_square_integrated_gradient Run all methods
 # all_ig_methods: group_basic group_advanced group_square
+
+
+# ==== TCGA-RENAL Methods ====
+ig_clam_tcga_renal_integrated_gradient:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient
+
+ig_clam_tcga_renal_expected_gradient:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name expected_gradient
+
+ig_clam_tcga_renal_integrated_decision_gradient:
+	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_decision_gradient --device cpu
+
+ig_clam_tcga_renal_contrastive_gradient:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name contrastive_gradient
+
+ig_clam_tcga_renal_vanilla_gradient:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name vanilla_gradient
+
+ig_clam_tcga_renal_square_integrated_gradient:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name square_integrated_gradient
+
+ig_clam_tcga_renal_optim_square_integrated_gradient:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient
+
+# Grouped commands for batch runs
+group_tcga_basic:
+	make ig_clam_tcga_renal_integrated_gradient
+	make ig_clam_tcga_renal_vanilla_gradient
+	make ig_clam_tcga_renal_expected_gradient
+
+group_tcga_adv:
+	make ig_clam_tcga_renal_integrated_decision_gradient
+	make ig_clam_tcga_renal_contrastive_gradient
+
+group_tcga_square:
+	make ig_clam_tcga_renal_square_integrated_gradient
+	make ig_clam_tcga_renal_optim_square_integrated_gradient
+
+group_tcga_all:
+	make ig_clam_tcga_renal_integrated_gradient
+	make ig_clam_tcga_renal_vanilla_gradient
+	make ig_clam_tcga_renal_expected_gradient
+	make ig_clam_tcga_renal_integrated_decision_gradient
+	make ig_clam_tcga_renal_contrastive_gradient
+	make ig_clam_tcga_renal_square_integrated_gradient
+	make ig_clam_tcga_renal_optim_square_integrated_gradient 
