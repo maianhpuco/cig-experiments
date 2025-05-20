@@ -87,7 +87,7 @@ def main(args, config):
 
     classes = []
     if dataset_name == "camelyon16":
-        classes = [0, 1]
+        classes = [1, 0]
     elif dataset_name == "tcga_renal":
         classes = [0, 1, 2]
     else:
