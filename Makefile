@@ -135,10 +135,11 @@ group_tcga_basic:
 	make ig_clam_tcga_renal_integrated_decision_gradient
 
 group_tcga_adv:
+	make ig_clam_tcga_renal_contrastive_gradient
+	make ig_clam_tcga_renal_square_integrated_gradient
 	make ig_clam_tcga_renal_optim_square_integrated_gradient 
 	
-# make ig_clam_tcga_renal_contrastive_gradient
-# make ig_clam_tcga_renal_square_integrated_gradient
+
 
 group_cam_basic:
 	make ig_clam_integrated_gradient
