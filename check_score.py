@@ -13,12 +13,12 @@ def load_config(config_file):
     return config 
 
 def inspect_scores_for_class(args, method, fold, class_id, score_dir):
-    all_scores_paths = glob.glob(os.path.join(score_dir, "*.npy"))
-    print(f"[Fold {fold} | Class {class_id}] Found {len(all_scores_paths)} .npy score files")
+    all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))[:3]  # only first 3
+    print(f"[Fold {fold} | Class {class_id}] Inspecting {len(all_scores_paths)} score files")
 
     for idx, score_path in enumerate(all_scores_paths):
         basename = os.path.basename(score_path).split(".")[0]
-        print(f"\n🔍 [{idx+1}/{len(all_scores_paths)}] Inspecting: {basename}")
+        print(f"\n🔍 [{idx+1}/3] Inspecting: {basename}")
 
         if not os.path.exists(score_path):
             print(f"  ⚠️  Score file not found: {score_path}, skipping.")
@@ -44,34 +44,31 @@ def main(args, config):
     else:
         raise ValueError(f"Unsupported dataset_name: {dataset_name}")
 
-    for fold in range(args.start_fold, args.end_fold + 1):
-        for class_id in classes:
-            score_dir = os.path.join(
-                base_score_folder, args.ig_name,
-                f"fold_{fold}", f"class_{class_id}"
-            )
-            if not os.path.exists(score_dir):
-                print(f"\n⚠️  Score folder not found: {score_dir}, skipping...")
-                continue
+    # Only inspect the first class
+    class_id = classes[0]
 
-            inspect_scores_for_class(args, args.ig_name, fold, class_id, score_dir)
+    for fold in range(args.start_fold, args.end_fold + 1):
+        score_dir = os.path.join(
+            base_score_folder, args.ig_name,
+            f"fold_{fold}", f"class_{class_id}"
+        )
+        if not os.path.exists(score_dir):
+            print(f"\n⚠️  Score folder not found: {score_dir}, skipping...")
+            continue
+
+        inspect_scores_for_class(args, args.ig_name, fold, class_id, score_dir)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True, help='Path to config YAML')
-    # parser.add_argument('--ig_name', required=True, help='Attribution method name')
-    # parser.add_argument('--start_fold', type=int, required=True)
-    # parser.add_argument('--end_fold', type=int, required=True)
     
     args = parser.parse_args()
 
+    # Defaults (can be edited as needed)
     args.start_fold = 1
     args.end_fold = 1
     args.ig_name = "contrastive_gradient" 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    
     config = load_config(args.config)
-
     main(args, config)
- 
- 
-# python check_score.py --config configs_simea/clam_camelyon16.yaml
