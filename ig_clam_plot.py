@@ -101,7 +101,8 @@ def main(args, config):
                 print(f"⚠️  Score folder not found: {score_dir}, skipping...")
                 continue
             plot_for_class(args, args.ig_name, fold, class_id, score_dir, plot_dir)
-
+            print("-------")
+        print("===================")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
