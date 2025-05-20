@@ -45,7 +45,8 @@ def inspect_scores_for_class(args, method, fold, class_id, score_dir):
             continue
 
         raw_scores = np.load(score_path)
-        normalized_scores = min_max_scale(raw_scores.copy())
+        normalized_scores = raw_scores
+        # normalized_scores = min_max_scale(raw_scores.copy())
         # normalized_scores = raw_scores 
         print(f"  >  Shape          : {normalized_scores.shape}")
         print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
@@ -78,7 +79,9 @@ def main(args, config):
                 continue
 
             inspect_scores_for_class(args, args.ig_name, fold, class_id, score_dir)
-
+            print("-------")
+        print("---------------")
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True, help='Path to config YAML')
