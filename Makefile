@@ -116,33 +116,37 @@ ig_clam_tcga_renal_optim_square_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient
 
 # Grouped commands for batch runs
+# group_tcga_basic:
+# 	make ig_clam_tcga_renal_integrated_gradient
+# 	make ig_clam_tcga_renal_vanilla_gradient
+# 	make ig_clam_tcga_renal_expected_gradient
+
+# group_tcga_adv:
+# 	make ig_clam_tcga_renal_integrated_decision_gradient
+# 	make ig_clam_tcga_renal_contrastive_gradient
+
+# group_tcga_square:
+# 	make ig_clam_tcga_renal_square_integrated_gradient
+# 	make ig_clam_tcga_renal_optim_square_integrated_gradient
+
 group_tcga_basic:
 	make ig_clam_tcga_renal_integrated_gradient
 	make ig_clam_tcga_renal_vanilla_gradient
 	make ig_clam_tcga_renal_expected_gradient
+	make ig_clam_tcga_renal_integrated_decision_gradient
 
 group_tcga_adv:
-	make ig_clam_tcga_renal_integrated_decision_gradient
-	make ig_clam_tcga_renal_contrastive_gradient
-
-group_tcga_square:
-	make ig_clam_tcga_renal_square_integrated_gradient
-	make ig_clam_tcga_renal_optim_square_integrated_gradient
-
-group_tcga_all:
-	make ig_clam_tcga_renal_integrated_gradient
-	make ig_clam_tcga_renal_vanilla_gradient
-	make ig_clam_tcga_renal_expected_gradient
-	make ig_clam_tcga_renal_integrated_decision_gradient
 	make ig_clam_tcga_renal_contrastive_gradient
 	make ig_clam_tcga_renal_square_integrated_gradient
 	make ig_clam_tcga_renal_optim_square_integrated_gradient 
 
-group_cam_all:
+group_cam_basic:
 	make ig_clam_integrated_gradient
 	make ig_clam_vanilla_gradient
 	make ig_clam_expected_gradient
 	make ig_clam_integrated_decision_gradient
+	
+group_cam_adv:
 	make ig_clam_contrastive_gradient
 	make ig_clam_square_integrated_gradient
 	make ig_clam_optim_square_integrated_gradient
