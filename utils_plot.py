@@ -447,7 +447,7 @@ def plot_heatmap_nobbox(
             linewidth=0.0,
             edgecolor=color,
             facecolor=color,
-            alpha=0.5  # Transparency
+            alpha=0# Transparency
         )
         ax.add_patch(rect)
 
