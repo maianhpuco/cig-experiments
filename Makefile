@@ -134,7 +134,7 @@ ig_clam_tcga_renal_square_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name square_integrated_gradient
 
 ig_clam_tcga_renal_optim_square_integrated_gradient:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient --device cpu
 
 # Grouped commands for batch runs
 # group_tcga_basic:
