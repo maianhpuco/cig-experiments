@@ -139,10 +139,10 @@ group_tcga_all:
 	make ig_clam_tcga_renal_optim_square_integrated_gradient 
 
 group_cam_all:
-	make ig_clam_integrated_gradient
-	make ig_clam_vanilla_gradient
-	make ig_clam_expected_gradient
-	make ig_clam_integrated_decision_gradient
-	make ig_clam_contrastive_gradient
-	make ig_clam_square_integrated_gradient
 	make ig_clam_optim_square_integrated_gradient
+# make ig_clam_integrated_gradient
+# make ig_clam_vanilla_gradient
+# make ig_clam_expected_gradient
+# make ig_clam_integrated_decision_gradient
+# make ig_clam_contrastive_gradient
+# make ig_clam_square_integrated_gradient
