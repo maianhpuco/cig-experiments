@@ -120,10 +120,10 @@ def main(args):
                     print(f"- Score shape: {scores.shape}")
 
                     score_save_path = os.path.join(
-                        args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{fold_id}'
+                        args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{fold_id}', f'class_{class_idx}'
                     )
                     os.makedirs(score_save_path, exist_ok=True)
-                    save_path = os.path.join(score_save_path, f'{basename}_class{class_idx}.npy')
+                    save_path = os.path.join(score_save_path, f'{basename}.npy')
 
                     if isinstance(scores, torch.Tensor):
                         scores = scores.detach().cpu().numpy()
