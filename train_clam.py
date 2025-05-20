@@ -71,6 +71,15 @@ def main(args):
     print("=======Number of folds:", len(folds), "=========")
     start_time = time.time() 
     for i in folds:
+                        
+        fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
+        os.makedirs(fold_result_dir, exist_ok=True)
+        print("++++++++++++++++++RESULT WILL BE SAVED IN FOLDER++++++++++++++++++++++++++++++")
+        print(fold_result_dir)
+        
+        
+        
+    
         fold_start_time = time.time() 
         print("=======Start fold number:", i, "=========") 
         seed_torch(args.seed)
@@ -94,9 +103,9 @@ def main(args):
         all_val_acc.append(val_acc)
         # Write results to pkl
         
-        fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
-        os.makedirs(fold_result_dir, exist_ok=True)
-
+        # fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
+        # os.makedirs(fold_result_dir, exist_ok=True)
+        
         filename = os.path.join(fold_result_dir, f'split_{i}_results.pkl')
         save_pkl(filename, results)
         print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 

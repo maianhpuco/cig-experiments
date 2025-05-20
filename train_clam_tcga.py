@@ -71,6 +71,17 @@ def main(args):
     print("=======Number of folds:", len(folds), "=========")
     start_time = time.time() 
     for i in folds:
+        
+                
+        fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
+        os.makedirs(fold_result_dir, exist_ok=True)
+
+        print("++++++++++++++++++RESULT WILL BE SAVED IN FOLDER++++++++++++++++++++++++++++++")
+        print(fold_result_dir)
+
+        
+
+        
         fold_start_time = time.time() 
         print("=======Start fold number:", i, "=========") 
         seed_torch(args.seed)
@@ -89,7 +100,7 @@ def main(args):
                 seed=42,
                 print_info=False
             )
-        print(f"Train len: {len(train_dataset)} | Val len: {len(val_dataset)} | Test len: {len(test_dataset)}")
+        print(f"FOLD {i} Train len: {len(train_dataset)} | Val len: {len(val_dataset)} | Test len: {len(test_dataset)}")
           
         datasets = (train_dataset, val_dataset, test_dataset)
         results, test_auc, val_auc, test_acc, val_acc = train(datasets, i, args)
@@ -99,14 +110,9 @@ def main(args):
         all_val_acc.append(val_acc)
         # Write results to pkl
         
-        fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
-        os.makedirs(fold_result_dir, exist_ok=True)
-
         filename = os.path.join(fold_result_dir, f'split_{i}_results.pkl')
-        save_pkl(filename, results)
-        
-        print(f"======> [x] Saved checkpoint for fold {i} at: {filename}")  
-        
+        save_pkl(filename, results) 
+        print(f"======> [x] Saved checkpoint for fold {i} at: {filename}")
         # filename = os.path.join(args.results_dir, f'split_{i}_results.pkl')
         # save_pkl(filename, results)
         # print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
@@ -121,7 +127,7 @@ def main(args):
         'val_acc': all_val_acc
     })
     
-    print("=======Number of folds:", len(folds), "=========") 
+    print("=======Number of folds:", folds, "=========") 
     
     if len(folds) != args.k:
         save_name = f'summary_partial_{start}_{end}.csv'
