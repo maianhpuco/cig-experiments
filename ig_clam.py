@@ -17,7 +17,7 @@ sys.path.append(ig_path)
 sys.path.append(clf_path)  
 
 from clam import load_clam_model  
-from attr_method_tcga_renal._common import call_model_function
+from attr_method._common import call_model_function
 from src.datasets.classification.tcga import return_splits_custom  
 from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon
 
@@ -45,19 +45,19 @@ def get_dummy_args():
 
 def main(args):
     if args.ig_name == 'integrated_gradient':
-        from attr_method_tcga_renal.integrated_gradient import IntegratedGradients as AttrMethod
+        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
     elif args.ig_name == 'vanilla_gradient':
-        from attr_method_tcga_renal.vanilla_gradient import VanillaGradients as AttrMethod
+        from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
     elif args.ig_name == 'contrastive_gradient':
-        from attr_method_tcga_renal.contrastive_gradient import ContrastiveGradients as AttrMethod
+        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
     elif args.ig_name == 'expected_gradient':
-        from attr_method_tcga_renal.expected_gradient import ExpectedGradients as AttrMethod
+        from attr_method.expected_gradient import ExpectedGradients as AttrMethod
     elif args.ig_name == 'integrated_decision_gradient':
-        from attr_method_tcga_renal.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
+        from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
     elif args.ig_name == 'optim_square_integrated_gradient':
-        from attr_method_tcga_renal.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
+        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
     elif args.ig_name == 'square_integrated_gradient':
-        from attr_method_tcga_renal.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
+        from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
 
     print(f"Running for {args.ig_name} Attribution method")
     attribution_method = AttrMethod()

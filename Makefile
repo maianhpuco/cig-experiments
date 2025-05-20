@@ -10,7 +10,6 @@ train_clam_camelyon16_1fold:
 
 train_clam_camelyon16_4fold:
 	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 2 --k_end 5
 
 train_clam_tcga_1fold:
@@ -136,9 +135,10 @@ group_tcga_basic:
 	make ig_clam_tcga_renal_integrated_decision_gradient
 
 group_tcga_adv:
-	make ig_clam_tcga_renal_contrastive_gradient
-	make ig_clam_tcga_renal_square_integrated_gradient
 	make ig_clam_tcga_renal_optim_square_integrated_gradient 
+	
+# make ig_clam_tcga_renal_contrastive_gradient
+# make ig_clam_tcga_renal_square_integrated_gradient
 
 group_cam_basic:
 	make ig_clam_integrated_gradient
