@@ -86,7 +86,7 @@ def return_splits_custom(
             shuffle=False,
             seed=seed,
             print_info=print_info, 
-            use_h5=False
+            use_h5=use_h5
         )
 
     train_dataset = create_dataset(df_train)
