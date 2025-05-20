@@ -19,7 +19,7 @@ sys.path.append(ig_path)
 sys.path.append(clf_path)  
 
 from clam import load_clam_model  
-from attr_method._common import (
+from attr_method_tcga_renal._common import (
     call_model_function
 ) 
 # from src.datasets.classification.camelyon16 import return_splits_custom
@@ -61,19 +61,19 @@ def get_dummy_args():
 
 def main(args):
     if args.ig_name == 'integrated_gradient':
-        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
+        from attr_method_tcga_renal.integrated_gradient import IntegratedGradients as AttrMethod
     elif args.ig_name == 'vanilla_gradient':
-        from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
+        from attr_method_tcga_renal.vanilla_gradient import VanillaGradients as AttrMethod
     elif args.ig_name == 'contrastive_gradient':
-        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
+        from attr_method_tcga_renal.contrastive_gradient import ContrastiveGradients as AttrMethod
     elif args.ig_name == 'expected_gradient':
-        from attr_method.expected_gradient import ExpectedGradients as AttrMethod
+        from attr_method_tcga_renal.expected_gradient import ExpectedGradients as AttrMethod
     elif args.ig_name == 'integrated_decision_gradient':
-        from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
+        from attr_method_tcga_renal.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
     elif args.ig_name == 'optim_square_integrated_gradient':
-        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
+        from attr_method_tcga_renal.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
     elif args.ig_name == 'square_integrated_gradient':
-        from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
+        from attr_method_tcga_renal.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
 
     print(f"Running for {args.ig_name} Attribution method")
 
@@ -136,22 +136,35 @@ def main(args):
             model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
             # ====== load the clam model's weight base in the fold id ====== 
         
-        #======= check dataset
-        for idx, (features, label, coords) in enumerate(test_dataset):
-            basename = test_dataset.slide_data['slide_id'].iloc[idx]
-            print(f"\n Processing sample {idx+1}/{len(test_dataset)}: {basename}")
+            #======= check dataset
+            for idx, (features, label, coords) in enumerate(test_dataset):
+                basename = test_dataset.slide_data['slide_id'].iloc[idx]
+                print(f"\nProcessing sample {idx + 1}/{len(test_dataset)}: {basename}")
+
+                # Inspect feature and coordinate shapes
+                print(">>> Features shape:", features.shape)  # [N, D]
+                print(">>> Label (raw):", label)
+                print(">>> Coords shape:", coords.shape)
+                print(">>> First 5 Coords:\n", coords[:5])
+
+                # Move features and label to device
+                features = features.to(args.device, dtype=torch.float32).unsqueeze(0)  # [1, N, D]
+                label = torch.tensor([label], dtype=torch.long, device=args.device)
+
+                # Run model
+                with torch.no_grad():
+                    logits, Y_prob, Y_hat, _, instance_dict = model(features, label=label)
+
+                # Print results
+                print("Logits:        ", logits.squeeze(0).cpu().numpy())
+                print("Probabilities: ", Y_prob.squeeze(0).cpu().numpy())
+                print("Prediction:    ", Y_hat.item())
+                print("Ground Truth:  ", label.item())
+
+                break
+            #======= check dataset
             
-            features = features.to(args.device, dtype=torch.float32).unsqueeze(0)  # shape: [1, N, D]
-            
-            with torch.no_grad():
-                logits, Y_prob, Y_hat, _, instance_dict = model(features, label=torch.tensor([label]))
-            
-            print("Logits:        ", logits.cpu().numpy())
-            print("Probabilities: ", Y_prob.cpu().numpy())
-            print("Prediction:    ", Y_hat.cpu().item())
-            print("Ground truth:  ", label)
-            break
-        #======= check dataset
+
         
         for idx, (features, label, coords) in enumerate(test_dataset):
             # print("- Feature shape", features.shape)
