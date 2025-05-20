@@ -103,9 +103,9 @@ def main(args):
     elif args.dataset_name=='tcga_renal':
         split_folder = args.paths['split_folder']
         data_dir_map = {
-            'KICH': args.paths['pt_files']['kich'],
-            'KIRP': args.paths['pt_files']['kirp'],
-            'KIRC': args.paths['pt_files']['kirc'],
+            'KICH': args.paths['data_dir']['kich'],
+            'KIRP': args.paths['data_dir']['kirp'],
+            'KIRC': args.paths['data_dir']['kirc'],
         }
         label_dict = {'KICH': 0, 'KIRP': 1, 'KIRC': 2}
         
