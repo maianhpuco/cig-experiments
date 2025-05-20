@@ -3,7 +3,7 @@ import sys
 import argparse
 import yaml
 import torch
-from src.datasets.classification.tcga import return_splits_custom  
+from src.datasets.classification.tcga_ver2 import return_splits_custom  
 from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon
 
 def load_dataset(args):
