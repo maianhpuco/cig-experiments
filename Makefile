@@ -180,4 +180,4 @@ plot_cam_contrastive_gradient:
 	--ig_name contrastive_gradient \
 	--start_fold 1 \
 	--end_fold 1 
-	
+python check_score.py --config configs_simea/clam_camelyon16.yaml

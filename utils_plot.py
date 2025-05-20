@@ -418,7 +418,7 @@ def plot_heatmap_nobbox(
     name="", 
     save_path=None):
     
-    norm_scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
+    # norm_scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
 
     # Define colormap
     cmap = cm.get_cmap('jet')
@@ -436,7 +436,7 @@ def plot_heatmap_nobbox(
         scaled_x = x * scale_x
         scaled_y = y * scale_y
 
-        color = cmap(norm_scores[i])
+        color = cmap(scores[i])
         ax.plot(scaled_x, scaled_y, 'o', markersize=3, color=color, alpha=0.8)
 
     # Add colorbar
