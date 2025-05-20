@@ -1,13 +1,13 @@
 dataset_name: 'tcga'
 paths:
   data_dir:
-    kich: "/home/mvu9/processing_datasets/processing_tcga/kich/features_fp"
-    kirc: "/home/mvu9/processing_datasets/processing_tcga/kirc/features_fp"
-    kirp: "/home/mvu9/processing_datasets/processing_tcga/kirp/features_fp"
-  save_dir: "/home/mvu9/processing_datasets/processing_tcga/"
-  result_dir: "/home/mvu9/processing_datasets/processing_tcga/results" # where we save all the check point
-  split_folder: "/home/mvu9/processing_datasets/processing_tcga/splits_csv"
-  for_ig_checkpoint_path: "/home/mvu9/processing_datasets/processing_tcga/result_2025-05-19_15-16-56/s_1_checkpoint.pt"
+    kich: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
+    kirc: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
+    kirp: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+  save_dir: "/home/mvu9/processing_datasets/processing_tcga_256/"
+  result_dir: "/home/mvu9/processing_datasets/processing_tcga_256/results" # where we save all the check point
+  split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
+  for_ig_checkpoint_path: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-19_15-16-56/s_1_checkpoint.pt"
 embed_dim: 1024
 lr: 0.0001
 label_frac: 1.0
