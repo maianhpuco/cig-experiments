@@ -217,7 +217,8 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.dataset_name = config['dataset_name']
-    args.data_dir_map = config['paths']['data_dir'] 
+    if args.dataset_name =='tcga_renal':
+        args.data_dir_map = config['paths']['data_dir'] 
     # args.device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
