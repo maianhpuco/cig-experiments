@@ -103,6 +103,7 @@ def main(args):
     # =========== config for tgca renal ============  
     elif args.dataset_name=='tcga_renal':
         split_folder = args.paths['split_folder']
+
         data_dir_map = {
             'KICH': args.paths['data_dir']['kich'],
             'KIRP': args.paths['data_dir']['kirp'],
@@ -118,12 +119,12 @@ def main(args):
             train_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
             val_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
             test_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
-
+            
             train_dataset, val_dataset, test_dataset = return_splits_custom(
                 train_csv_path,
                 val_csv_path,
                 test_csv_path,
-                data_dir_map=data_dir_map,
+                data_dir_map=args.data_dir_map,
                 label_dict= label_dict,  # This won't affect direct labels
                 seed=42,
                 print_info=False
@@ -234,6 +235,7 @@ if __name__ == "__main__":
             setattr(args, key, val)
             
     args.dataset_name = config['dataset_name']
+    args.data_dir_map = config['paths']['data_dir'] 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = "cpu"
     os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)

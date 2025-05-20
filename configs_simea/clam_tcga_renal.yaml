@@ -32,4 +32,4 @@ inst_loss: null
 subtyping: false
 bag_weight: 0.7
 B: 8
-n_classes: 2
+n_classes: 3
