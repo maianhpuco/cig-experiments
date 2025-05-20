@@ -38,8 +38,8 @@ def main(args):
     with open(args.config, 'r') as f:
         cfg = yaml.safe_load(f)
 
-    timestamp = get_timestamp_str()
-
+    # timestamp = get_timestamp_str()
+    timestamp =  "final"
     # Set paths from YAML
     args.data_root_dir = cfg['paths']['pt_files']
     args.results_dir = os.path.join(cfg['paths']['save_dir'], f'result_{timestamp}_ep{args.max_epochs}')
@@ -93,10 +93,19 @@ def main(args):
         all_test_acc.append(test_acc)
         all_val_acc.append(val_acc)
         # Write results to pkl
-    
-        filename = os.path.join(args.results_dir, f'split_{i}_results.pkl')
+        
+        fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
+        os.makedirs(fold_result_dir, exist_ok=True)
+
+        filename = os.path.join(fold_result_dir, f'split_{i}_results.pkl')
         save_pkl(filename, results)
         print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
+
+        # filename = os.path.join(args.results_dir, f'fold_{i}/split_{i}_results.pkl')
+        # save_pkl(filename, results)
+        # print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
+        
+        
         fold_duration = time.time() - fold_start_time
         print(f" --> Fold {i} finished in {fold_duration:.2f} seconds") 
         
@@ -119,6 +128,8 @@ def main(args):
     total_duration = time.time() - start_time
 
     print(f"\n ----> All folds completed in {total_duration:.2f} seconds ({total_duration / 60:.2f} minutes)") 
+    print(f" \n ---->  Check result saved in: ", )
+    
 def seed_torch(seed=7):
     import random
     random.seed(seed)

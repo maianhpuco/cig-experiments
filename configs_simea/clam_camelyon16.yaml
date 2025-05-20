@@ -1,7 +1,7 @@
 dataset_name: 'camelyon16'
 paths:
   pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
-  save_dir: "/home/mvu9/processing_datasets/processing_camelyon16/"
+  save_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_result"
   result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/results" # where we save all the check point
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
   for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/result_2025-05-18_22-23-56/s_1_checkpoint.pt"
