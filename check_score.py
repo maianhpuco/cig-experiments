@@ -6,10 +6,26 @@ import argparse
 import h5py
 import numpy as np
 
-from utils_plot import (
-    min_max_scale, 
-    replace_outliers_with_bounds
-)
+# from utils_plot import (
+#     min_max_scale, 
+#     replace_outliers_with_bounds
+# )
+
+def min_max_scale(array):
+    """
+    Normalize a numpy array to the [0, 1] range after min-max scaling.
+
+    If all elements are equal, returns a zero array of the same shape.
+    """
+    min_val = np.min(array)
+    max_val = np.max(array)
+    range_val = max_val - min_val
+
+    if range_val == 0:
+        return np.zeros_like(array)
+    
+    return (array - min_val) / range_val
+ 
 def load_config(config_file):
     import yaml 
     with open(config_file, 'r') as f:
