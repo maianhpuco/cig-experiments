@@ -56,7 +56,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             continue
 
         with h5py.File(h5_path, "r") as f:
-            coordinates = f['coordinates'][:]
+            coordinates = f['coords'][:]
 
         scores = np.load(score_path)
         scaled_scores = min_max_scale(replace_outliers_with_bounds(scores.copy()))
