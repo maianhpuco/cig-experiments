@@ -49,7 +49,8 @@ def main(args):
         print(f"\nSample {idx + 1}")
         print(f" - Feature shape: {features.shape}")
         print(f" - Label: {label}")
-        print(f" - Coords shape: {coords.shape}")
+        print(f" - Coords shape:", coords)
+
         if idx >= 2:  # just print 3 samples
             break
 
