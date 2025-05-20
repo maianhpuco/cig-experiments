@@ -22,7 +22,8 @@ def load_dataset(args):
             data_dir_map=data_dir_map,
             label_dict=label_dict,
             seed=42,
-            print_info=False
+            print_info=False, 
+            use_h5=True
         )
         return test_ds
 

@@ -13,6 +13,7 @@ class Generic_MIL_Dataset(Dataset):
                  label_dict,
                  seed=1,
                  print_info=False,
+                 use_h5=False, 
                  ignore=[],
                  **kwargs):
         
@@ -65,7 +66,8 @@ def return_splits_custom(
         data_dir_map, 
         label_dict, 
         seed=1, 
-        print_info=False):
+        print_info=False, 
+        use_h5=False):
     """Create train, val, and test datasets from a custom split CSV."""
     df_train = pd.read_csv(train_csv_path)
     df_val = pd.read_csv(val_csv_path)
@@ -83,7 +85,8 @@ def return_splits_custom(
             label_dict=label_dict,
             shuffle=False,
             seed=seed,
-            print_info=print_info
+            print_info=print_info, 
+            use_h5=False
         )
 
     train_dataset = create_dataset(df_train)
