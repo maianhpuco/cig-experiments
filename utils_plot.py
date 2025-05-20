@@ -135,8 +135,8 @@ def plot_image_with_bboxes(basename, SLIDE_PATH, coordinates, scores, figsize=(2
     scale_x = new_width / original_width
     scale_y = new_height / original_height
 
-    # Normalize the scores to the range [0, 1] for color mappingnorm
-    _scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
+    # Normalize the scores to the range [0, 1] for color mapping
+    norm_scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
 
     # Set the figure size for the 2 subplots
     fig, axes = plt.subplots(1, 2, figsize=figsize)
@@ -408,7 +408,7 @@ def plot_anno_with_mask(basename, SLIDE_PATH, df_mask, save_dir=None, figsize=(2
         plt.savefig(save_path, bbox_inches='tight', dpi=100)
         print(f"Saved WSI image to {save_path}")
      
-        
+ 
 def plot_heatmap_nobbox(
     scale_x, scale_y, 
     new_height, new_width, 
@@ -416,10 +416,9 @@ def plot_heatmap_nobbox(
     scores, 
     figsize=(10, 10), 
     name="", 
-    save_path=None):
+    save_path=None,
+    patch_size=256):  # <-- Default patch size in pixels
     
-    # norm_scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
-
     # Define colormap
     cmap = cm.get_cmap('jet')
     norm = plt.Normalize(vmin=np.min(scores), vmax=np.max(scores))
@@ -430,14 +429,27 @@ def plot_heatmap_nobbox(
     ax.imshow(white_background)
     ax.axis('off')
 
-    # Plot dots directly at scaled coordinates
-    for i, coord in tqdm(enumerate(coordinates), total=len(coordinates), desc="Plotting heatmap dots"):
-        x, y = coord.astype('int')
+    # Plot 256x256 rectangles for each coordinate
+    for i, coord in tqdm(enumerate(coordinates), total=len(coordinates), desc="Plotting heatmap patches"):
+        x, y = coord.astype('int')  # top-left corner of patch
         scaled_x = x * scale_x
         scaled_y = y * scale_y
 
+        scaled_patch_w = patch_size * scale_x
+        scaled_patch_h = patch_size * scale_y
+
         color = cmap(scores[i])
-        ax.plot(scaled_x, scaled_y, 'o', markersize=3, color=color, alpha=0.8)
+
+        rect = patches.Rectangle(
+            (scaled_x, scaled_y),
+            scaled_patch_w,
+            scaled_patch_h,
+            linewidth=0.5,
+            edgecolor=color,
+            facecolor=color,
+            alpha=0.5  # Transparency
+        )
+        ax.add_patch(rect)
 
     # Add colorbar
     fig.colorbar(cm.ScalarMappable(cmap=cmap, norm=norm), ax=ax, label='Score Value')
@@ -448,4 +460,4 @@ def plot_heatmap_nobbox(
         save_dir = os.path.dirname(save_path)
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(save_path, bbox_inches='tight', dpi=300)
-        print(f"✅ Saved heatmap to {save_path}") 
+        print(f"✅ Saved heatmap to {save_path}")   

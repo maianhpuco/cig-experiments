@@ -58,17 +58,21 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         with h5py.File(h5_path, "r") as f:
             coordinates = f['coords'][:]
 
+        # ✅ Load scores
         scores = np.load(score_path)
-        scaled_scores = min_max_scale(replace_outliers_with_bounds(scores.copy()))
 
+        # ✅ Apply preprocessing: clip outliers and scale to [0, 1]
+        clipped_scores = replace_outliers_with_bounds(scores.copy())
+        scaled_scores = min_max_scale(clipped_scores)
+
+        # ✅ Plot heatmap
         save_path = os.path.join(plot_dir, f"{basename}.png")
-
         plot_heatmap_nobbox(
             scale_x, scale_y, new_height, new_width,
             coordinates, scaled_scores, name="", save_path=save_path
         )
         print(f"  ✅ Saved to {save_path}")
-
+ 
 def main(args, config):
     
     dataset_name = config.get("dataset_name", "").lower()
