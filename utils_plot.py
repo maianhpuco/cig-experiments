@@ -447,12 +447,11 @@ def plot_heatmap_nobbox(
             linewidth=0.0,
             edgecolor=color,
             facecolor=color,
-            alpha=0# Transparency
         )
         ax.add_patch(rect)
 
     # Add colorbar
-    fig.colorbar(cm.ScalarMappable(cmap=cmap, norm=norm), ax=ax, label='Score Value')
+    # fig.colorbar(cm.ScalarMappable(cmap=cmap, norm=norm), ax=ax, label='Score Value')
 
     plt.title(name, fontsize=10, fontweight='bold') 
 
