@@ -29,7 +29,7 @@ def inspect_scores_for_class(args, method, fold, class_id, score_dir):
             continue
 
         raw_scores = np.load(score_path)
-        # normalized_scores = min_max_scale(replace_outliers_with_bounds(raw_scores.copy()))  
+        normalized_scores = min_max_scale(raw_scores.copy())
         normalized_scores = raw_scores 
         print(f"  >  Shape          : {normalized_scores.shape}")
         print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
