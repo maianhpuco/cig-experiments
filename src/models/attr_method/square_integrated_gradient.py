@@ -16,6 +16,7 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     if isinstance(outputs, tuple):
         logits_tensor = outputs[0]  # Assume first element is logits
         print(f"call_model_function: Unpacked tuple, logits shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, is_leaf={logits_tensor.is_leaf}")
+        print(f"call_model_function: Tuple length={len(outputs)}, types={[type(x) for x in outputs]}")
     else:
         logits_tensor = outputs
         print(f"call_model_function: Single output, logits shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, is_leaf={logits_tensor.is_leaf}")
@@ -109,8 +110,8 @@ class SquareIntegratedGradients(CoreSaliency):
             target_logits_step = logits_step[:, target_class_idx]
             counterfactual_grad = torch.autograd.grad(target_logits_step.sum(), x_step_tensor, allow_unused=True)[0]
             if counterfactual_grad is None:
-                print(f"Warning: counterfactual_grad is None for alpha={alpha:.2f}, using zeros")
-                counterfactual_grad = torch.zeros_like(gradients_avg)
+                print(f"Warning: counterfactual_grad is None for alpha={alpha:.2f}, using gradients_avg as fallback")
+                counterfactual_grad = gradients_avg  # Fallback to gradients_avg
             else:
                 counterfactual_grad = counterfactual_grad.mean(dim=0)
                 print(f"Alpha {alpha:.2f}, counterfactual_grad shape: {counterfactual_grad.shape}, norm: {torch.norm(counterfactual_grad):.4f}")
@@ -118,7 +119,11 @@ class SquareIntegratedGradients(CoreSaliency):
             W_j = torch.norm(gradients_avg) + 1e-8
             attribution_values += (counterfactual_grad * gradients_avg) * (eta / W_j)
 
-        # Final attribution
-        result = (attribution_values / x_steps).detach().cpu().numpy()
-        print(f"Raw attribution norm: {torch.norm(attribution_values):.4f}, min: {result.min():.4e}, max: {result.max():.4e}")
+        # Final attribution with normalization
+        result = attribution_values / x_steps
+        result_norm = torch.norm(result)
+        if result_norm > 0:
+            result = result / (result_norm + 1e-8)  # Normalize to unit norm
+        result = result.detach().cpu().numpy()
+        print(f"Raw attribution norm: {result_norm:.4f}, min: {result.min():.4e}, max: {result.max():.4e}")
         return result

@@ -222,7 +222,7 @@ def main(args):
 
                     # print(f"Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
-                # break
+                break
 
 
 
