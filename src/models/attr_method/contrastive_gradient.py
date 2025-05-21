@@ -32,8 +32,9 @@ class ContrastiveGradients(CoreSaliency):
             x_baseline_torch = x_baseline_batch.clone().detach().float()
             x_step_batch_torch = x_step_batch.clone().detach().float().requires_grad_()
 
-            logits_r = model(x_baseline_torch)
-            logits_step = model(x_step_batch_torch)
+            
+            logits_r = model(x_baseline_torch, [x_baseline_torch.shape[0]]) 
+            logits_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])
 
             logits_r = logits_r[0] if isinstance(logits_r, tuple) else logits_r
             logits_step = logits_step[0] if isinstance(logits_step, tuple) else logits_step
