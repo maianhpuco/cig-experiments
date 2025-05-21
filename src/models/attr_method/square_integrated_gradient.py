@@ -13,8 +13,13 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
 
     model.eval()
     outputs = model(inputs)
-    logits_tensor = outputs[0] if isinstance(outputs, tuple) else outputs
-    print(f"call_model_function: Raw logits shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, is_leaf={logits_tensor.is_leaf}")
+    if isinstance(outputs, tuple):
+        logits_tensor = outputs[0]  # Assume first element is logits
+        print(f"call_model_function: Unpacked tuple, logits shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, is_leaf={logits_tensor.is_leaf}")
+    else:
+        logits_tensor = outputs
+        print(f"call_model_function: Single output, logits shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, is_leaf={logits_tensor.is_leaf}")
+
     if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
         target_class_idx = call_model_args.get('target_class_idx', 0)
         if logits_tensor.dim() == 2:
@@ -47,21 +52,15 @@ class SquareIntegratedGradients(CoreSaliency):
         attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
         alphas = torch.linspace(0, 1, x_steps, device=device)
 
-        # Sample baseline
-        try:
-            sampled_indices = torch.randint(0, baseline_features.shape[0], (x_value.shape[0],), device=device)
-            x_baseline_batch = baseline_features[sampled_indices]
-            print(f"Baseline norm: {torch.norm(x_baseline_batch):.4f}, min: {x_baseline_batch.min():.4f}, max: {x_baseline_batch.max():.4f}")
-        except Exception:
-            print("Warning: Invalid baseline sampling, using zero baseline")
-            x_baseline_batch = torch.zeros_like(x_value, device=device)
-            print(f"Zero baseline norm: {torch.norm(x_baseline_batch):.4f}")
+        # Use zero baseline for maximum contrast
+        x_baseline_batch = torch.zeros_like(x_value, device=device)
+        print(f"Zero baseline norm: {torch.norm(x_baseline_batch):.4f}")
 
         x_diff = x_value - x_baseline_batch
 
         if torch.norm(x_diff).item() < 1e-6:
-            print("Warning: x_diff is near zero, using zero baseline")
-            x_baseline_batch = torch.zeros_like(x_value)
+            print("Warning: x_diff is near zero, using identity baseline")
+            x_baseline_batch = x_value * 0.0
             x_diff = x_value - x_baseline_batch
 
         print(f"x_value shape: {x_value.shape}, norm: {torch.norm(x_value):.4f}")
@@ -76,6 +75,13 @@ class SquareIntegratedGradients(CoreSaliency):
         for name, module in model.named_modules():
             if any(k in name.lower() for k in ["classifier", "fc", "attention", "attn"]):
                 module.register_forward_hook(forward_hook)
+
+        # Test direct gradient link
+        x_test = x_value.clone().requires_grad_(True)
+        logits_test = call_model_function(x_test, model, call_model_args)
+        target_logits_test = logits_test[:, target_class_idx].sum()
+        grad_test = torch.autograd.grad(target_logits_test, x_test)[0]
+        print(f"Direct gradient test: grad shape={grad_test.shape if grad_test is not None else None}, norm={torch.norm(grad_test) if grad_test is not None else 'None'}")
 
         for alpha in tqdm(alphas, desc=f"SIG class {target_class_idx}", ncols=100):
             x_step = x_baseline_batch + alpha * x_diff
@@ -96,7 +102,7 @@ class SquareIntegratedGradients(CoreSaliency):
                 logits_r = call_model_function(x_baseline_batch, model, call_model_args)
             logits_step = call_model_function(x_step_tensor, model, call_model_args)
 
-            # Compute logits difference for the target class only
+            # Compute counterfactual gradient directly
             target_logits_step = logits_step[:, target_class_idx]
             counterfactual_grad = torch.autograd.grad(target_logits_step.sum(), x_step_tensor, allow_unused=True)[0]
             if counterfactual_grad is None:
