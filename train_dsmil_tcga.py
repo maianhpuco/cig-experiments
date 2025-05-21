@@ -15,25 +15,32 @@ from sklearn.model_selection import KFold
 from collections import OrderedDict
 import json
 from tqdm import tqdm
-from src.datasets.classification.camelyon16 import return_splits_custom 
 
 sys.path.append(os.path.join("src/externals/dsmil-wsi"))
+
 
 import dsmil as mil
 
 
-def train(args, data_loader, label_dict, milnet, criterion, optimizer):
+def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimizer):
     milnet.train()
+
+    df = pd.read_csv(train_path)
+    patient_ids = df["patient_id"].dropna().tolist()
+    slides = df["slide"].dropna().tolist()
+    labels= df["label"].dropna().tolist()
 
     total_loss = 0
     Tensor = torch.cuda.FloatTensor
-    for batch_idx, (data, label) in enumerate(data_loader):
+    for i, (patient_id, slide_id, label) in enumerate(zip(patient_ids, slides, labels)):
         optimizer.zero_grad()
 
+        full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
+        features = torch.load(full_path, weights_only=True, map_location='cuda:0')
         bag_label = torch.zeros(args.num_classes, dtype=torch.float32).cuda()
         bag_label[label_dict[label]] = 1
         bag_label = bag_label.unsqueeze(0)
-        bag_feats = data.cuda()
+        bag_feats = features
         bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
         bag_feats = bag_feats.view(-1, args.feats_size)
         ins_prediction, bag_prediction, _, _ = milnet(bag_feats)
@@ -44,8 +51,8 @@ def train(args, data_loader, label_dict, milnet, criterion, optimizer):
         loss.backward()
         optimizer.step()
         total_loss = total_loss + loss.item()
-        sys.stdout.write('\r Training bag [%d/%d] bag loss: %.4f' % (batch_idx, len(data_loader), loss.item()))
-    return total_loss / len(data_loader)
+        sys.stdout.write('\r Training bag [%d/%d] bag loss: %.4f' % (i, len(patient_ids), loss.item()))
+    return total_loss / len(patient_ids)
 
 def dropout_patches(feats, p):
     num_rows = feats.size(0)
@@ -54,19 +61,28 @@ def dropout_patches(feats, p):
     selected_rows = feats[random_indices]
     return selected_rows
 
-def test(args, data_loader, label_dict, milnet, criterion, thresholds=None, return_predictions=False):
+def test(args, test_csv_path, data_dir_map, label_dict, milnet, criterion, thresholds=None, return_predictions=False):
     milnet.eval()
     total_loss = 0
     test_labels = []
     test_predictions = []
     Tensor = torch.cuda.FloatTensor
 
+    print("LOG: test_csv_path", test_csv_path)
+    df = pd.read_csv(test_csv_path)
+    
+    patient_ids = df["patient_id"].dropna().tolist()
+    slides = df["slide"].dropna().tolist()
+    labels= df["label"].dropna().tolist()
     with torch.no_grad():
-        for batch_idx, (data, label) in enumerate(data_loader):
+        for i, (patient_id, slide_id, label) in enumerate(zip(patient_ids, slides, labels)):
+            full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
+            features = torch.load(full_path, weights_only=True, map_location='cuda:0')
+
             bag_label = torch.zeros(args.num_classes, dtype=torch.float32).cuda()
             bag_label[label_dict[label]] = 1
             bag_label = bag_label.unsqueeze(0)
-            bag_feats = data.cuda()
+            bag_feats = features
             bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
             bag_feats = bag_feats.view(-1, args.feats_size)
             ins_prediction, bag_prediction, _, _ = milnet(bag_feats)
@@ -75,7 +91,7 @@ def test(args, data_loader, label_dict, milnet, criterion, thresholds=None, retu
             max_loss = criterion(max_prediction.view(1, -1), bag_label.view(1, -1))
             loss = 0.5*bag_loss + 0.5*max_loss
             total_loss = total_loss + loss.item()
-            sys.stdout.write('\r Testing bag [%d/%d] bag loss: %.4f' % (batch_idx, len(data_loader), loss.item()))
+            sys.stdout.write('\r Testing bag [%d/%d] bag loss: %.4f' % (i, len(patient_ids), loss.item()))
             test_labels.extend([bag_label.squeeze().cpu().numpy().astype(int)])
             if args.average:
                 test_predictions.extend([(torch.sigmoid(max_prediction)+torch.sigmoid(bag_prediction)).squeeze().cpu().numpy()])
@@ -97,13 +113,13 @@ def test(args, data_loader, label_dict, milnet, criterion, thresholds=None, retu
             class_prediction_bag[test_predictions[:, i]<thresholds_optimal[i]] = 0
             test_predictions[:, i] = class_prediction_bag
     bag_score = 0
-    for i in range(0, len(test_labels)):
+    for i in range(0, len(patient_ids)):
         bag_score = np.array_equal(test_labels[i], test_predictions[i]) + bag_score         
-    avg_score = bag_score / len(test_labels)
+    avg_score = bag_score / len(patient_ids)
     
     if return_predictions:
-        return total_loss / len(test_labels), avg_score, auc_value, thresholds_optimal, test_predictions, test_labels
-    return total_loss / len(test_labels), avg_score, auc_value, thresholds_optimal
+        return total_loss / len(patient_ids), avg_score, auc_value, thresholds_optimal, test_predictions, test_labels
+    return total_loss / len(patient_ids), avg_score, auc_value, thresholds_optimal
 
 def multi_label_roc(labels, predictions, num_classes, pos_label=1):
     fprs = []
@@ -172,7 +188,7 @@ def print_save_message(args, save_name, thresholds_optimal):
 
 def main():
     parser = argparse.ArgumentParser(description='Train DSMIL on 20x patch features learned by SimCLR')
-    parser.add_argument('--num_classes', default=2, type=int, help='Number of output classes [2]')
+    parser.add_argument('--num_classes', default=3, type=int, help='Number of output classes [2]')
     parser.add_argument('--feats_size', default=1024, type=int, help='Dimension of the feature size [512]')
     parser.add_argument('--lr', default=0.0001, type=float, help='Initial learning rate [0.0001]')
     parser.add_argument('--num_epochs', default=50, type=int, help='Number of total training epochs [100]')
@@ -213,9 +229,14 @@ def main():
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.num_epochs, 0.000005)
         return milnet, criterion, optimizer, scheduler
 
-    args.split_folder = "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
-    data_dir = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files"
-    label_dict = {'normal': 0, 'tumor': 1}
+    args.split_folder = "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
+    label_dict = {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
+    data_dir_map = {
+        'KICH': "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp",
+        'KIRC': "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp",
+        'KIRP': "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+    }
+
     # bags_path = bags_path.sample(n=50, random_state=42)
     fold_results = []
 
@@ -227,16 +248,9 @@ def main():
         print(f"Starting iteration {iteration}.")
         milnet, criterion, optimizer, scheduler = init_model(args)
 
-        split_csv_path = os.path.join(args.split_folder, f'fold_{iteration}.csv')
-
-        train_dataset, val_dataset, test_dataset = return_splits_custom(
-            csv_path=split_csv_path,
-            data_dir=data_dir,
-            label_dict= label_dict,  # This won't affect direct labels
-            seed=42,
-            print_info=False
-        )
-        
+        train_path = os.path.join(args.split_folder, f'fold_{iteration}/train.csv')
+        val_path = os.path.join(args.split_folder, f'fold_{iteration}/val.csv')
+        test_path = os.path.join(args.split_folder, f'fold_{iteration}/test.csv')
 
         fold_best_score = 0
         best_ac = 0
@@ -245,8 +259,8 @@ def main():
 
         for epoch in range(1, args.num_epochs + 1):
             counter += 1
-            train_loss_bag = train(args, train_dataset, label_dict, milnet, criterion, optimizer) # iterate all bags
-            test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, val_dataset, label_dict, milnet, criterion)
+            train_loss_bag = train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimizer) # iterate all bags
+            test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, val_path, data_dir_map, label_dict, milnet, criterion)
             
             print_epoch_info(epoch, args, train_loss_bag, test_loss_bag, avg_score, aucs)
             scheduler.step()
@@ -260,7 +274,7 @@ def main():
                 save_model(args, iteration, run, save_path, milnet, thresholds_optimal)
                 best_model = copy.deepcopy(milnet)
             if counter > args.stop_epochs: break
-        test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, test_dataset, label_dict, best_model, criterion)
+        test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, test_path, data_dir_map, label_dict, best_model, criterion)
         fold_results.append((best_ac, best_auc))
     mean_ac = np.mean(np.array([i[0] for i in fold_results]))
     mean_auc = np.mean(np.array([i[1] for i in fold_results]), axis=0)
