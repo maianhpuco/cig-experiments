@@ -187,13 +187,13 @@ plot_camelyon16_optim_square_integrated_gradient:
 
 # === Grouped Targets ===
 
-group_cam_basic:
+group_plot_cam_basic:
 	make plot_camelyon16_integrated_gradient
 	make plot_camelyon16_vanilla_gradient
 	make plot_camelyon16_expected_gradient
 	make plot_camelyon16_integrated_decision_gradient
 
-group_cam_adv:
+group_plot_cam_adv:
 	make plot_camelyon16_contrastive_gradient
 	make plot_camelyon16_square_integrated_gradient
 	make plot_camelyon16_optim_square_integrated_gradient
@@ -223,13 +223,13 @@ plot_tcga_renal_optim_square_integrated_gradient:
 
 # === Grouped Targets ===
 
-group_tcga_basic:
+group_plot_tcga_basic:
 	make plot_tcga_renal_integrated_gradient
 	make plot_tcga_renal_vanilla_gradient
 	make plot_tcga_renal_expected_gradient
 	make plot_tcga_renal_integrated_decision_gradient
 
-group_tcga_adv:
+group_plot_tcga_adv:
 	make plot_tcga_renal_contrastive_gradient
 	make plot_tcga_renal_square_integrated_gradient
 	make plot_tcga_renal_optim_square_integrated_gradient
