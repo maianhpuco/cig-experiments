@@ -30,6 +30,9 @@ def train(args, data_loader, label_dict, milnet, criterion, optimizer):
     for batch_idx, (data, label) in enumerate(data_loader):
         optimizer.zero_grad()
 
+        print("LOG: label_dict", label_dict)
+        print("LOG: label", label)
+
         bag_label = torch.zeros(args.num_classes, dtype=torch.float32).cuda()
         bag_label[label_dict[label]] = 1
         bag_label = bag_label.unsqueeze(0)
