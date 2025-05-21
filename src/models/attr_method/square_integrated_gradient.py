@@ -59,11 +59,6 @@ class SquareIntegratedGradients(CoreSaliency):
 
         x_diff = x_value - x_baseline_batch
 
-        if torch.norm(x_diff).item() < 1e-6:
-            print("Warning: x_diff is near zero, using identity baseline")
-            x_baseline_batch = x_value * 0.0
-            x_diff = x_value - x_baseline_batch
-
         print(f"x_value shape: {x_value.shape}, norm: {torch.norm(x_value):.4f}")
         print(f"x_diff shape: {x_diff.shape}, norm: {torch.norm(x_diff):.4f}")
 
