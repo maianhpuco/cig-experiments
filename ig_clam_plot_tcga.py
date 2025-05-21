@@ -21,25 +21,25 @@ def load_config(config_file):
         config = yaml.safe_load(f)
     return config 
 
-def get_tcga_slide_mapping(split_folder, fold, class_label):
-    split_csv_path = os.path.join(split_folder, f"fold_{fold}", "test.csv")
-    if not os.path.exists(split_csv_path):
-        raise FileNotFoundError(f"Split file not found: {split_csv_path}")
+# def get_tcga_slide_mapping(split_folder, fold, class_label):
+#     split_csv_path = os.path.join(split_folder, f"fold_{fold}", "test.csv")
+#     if not os.path.exists(split_csv_path):
+#         raise FileNotFoundError(f"Split file not found: {split_csv_path}")
 
-    df = pd.read_csv(split_csv_path, header=None)
-    df.columns = ['uuid', 'slide', 'label']
+#     df = pd.read_csv(split_csv_path, header=None)
+#     df.columns = ['uuid', 'slide', 'label']
 
-    filtered = df[df['label'].str.lower() == class_label.lower()]
+#     filtered = df[df['label'].str.lower() == class_label.lower()]
 
-    mapping = {
-        os.path.splitext(row.slide)[0]: os.path.join(
-            row.label.upper(), row.uuid, row.slide + ".svs"
-        )
-        for _, row in filtered.iterrows()
-    }
+#     mapping = {
+#         os.path.splitext(row.slide)[0]: os.path.join(
+#             row.label.upper(), row.uuid, row.slide + ".svs"
+#         )
+#         for _, row in filtered.iterrows()
+#     }
 
-    print(f"[Fold {fold} | Class {class_label}] Slide mapping created with {len(mapping)} entries")
-    return mapping
+#     print(f"[Fold {fold} | Class {class_label}] Slide mapping created with {len(mapping)} entries")
+#     return mapping
  
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
@@ -64,18 +64,26 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 
     for idx, score_path in enumerate(scores_to_plot):
         print(f"  → Plotting [{idx+1}/{len(scores_to_plot)}]: {score_path}")
-        basename = os.path.basename(score_path).split(".")[0]
 
+        basename = os.path.splitext(os.path.basename(score_path))[0] 
+        
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
+
         elif dataset_name == "tcga_renal":
-            if basename not in slide_mapping:
-                print(f"Slide name {basename} not found in TCGA mapping, skipping...")
+            class_labels = ["KICH", "KIRP", "KIRC"]
+            class_label = class_labels[class_id]
+
+            # Dynamically glob the file
+            slide_candidates = glob.glob(os.path.join(args.slide_path, class_label, "*", f"{basename}.svs"))
+
+            if len(slide_candidates) == 0:
+                print(f" Slide file for {basename} not found in {class_label}/, skipping.")
                 continue
-            relative_slide_path = slide_mapping[basename]
-            slide_path = os.path.join(args.slide_path, relative_slide_path)
-        else:
-            raise ValueError("Unknown dataset.")
+            elif len(slide_candidates) > 1:
+                print(f" Multiple slide matches for {basename}, using first.")
+
+            slide_path = slide_candidates[0] 
 
         if not os.path.exists(slide_path):
             print(f"Slide not found: {slide_path}, skipping.")
