@@ -12,11 +12,11 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
               else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
 
     model.eval()
-    logits = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
+    outputs = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
 
-    logits_tensor = logits[0] if isinstance(logits, tuple) else logits
+    logits_tensor = outputs[0] if isinstance(outputs, tuple) else outputs
 
-    print(f"call_model_function: expected_keys={expected_keys}, logits_tensor shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, values={logits_tensor.detach().cpu().numpy()}")
+    print(f"call_model_function: expected_keys={expected_keys}, inputs shape={inputs.shape}, requires_grad={inputs.requires_grad}, logits_tensor shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, values={logits_tensor.detach().cpu().numpy()}")
 
     if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
         target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
@@ -25,16 +25,23 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
         else:
             target_output = logits_tensor[target_class_idx].sum()
         gradients = torch.autograd.grad(target_output, inputs)[0]
-        print("call_model_function: Returning gradients")
+        print("call_model_function: Returning gradients, shape={gradients.shape}")
         return {INPUT_OUTPUT_GRADIENTS: gradients}
 
     target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
     if logits_tensor.dim() == 2:
-        print(f"call_model_function: Returning class {target_class_idx} logits, shape={logits_tensor[:, target_class_idx].shape}, values={logits_tensor[:, target_class_idx].detach().cpu().numpy()}")
-        return logits_tensor[:, target_class_idx]
+        class_logits = logits_tensor[:, target_class_idx]
+        print(f"call_model_function: Returning class {target_class_idx} logits, shape={class_logits.shape}, requires_grad={class_logits.requires_grad}, values={class_logits.detach().cpu().numpy()}")
+        return class_logits
     print(f"call_model_function: Returning full logits, shape={logits_tensor.shape}")
     return logits_tensor
 
+# import os
+# import numpy as np
+# import torch
+# from tqdm import tqdm
+# from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+# from attr_method._common import PreprocessInputs, call_model_function
 
 class ContrastiveGradients(CoreSaliency):
     """
@@ -87,6 +94,16 @@ class ContrastiveGradients(CoreSaliency):
 
         model.eval()
         alphas = torch.linspace(0, 1, x_steps, device=device)
+
+        # Gradient hook to debug
+        def gradient_hook(module, grad_input, grad_output):
+            print(f"Gradient hook: module={module.__class__.__name__}, grad_output[0] shape={grad_output[0].shape if grad_output[0] is not None else None}, grad_output[0] requires_grad={grad_output[0].requires_grad if grad_output[0] is not None else False}")
+
+        # Register hook on model's classifier layer (adjust based on CLAM model structure)
+        for name, module in model.named_modules():
+            if "classifier" in name.lower() or "fc" in name.lower():
+                module.register_backward_hook(gradient_hook)
+                print(f"Registered gradient hook on {name}")
 
         for alpha in tqdm(alphas, desc=f"Computing class {target_class_idx}:", ncols=100):
             x_step_batch = x_baseline_batch + alpha * x_diff
