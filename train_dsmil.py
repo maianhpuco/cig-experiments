@@ -262,9 +262,9 @@ def main():
     args.split_folder = "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
     label_dict = {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
     data_dir_map = {
-        'kich': "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp",
-        'kirc': "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp",
-        'kirp': "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+        'KICH': "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp",
+        'KIRC': "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp",
+        'KIRP': "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
     }
 
     if args.eval_scheme == '5-time-train+valid+test':
