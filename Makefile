@@ -208,6 +208,7 @@ plot_cam_integrated_gradient:
 	python ig_clam_cig_check.py \
 	--config configs_simea/clam_camelyon16.yaml \
 	--ig_name contrastive_gradient
+	--device cpu
 
 
 check_score: 
