@@ -39,7 +39,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         print(f"  → Plotting [{idx+1}/{len(scores_to_plot)}]: {score_path}")
 
         basename = os.path.splitext(os.path.basename(score_path))[0]
-
+        print(basename)
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
 
@@ -50,12 +50,13 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             slide_candidates = glob.glob(
                 os.path.join(args.slide_path, class_label, "*", f"{basename}.svs")
             )
+            
 
             if len(slide_candidates) == 0:
-                print(f" ❌ Slide file for {basename} not found in {class_label}/, skipping.")
+                print(f"  Slide file for {basename} not found in {class_label}/, skipping.")
                 continue
             elif len(slide_candidates) > 1:
-                print(f" ⚠️  Multiple slide matches for {basename}, using first.")
+                print(f"   Multiple slide matches for {basename}, using first.")
 
             slide_path = slide_candidates[0]
 
@@ -63,19 +64,19 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             raise ValueError("Unknown dataset.")
 
         if not os.path.exists(slide_path):
-            print(f"❌ Slide not found: {slide_path}, skipping.")
+            print(f" Slide not found: {slide_path}, skipping.")
             continue
 
         try:
             slide = openslide.open_slide(slide_path)
         except Exception as e:
-            print(f"❌ Failed to open slide: {slide_path} | Error: {e}")
+            print(f" Failed to open slide: {slide_path} | Error: {e}")
             continue
 
         try:
             _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
         except Exception as e:
-            print(f"❌ Failed to compute rescaling stats for {basename} | Error: {e}")
+            print(f" Failed to compute rescaling stats for {basename} | Error: {e}")
             continue
 
         scale_x = new_width / original_width
@@ -83,14 +84,14 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 
         h5_path = os.path.join(args.features_h5_path, f"{basename}.h5")
         if not os.path.exists(h5_path):
-            print(f"❌ H5 not found: {h5_path}, skipping.")
+            print(f" H5 not found: {h5_path}, skipping.")
             continue
 
         try:
             with h5py.File(h5_path, "r") as f:
                 coordinates = f['coords'][:]
         except Exception as e:
-            print(f"❌ Failed to read coords from H5: {h5_path} | Error: {e}")
+            print(f" Failed to read coords from H5: {h5_path} | Error: {e}")
             continue
 
         try:
@@ -98,7 +99,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             clipped_scores = replace_outliers_with_bounds(scores.copy())
             scaled_scores = min_max_scale(clipped_scores)
         except Exception as e:
-            print(f"❌ Failed to load/process scores from {score_path} | Error: {e}")
+            print(f"Failed to load/process scores from {score_path} | Error: {e}")
             continue
 
         save_path = os.path.join(plot_dir, f"{basename}.png")
@@ -108,9 +109,9 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
                 scale_x, scale_y, new_height, new_width,
                 coordinates, scaled_scores, name="", save_path=save_path
             )
-            print(f"✅ Saved to {save_path}")
+            print(f"Saved to {save_path}")
         except Exception as e:
-            print(f"❌ Failed to save plot for {basename} | Error: {e}")
+            print(f"Failed to save plot for {basename} | Error: {e}")
             continue
         
 def main(args, config):
@@ -142,7 +143,7 @@ def main(args, config):
             )
 
             if not os.path.exists(score_dir):
-                print(f"⚠️ Score folder not found: {score_dir}, skipping...")
+                print(f" Score folder not found: {score_dir}, skipping...")
                 continue
 
             plot_for_class(args, args.ig_name, fold, class_id, score_dir, plot_dir)
