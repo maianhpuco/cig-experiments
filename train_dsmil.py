@@ -74,7 +74,7 @@ def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimiz
         full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
         features = torch.load(full_path, weights_only=True, map_location='cuda:0')
 
-        print("LOG: label", label)
+        print("LOG: label_dict[label]", label_dict[label])
         print("LOG: Tensor(label_dict[label])", Tensor(label_dict[label]))
         bag_label = Tensor(label_dict[label]).unsqueeze(0)
         print("LOG: bag_label", bag_label)
