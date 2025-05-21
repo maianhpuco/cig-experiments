@@ -70,7 +70,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 
         if not os.path.exists(slide_path):
             print(f" Slide not found: {slide_path}, skipping.")
-            continue
+            # continue
 
         try:
             slide = openslide.open_slide(slide_path)
