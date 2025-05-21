@@ -46,13 +46,15 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         elif dataset_name == "tcga_renal":
             class_labels = ["KICH", "KIRP", "KIRC"]
             class_label = class_labels[class_id]
-            print("slide path", args.slide_path, "class", class_label)
-            slide_root = args.slide_path[class_label.lower()] 
-            
+            slide_dirs = args.slide_path  # dict with lowercase keys: kich, kirp, kirc
+
+            # ensure key lookup is correct
+            slide_root = slide_dirs[class_label.lower()]
             slide_candidates = glob.glob(
-                os.path.join(slide_root, class_label, "*", f"{basename}.svs")
+                os.path.join(slide_root, "*", f"{basename}.svs")
             )
-            
+            print(f"Searching: {os.path.join(slide_root, '*', f'{basename}.svs')}")
+
 
             if len(slide_candidates) == 0:
                 print(f"  Slide file for {basename} not found in {class_label}/, skipping.")
