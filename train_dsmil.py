@@ -275,8 +275,8 @@ def main():
         os.makedirs(save_path, exist_ok=True)
         run = len(glob.glob(os.path.join(save_path, '*.pth')))
 
-        for iteration in range(5):
-            print(f"Starting iteration {iteration + 1}.")
+        for iteration in range(1, 6):
+            print(f"Starting iteration {iteration}.")
             milnet, criterion, optimizer, scheduler = init_model(args)
 
             train_path = os.path.join(args.split_folder, f'fold_{iteration}/train.csv')
