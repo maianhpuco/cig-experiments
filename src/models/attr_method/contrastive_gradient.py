@@ -33,12 +33,17 @@ class ContrastiveGradients(CoreSaliency):
             # ------------ Counter Factual Gradient ------------ 
             x_step_batch = x_baseline_batch + alpha * x_diff
             # ------------ Counter Factual Gradient ------------
-            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, requires_grad=False)
+            x_baseline_torch = x_baseline_batch.detach().clone().float().cpu()
+ 
+            # x_baseline_torch = torch.tensor(x_baseline_batch, dtype=torch.float32, requires_grad=False)
             logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])
-
+            print("Logits x r", logits_x_r)
             # Compute counterfactual gradients using logitws difference
-            x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True)
+            x_step_batch_torch = x_step_batch.detach().clone().float().requires_grad_()
+ 
+            # x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True)
             logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])
+            print("Logits x r", logilogits_x_stepts_x_r)
             logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
             logits_difference.backward()
             
@@ -46,10 +51,12 @@ class ContrastiveGradients(CoreSaliency):
                 raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.")
 
             grad_logits_diff = x_step_batch_torch.grad.numpy()
-            
+             
             # ------------ Conbine Gradient and X_diff ------------ 
             counterfactual_gradients = grad_logits_diff.mean(axis=0) 
-            
+            print("counter factual gradident")
+            print(counterfactual_gradients.shape)
+            print(counterfactual_gradients[:3])
             # print("check shape")
             # print(x_diff.shape, counterfactual_gradients.shape)
             attribution_values += counterfactual_gradients 
