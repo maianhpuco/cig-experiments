@@ -37,13 +37,13 @@ class ContrastiveGradients(CoreSaliency):
  
             # x_baseline_torch = torch.tensor(x_baseline_batch, dtype=torch.float32, requires_grad=False)
             logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])
-            print("Logits x r", logits_x_r)
+            print("logits_x_r", logits_x_r)
             # Compute counterfactual gradients using logitws difference
             x_step_batch_torch = x_step_batch.detach().clone().float().requires_grad_()
  
             # x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True)
             logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])
-            print("Logits x r", logilogits_x_stepts_x_r)
+            print("logits_x_step", logits_x_step)
             logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
             logits_difference.backward()
             
