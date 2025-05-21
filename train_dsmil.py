@@ -75,6 +75,7 @@ def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimiz
         features = torch.load(full_path, weights_only=True, map_location='cuda:0')
 
         bag_label = Tensor(label_dict[label]).unsqueeze(0)
+        print("LOG: bag_label", bag_label)
         bag_feats = features
         bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
         bag_feats = bag_feats.view(-1, args.feats_size)
