@@ -42,25 +42,25 @@ class SquareIntegratedGradients(CoreSaliency):
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
     def GetMask(self, **kwargs):
-        # Convert x_value to NumPy for consistency with original code
+        # Convert x_value to NumPy for consistency
         x_value = kwargs["x_value"].detach().cpu().numpy() if isinstance(kwargs["x_value"], torch.Tensor) else kwargs["x_value"]
         model = kwargs["model"]
         call_model_args = kwargs.get("call_model_args", {})
         baseline_features = kwargs["baseline_features"].detach().cpu().numpy() if isinstance(kwargs["baseline_features"], torch.Tensor) else kwargs["baseline_features"]
         x_steps = kwargs.get("x_steps", 25)  # Match original code's default
         eta = kwargs.get("eta", 1.0)
-        device = kwargs.get("device", "cpu")
+        device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         target_class_idx = call_model_args.get("target_class_idx", 0)
 
         # Prepare attribution accumulator
         attribution_values = np.zeros_like(x_value, dtype=np.float32)
         alphas = np.linspace(0, 1, x_steps)
 
-        # Sample baseline as in the original code
+        # Sample baseline without extra batch dimension
         try:
-            sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
+            sampled_indices = np.random.choice(baseline_features.shape[0], x_value.shape[0], replace=True)
             x_baseline_batch = baseline_features[sampled_indices]
-            print(f"Sampled baseline norm: {np.linalg.norm(x_baseline_batch):.4f}, min: {x_baseline_batch.min():.4f}, max: {x_baseline_batch.max():.4f}")
+            print(f"Sampled baseline shape: {x_baseline_batch.shape}, norm: {np.linalg.norm(x_baseline_batch):.4f}, min: {x_baseline_batch.min():.4f}, max: {x_baseline_batch.max():.4f}")
         except Exception as e:
             print(f"Warning: Failed to sample baseline ({e}), using zero baseline")
             x_baseline_batch = np.zeros_like(x_value, dtype=np.float32)
@@ -78,7 +78,7 @@ class SquareIntegratedGradients(CoreSaliency):
         # Forward hook to debug requires_grad
         def forward_hook(module, input, output):
             output_tensor = output[0] if isinstance(output, tuple) else output
-            print(f"Forward hook: module={module.__class__.__name__}, output shape={output_tensor.shape}, requires_grad={output_tensor.requires_grad}")
+            print(f"Forward hook: module={module.__class__.__name__}, input shape={input[0].shape if isinstance(input, tuple) else input.shape}, output shape={output_tensor.shape}, requires_grad={output_tensor.requires_grad}")
 
         # Register hooks on key layers
         for name, module in model.named_modules():
@@ -88,6 +88,7 @@ class SquareIntegratedGradients(CoreSaliency):
         for alpha in tqdm(alphas, desc=f"SIG class {target_class_idx}", ncols=100):
             x_step = x_baseline_batch + alpha * x_diff
             x_step_tensor = torch.tensor(x_step, dtype=torch.float32, device=device, requires_grad=True)
+            print(f"Input x_step_tensor shape: {x_step_tensor.shape}")
 
             # Step 1: Get model gradient w.r.t x_step
             call_model_output = call_model_function(
@@ -97,7 +98,7 @@ class SquareIntegratedGradients(CoreSaliency):
                 expected_keys=self.expected_keys
             )
             gradients = call_model_output[INPUT_OUTPUT_GRADIENTS]
-            gradients_avg = gradients.mean(axis=0)  # Match original code's averaging
+            gradients_avg = gradients.mean(axis=0)
             print(f"Alpha {alpha:.2f}, gradients_avg shape: {gradients_avg.shape}, norm: {np.linalg.norm(gradients_avg):.4f}")
 
             # Step 2: Counterfactual gradients using .backward()
@@ -123,7 +124,7 @@ class SquareIntegratedGradients(CoreSaliency):
             W_j = np.linalg.norm(gradients_avg) + 1e-8
             attribution_values += (counterfactual_grad * gradients_avg) * (eta / W_j)
 
-        # Final attribution (match original code)
+        # Final attribution
         result = attribution_values / x_steps
         print(f"Raw attribution norm: {np.linalg.norm(result):.4f}, min: {result.min():.4e}, max: {result.max():.4e}")
         return result
