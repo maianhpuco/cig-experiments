@@ -99,9 +99,15 @@ class SquareIntegratedGradients(CoreSaliency):
             target_logits_r = logits_r[:, target_class_idx]
             logits_diff = (target_logits_step - target_logits_r).norm(p=2) ** 2
 
-            # Compute counterfactual gradient using autograd
-            counterfactual_grad = torch.autograd.grad(logits_diff, x_step_tensor, create_graph=False)[0].mean(dim=0)
-            print(f"Alpha {alpha:.2f}, counterfactual_grad shape: {counterfactual_grad.shape}, norm: {torch.norm(counterfactual_grad):.4f}")
+            # Compute counterfactual gradient with allow_unused=True
+            grad_outputs = torch.ones_like(logits_diff)
+            counterfactual_grad = torch.autograd.grad(logits_diff, x_step_tensor, grad_outputs=grad_outputs, allow_unused=True)[0]
+            if counterfactual_grad is None:
+                print(f"Warning: counterfactual_grad is None for alpha={alpha:.2f}, using zeros")
+                counterfactual_grad = torch.zeros_like(gradients_avg)
+            else:
+                counterfactual_grad = counterfactual_grad.mean(dim=0)
+                print(f"Alpha {alpha:.2f}, counterfactual_grad shape: {counterfactual_grad.shape}, norm: {torch.norm(counterfactual_grad):.4f}")
 
             W_j = torch.norm(gradients_avg) + 1e-8
             attribution_values += (counterfactual_grad * gradients_avg) * (eta / W_j)
