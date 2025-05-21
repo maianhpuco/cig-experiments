@@ -30,9 +30,6 @@ def train(args, data_loader, label_dict, milnet, criterion, optimizer):
     for batch_idx, (data, label) in enumerate(data_loader):
         optimizer.zero_grad()
 
-        print("LOG: label_dict", label_dict)
-        print("LOG: label", label)
-
         label = label.astype(int)
 
         bag_label = torch.zeros(args.num_classes, dtype=torch.float32).cuda()
@@ -150,8 +147,8 @@ def optimal_thresh(fpr, tpr, thresholds, p=0):
 
 def print_epoch_info(epoch, args, train_loss_bag, test_loss_bag, avg_score, aucs):
     if args.dataset.startswith('TCGA-lung'):
-        print('\r Epoch [%d/%d] train loss: %.4f test loss: %.4f, average score: %.4f, auc_KIRP: %.4f, auc_KIRC: %.4f, auc_KICH: %.4f' % 
-                (epoch, args.num_epochs, train_loss_bag, test_loss_bag, avg_score, aucs[0], aucs[1], aucs[2]))
+        print('\r Epoch [%d/%d] train loss: %.4f test loss: %.4f, average score: %.4f, normal: %.4f, tumor: %.4f' % 
+                (epoch, args.num_epochs, train_loss_bag, test_loss_bag, avg_score, aucs[0], aucs[1]))
     else:
         print('\r Epoch [%d/%d] train loss: %.4f test loss: %.4f, average score: %.4f, AUC: ' % 
                 (epoch, args.num_epochs, train_loss_bag, test_loss_bag, avg_score) + '|'.join('class-{}>>{}'.format(*k) for k in enumerate(aucs))) 
@@ -171,7 +168,7 @@ def save_model(args, fold, run, save_path, model, thresholds_optimal):
 
 def print_save_message(args, save_name, thresholds_optimal):
     if args.dataset.startswith('TCGA-lung'):
-        print('Best model saved at: ' + save_name + ' Best thresholds: auc_KIRP %.4f, auc_KIRC %.4f, auc_KICH %.4f' % (thresholds_optimal[0], thresholds_optimal[1], thresholds_optimal[2]))
+        print('Best model saved at: ' + save_name + ' Best thresholds: normal %.4f, tumor %.4f' % (thresholds_optimal[0], thresholds_optimal[1]))
     else:
         print('Best model saved at: ' + save_name)
         print('Best thresholds ===>>> '+ '|'.join('class-{}>>{}'.format(*k) for k in enumerate(thresholds_optimal)))
