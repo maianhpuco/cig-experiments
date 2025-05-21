@@ -214,7 +214,7 @@ def main():
         return milnet, criterion, optimizer, scheduler
 
     args.split_folder = "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
-    data_dir = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files"
+    data_dir = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
     label_dict = {'normal': 0, 'tumor': 1}
     # bags_path = bags_path.sample(n=50, random_state=42)
     fold_results = []
