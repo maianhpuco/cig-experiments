@@ -66,7 +66,12 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
                 print(f"  Slide {basename} not found in split CSV, skipping.")
                 continue
             relative_path = slide_path_mapping[basename]
+            print("----- ", basename)
+            print("----- ", relative_path)
+        
             slide_path = os.path.join(args.slide_path_root, relative_path)
+            print("-----", slide_path)
+            
         else:
             raise ValueError("Unknown dataset.")
 
