@@ -38,7 +38,7 @@ class SquareIntegratedGradients(CoreSaliency):
         model = kwargs["model"]
         call_model_args = kwargs.get("call_model_args", {})
         baseline_features = kwargs["baseline_features"].to(x_value.device)
-        x_steps = kwargs.get("x_steps", 50)  # Increased steps for better accuracy
+        x_steps = kwargs.get("x_steps", 50)
         eta = kwargs.get("eta", 1.0)
         device = x_value.device
         target_class_idx = call_model_args.get("target_class_idx", 0)
@@ -89,17 +89,24 @@ class SquareIntegratedGradients(CoreSaliency):
             gradients_avg = gradients.mean(dim=0)
             print(f"Alpha {alpha:.2f}, gradients_avg shape: {gradients_avg.shape}, norm: {torch.norm(gradients_avg):.4f}")
 
-            # Step 2: Counterfactual gradients using autograd
+            # Step 2: Counterfactual gradients
             with torch.no_grad():
                 logits_r = call_model_function(x_baseline_batch, model, call_model_args)
             logits_step = call_model_function(x_step_tensor, model, call_model_args)
-            logits_diff = (logits_step - logits_r).norm(p=2) ** 2
+
+            # Compute logits difference for the target class only
+            target_logits_step = logits_step[:, target_class_idx]
+            target_logits_r = logits_r[:, target_class_idx]
+            logits_diff = (target_logits_step - target_logits_r).norm(p=2) ** 2
 
             # Compute counterfactual gradient using autograd
-            counterfactual_grad = torch.autograd.grad(logits_diff, x_step_tensor)[0].mean(dim=0)
+            counterfactual_grad = torch.autograd.grad(logits_diff, x_step_tensor, create_graph=False)[0].mean(dim=0)
             print(f"Alpha {alpha:.2f}, counterfactual_grad shape: {counterfactual_grad.shape}, norm: {torch.norm(counterfactual_grad):.4f}")
 
             W_j = torch.norm(gradients_avg) + 1e-8
             attribution_values += (counterfactual_grad * gradients_avg) * (eta / W_j)
 
-        return (attribution_values / x_steps).detach().cpu().numpy()
+        # Final attribution
+        result = (attribution_values / x_steps).detach().cpu().numpy()
+        print(f"Raw attribution norm: {torch.norm(attribution_values):.4f}, min: {result.min():.4e}, max: {result.max():.4e}")
+        return result
