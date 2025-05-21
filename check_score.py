@@ -86,13 +86,23 @@ def main(args, config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True, help='Path to config YAML')
-    
+    parser.add_argument('--ig_name',
+                            default='integrated_gradient',
+                            choices=[
+                                'integrated_gradient',
+                                'expected_gradient',
+                                'integrated_decision_gradient',
+                                'contrastive_gradient',
+                                'vanilla_gradient',
+                                'square_integrated_gradient',
+                                'optim_square_integrated_gradient'
+                            ])
     args = parser.parse_args()
 
     # Defaults
     args.start_fold = 1
     args.end_fold = 1
-    args.ig_name = "integrated_gradient" 
+    # args.ig_name = "integrated_gradient" 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     print(args.ig_name)
     config = load_config(args.config)
