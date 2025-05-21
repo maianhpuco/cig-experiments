@@ -119,6 +119,22 @@ def main(args):
                     attribution_values = attribution_method.GetMask(**kwargs)
                     scores = attribution_values.mean(1)
                     print(f"- Score shape: {scores.shape}")
+                    scores = attribution_values.mean(1)
+
+                    # Normalize and summarize the scores
+                    if isinstance(scores, torch.Tensor):
+                        scores = scores.detach().cpu().numpy()
+
+                    from utils_plot import min_max_scale  # if not already imported
+                    normalized_scores = min_max_scale(scores.copy())
+                    
+                    print("=====Sanity Check the result======= ")
+                    print(f"  >  Shape          : {normalized_scores.shape}")
+                    print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
+                    print(f"  >  Sum            : {np.sum(normalized_scores):.6f}")
+                    print(f"  >  Min value      : {np.min(normalized_scores):.6f}")
+                    print(f"  >  Max value      : {np.max(normalized_scores):.6f}")
+                    print(f"  >  Non-zero count : {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}")
 
                     score_save_path = os.path.join(
                         args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{fold_id}', f'class_{class_idx}'
@@ -172,7 +188,20 @@ def main(args):
                     scores = attribution_values.mean(1)
                     print(scores)
                     print(f"- Score shape: {scores.shape}")
+                    if isinstance(scores, torch.Tensor):
+                        scores = scores.detach().cpu().numpy()
 
+                    from utils_plot import min_max_scale  # if not already imported
+                    normalized_scores = min_max_scale(scores.copy())
+                    
+                    print("=====Sanity Check the result======= ")
+                    print(f"  >  Shape          : {normalized_scores.shape}")
+                    print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
+                    print(f"  >  Sum            : {np.sum(normalized_scores):.6f}")
+                    print(f"  >  Min value      : {np.min(normalized_scores):.6f}")
+                    print(f"  >  Max value      : {np.max(normalized_scores):.6f}")
+                    print(f"  >  Non-zero count : {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}") 
+                    
                     score_save_path = os.path.join(
                         args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{fold_id}', f'class_{class_idx}'
                     )
@@ -185,7 +214,7 @@ def main(args):
 
                     print(f"Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
-                break
+                # break
 
 
 
