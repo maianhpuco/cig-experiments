@@ -16,7 +16,7 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
 
     logits_tensor = logits[0] if isinstance(logits, tuple) else logits
 
-    print(f"call_model_function: expected_keys={expected_keys}, logits_tensor shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}")
+    print(f"call_model_function: expected_keys={expected_keys}, logits_tensor shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, values={logits_tensor.detach().cpu().numpy()}")
 
     if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
         target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
@@ -30,11 +30,10 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
 
     target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
     if logits_tensor.dim() == 2:
-        print(f"call_model_function: Returning class {target_class_idx} logits, shape={logits_tensor[:, target_class_idx].shape}")
+        print(f"call_model_function: Returning class {target_class_idx} logits, shape={logits_tensor[:, target_class_idx].shape}, values={logits_tensor[:, target_class_idx].detach().cpu().numpy()}")
         return logits_tensor[:, target_class_idx]
     print(f"call_model_function: Returning full logits, shape={logits_tensor.shape}")
     return logits_tensor
-
 
 class ContrastiveGradients(CoreSaliency):
     """
@@ -75,11 +74,15 @@ class ContrastiveGradients(CoreSaliency):
 
         x_diff = x_value - x_baseline_batch  # [N, D]
 
-        # Check if x_diff is too small
-        if torch.norm(x_diff).item() < 1e-6:
+        # Check x_diff norm
+        x_diff_norm = torch.norm(x_diff).item()
+        print(f"x_diff norm: {x_diff_norm:.4f}")
+        if x_diff_norm < 1e-6:
             print("Warning: x_diff is near zero, using zero baseline")
             x_baseline_batch = torch.zeros_like(x_value, device=device)
             x_diff = x_value - x_baseline_batch
+            x_diff_norm = torch.norm(x_diff).item()
+            print(f"New x_diff norm: {x_diff_norm:.4f}")
 
         model.eval()
         alphas = torch.linspace(0, 1, x_steps, device=device)
@@ -98,7 +101,8 @@ class ContrastiveGradients(CoreSaliency):
                 print(f"Error: Expected tensors, got logits_r: {type(logits_r)}, logits_step: {type(logits_step)}")
                 raise TypeError("call_model_function returned non-tensor outputs")
 
-            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_step.shape}, logits_diff: {(logits_step - logits_r).norm().item():.4f}")
+            logits_diff = (logits_step - logits_r).norm().item()
+            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_step.shape}, logits_diff: {logits_diff:.4f}, logits_r: {logits_r.detach().cpu().numpy()}, logits_step: {logits_step.detach().cpu().numpy()}")
 
             # Compute counterfactual loss
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
@@ -108,15 +112,15 @@ class ContrastiveGradients(CoreSaliency):
                 x_step_batch.grad.zero_()
 
             # Backward pass
-            loss.backward()
-
-            # Check gradients
-            if x_step_batch.grad is None:
-                print(f"Error: No gradients for class {target_class_idx}, alpha {alpha:.2f}, loss={loss.item():.4f}")
-                raise RuntimeError("Gradients not computed! Ensure model parameters require gradients.")
-
-            attribution_values += x_step_batch.grad
-            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, Loss: {loss.item():.4f}, Grad norm: {torch.norm(x_step_batch.grad):.4f}")
+            if loss.item() > 0:  # Only backward if loss is non-zero
+                loss.backward()
+                if x_step_batch.grad is None:
+                    print(f"Warning: No gradients for class {target_class_idx}, alpha {alpha:.2f}, loss={loss.item():.4f}")
+                else:
+                    attribution_values += x_step_batch.grad
+                    print(f"Class {target_class_idx}, Alpha {alpha:.2f}, Loss: {loss.item():.4f}, Grad norm: {torch.norm(x_step_batch.grad):.4f}")
+            else:
+                print(f"Class {target_class_idx}, Alpha {alpha:.2f}, Loss: {loss.item():.4f}, Skipping backward due to zero loss")
 
         x_diff_mean = x_diff.mean(dim=0)
         final_attribution = (attribution_values * x_diff_mean) / x_steps
