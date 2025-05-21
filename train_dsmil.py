@@ -15,9 +15,12 @@ from sklearn.model_selection import KFold
 from collections import OrderedDict
 import json
 from tqdm import tqdm
-import dsmil as mil
 
 sys.path.append(os.path.join("src/externals/dsmil-wsi"))
+
+
+import dsmil as mil
+
 
 def get_bag_feats(csv_file_df, args):
     if args.dataset == 'TCGA-lung-default':
