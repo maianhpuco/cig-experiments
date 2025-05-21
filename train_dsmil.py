@@ -77,7 +77,6 @@ def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimiz
         bag_label = torch.tensor([0, 0, 0], dtype=torch.float32).cuda()
         bag_label[label_dict[label]] = 1
         bag_label = bag_label.unsqueeze(0)
-        print("LOG: bag_label", bag_label)
         bag_feats = features
         bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
         bag_feats = bag_feats.view(-1, args.feats_size)
@@ -119,7 +118,6 @@ def test(args, test_csv_path, data_dir_map, label_dict, milnet, criterion, thres
             bag_label = torch.tensor([0, 0, 0], dtype=torch.float32).cuda()
             bag_label[label_dict[label]] = 1
             bag_label = bag_label.unsqueeze(0)
-            print("LOG: bag_label", bag_label)
             bag_feats = features
             bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
             bag_feats = bag_feats.view(-1, args.feats_size)
@@ -198,8 +196,8 @@ def optimal_thresh(fpr, tpr, thresholds, p=0):
 
 def print_epoch_info(epoch, args, train_loss_bag, test_loss_bag, avg_score, aucs):
     if args.dataset.startswith('TCGA-lung'):
-        print('\r Epoch [%d/%d] train loss: %.4f test loss: %.4f, average score: %.4f, auc_LUAD: %.4f, auc_LUSC: %.4f' % 
-                (epoch, args.num_epochs, train_loss_bag, test_loss_bag, avg_score, aucs[0], aucs[1]))
+        print('\r Epoch [%d/%d] train loss: %.4f test loss: %.4f, average score: %.4f, auc_KIRP: %.4f, auc_KIRC: %.4f, auc_KICH: %.4f' % 
+                (epoch, args.num_epochs, train_loss_bag, test_loss_bag, avg_score, aucs[0], aucs[1], aucs[2]))
     else:
         print('\r Epoch [%d/%d] train loss: %.4f test loss: %.4f, average score: %.4f, AUC: ' % 
                 (epoch, args.num_epochs, train_loss_bag, test_loss_bag, avg_score) + '|'.join('class-{}>>{}'.format(*k) for k in enumerate(aucs))) 
@@ -219,7 +217,7 @@ def save_model(args, fold, run, save_path, model, thresholds_optimal):
 
 def print_save_message(args, save_name, thresholds_optimal):
     if args.dataset.startswith('TCGA-lung'):
-        print('Best model saved at: ' + save_name + ' Best thresholds: LUAD %.4f, LUSC %.4f' % (thresholds_optimal[0], thresholds_optimal[1]))
+        print('Best model saved at: ' + save_name + ' Best thresholds: auc_KIRP %.4f, auc_KIRC %.4f, auc_KICH %.4f' % (thresholds_optimal[0], thresholds_optimal[1], thresholds_optimal[2]))
     else:
         print('Best model saved at: ' + save_name)
         print('Best thresholds ===>>> '+ '|'.join('class-{}>>{}'.format(*k) for k in enumerate(thresholds_optimal)))
@@ -241,6 +239,8 @@ def main():
     parser.add_argument('--non_linearity', default=1, type=float, help='Additional nonlinear operation [0]')
     parser.add_argument('--average', type=bool, default=False, help='Average the score of max-pooling and bag aggregating')
     parser.add_argument('--eval_scheme', default='5-fold-cv', type=str, help='Evaluation scheme [5-fold-cv | 5-fold-cv-standalone-test | 5-time-train+valid+test ]')
+    parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
+    parser.add_argument('--k_end', default=1, type=int, help='End fold number')
 
     
     args = parser.parse_args()
@@ -273,52 +273,51 @@ def main():
         'KIRP': "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
     }
 
-    if args.eval_scheme == '5-time-train+valid+test':
-        # bags_path = bags_path.sample(n=50, random_state=42)
-        fold_results = []
+    # bags_path = bags_path.sample(n=50, random_state=42)
+    fold_results = []
 
-        save_path = os.path.join('weights', datetime.date.today().strftime("%Y%m%d"))
-        os.makedirs(save_path, exist_ok=True)
-        run = len(glob.glob(os.path.join(save_path, '*.pth')))
+    save_path = os.path.join('weights', datetime.date.today().strftime("%Y%m%d"))
+    os.makedirs(save_path, exist_ok=True)
+    run = len(glob.glob(os.path.join(save_path, '*.pth')))
 
-        for iteration in range(1, 6):
-            print(f"Starting iteration {iteration}.")
-            milnet, criterion, optimizer, scheduler = init_model(args)
+    for iteration in range(args.k_start, args.k_end + 1):
+        print(f"Starting iteration {iteration}.")
+        milnet, criterion, optimizer, scheduler = init_model(args)
 
-            train_path = os.path.join(args.split_folder, f'fold_{iteration}/train.csv')
-            val_path = os.path.join(args.split_folder, f'fold_{iteration}/val.csv')
-            test_path = os.path.join(args.split_folder, f'fold_{iteration}/test.csv')
+        train_path = os.path.join(args.split_folder, f'fold_{iteration}/train.csv')
+        val_path = os.path.join(args.split_folder, f'fold_{iteration}/val.csv')
+        test_path = os.path.join(args.split_folder, f'fold_{iteration}/test.csv')
 
-            fold_best_score = 0
-            best_ac = 0
-            best_auc = 0
-            counter = 0
+        fold_best_score = 0
+        best_ac = 0
+        best_auc = 0
+        counter = 0
 
-            for epoch in range(1, args.num_epochs + 1):
-                counter += 1
-                train_loss_bag = train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimizer) # iterate all bags
-                test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, val_path, data_dir_map, label_dict, milnet, criterion)
-                
-                print_epoch_info(epoch, args, train_loss_bag, test_loss_bag, avg_score, aucs)
-                scheduler.step()
+        for epoch in range(1, args.num_epochs + 1):
+            counter += 1
+            train_loss_bag = train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimizer) # iterate all bags
+            test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, val_path, data_dir_map, label_dict, milnet, criterion)
+            
+            print_epoch_info(epoch, args, train_loss_bag, test_loss_bag, avg_score, aucs)
+            scheduler.step()
 
-                current_score = get_current_score(avg_score, aucs)
-                if current_score > fold_best_score:
-                    counter = 0
-                    fold_best_score = current_score
-                    best_ac = avg_score
-                    best_auc = aucs
-                    save_model(args, iteration, run, save_path, milnet, thresholds_optimal)
-                    best_model = copy.deepcopy(milnet)
-                if counter > args.stop_epochs: break
-            test_loss_bag, avg_score, aucs, thresholds_optimal = test(test_path, data_dir_map, label_dict, best_model, criterion, args)
-            fold_results.append((best_ac, best_auc))
-        mean_ac = np.mean(np.array([i[0] for i in fold_results]))
-        mean_auc = np.mean(np.array([i[1] for i in fold_results]), axis=0)
-        # Print mean and std deviation for each class
-        print(f"Final results: Mean Accuracy: {mean_ac}")
-        for i, mean_score in enumerate(mean_auc):
-            print(f"Class {i}: Mean AUC = {mean_score:.4f}")
+            current_score = get_current_score(avg_score, aucs)
+            if current_score > fold_best_score:
+                counter = 0
+                fold_best_score = current_score
+                best_ac = avg_score
+                best_auc = aucs
+                save_model(args, iteration, run, save_path, milnet, thresholds_optimal)
+                best_model = copy.deepcopy(milnet)
+            if counter > args.stop_epochs: break
+        test_loss_bag, avg_score, aucs, thresholds_optimal = test(test_path, data_dir_map, label_dict, best_model, criterion, args)
+        fold_results.append((best_ac, best_auc))
+    mean_ac = np.mean(np.array([i[0] for i in fold_results]))
+    mean_auc = np.mean(np.array([i[1] for i in fold_results]), axis=0)
+    # Print mean and std deviation for each class
+    print(f"Final results: Mean Accuracy: {mean_ac}")
+    for i, mean_score in enumerate(mean_auc):
+        print(f"Class {i}: Mean AUC = {mean_score:.4f}")
 
 if __name__ == '__main__':
     main()
