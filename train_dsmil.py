@@ -61,6 +61,7 @@ def generate_pt_files(args, df):
 def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimizer):
     milnet.train()
 
+    print("LOG: train_path", train_path)
     df = pd.read_csv(train_path)
     patient_ids = df["patient_id"].dropna().tolist()
     slides = df["slide"].dropna().tolist()
@@ -105,6 +106,7 @@ def test(args, test_csv_path, data_dir_map, label_dict, milnet, criterion, thres
     test_predictions = []
     Tensor = torch.cuda.FloatTensor
 
+    print("LOG: test_csv_path", test_csv_path)
     df = pd.read_csv(test_csv_path)
     
     patient_ids = df["patient_id"].dropna().tolist()
@@ -310,7 +312,7 @@ def main():
                 save_model(args, iteration, run, save_path, milnet, thresholds_optimal)
                 best_model = copy.deepcopy(milnet)
             if counter > args.stop_epochs: break
-        test_loss_bag, avg_score, aucs, thresholds_optimal = test(test_path, data_dir_map, label_dict, best_model, criterion, args)
+        test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, test_path, data_dir_map, label_dict, best_model, criterion)
         fold_results.append((best_ac, best_auc))
     mean_ac = np.mean(np.array([i[0] for i in fold_results]))
     mean_auc = np.mean(np.array([i[1] for i in fold_results]), axis=0)
