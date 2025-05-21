@@ -72,7 +72,7 @@ def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimiz
         optimizer.zero_grad()
 
         full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
-        features = torch.load(full_path, weights_only=True)
+        features = torch.load(full_path, weights_only=True, map_location='cuda:0')
 
         bag_label = Tensor(label_dict[label]).unsqueeze(0)
         bag_feats = features
@@ -111,7 +111,7 @@ def test(args, test_csv_path, data_dir_map, label_dict, milnet, criterion, thres
     with torch.no_grad():
         for i, (patient_id, slide_id, label) in enumerate(zip(patient_ids, slides, labels)):
             full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
-            features = torch.load(full_path, weights_only=True)
+            features = torch.load(full_path, weights_only=True, map_location='cuda:0')
 
             bag_label = Tensor(label_dict[label]).unsqueeze(0)
             bag_feats = features
