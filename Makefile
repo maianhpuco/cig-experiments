@@ -95,19 +95,6 @@ group_square: #done  runing
 	make ig_clam_optim_square_integrated_gradient
 
 
-	 
-
-dr_cig:
-	python ig_clam_test.py -sig-config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
-
-
-dr_sig:
-	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
-
-
-dr_osig:
-	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
-
 
 # # error make ig_clam_integrated_decision_gradient, ig_clam_contrastive_gradientig_clam_square_integrated_gradient Run all methods
 # all_ig_methods: group_basic group_advanced group_square
@@ -184,7 +171,40 @@ plot_cam_integrated_gradient:
 
 # python check_score.py --config  configs_simea/clam_camelyon16.yaml
 
-check_cig:
+
+#=========== MAKE FILE FOR SANITY CHECK ========
+	 
+
+dr_cig:
+	python ig_clam_test.py -sig-config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
+
+
+dr_sig:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
+
+
+dr_osig:
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
+
+
+
+plot_cam_integrated_gradient: 
+	python ig_clam_plot.py \
+	--config configs_simea/clam_camelyon16.yaml \
+	--ig_name integrated_gradient \
+	--start_fold 1 \
+	--end_fold 1 
+ 
+
+
+plot_cam_integrated_gradient: 
+	python ig_clam_plot.py \
+	--config configs_simea/clam_camelyon16.yaml \
+	--ig_name integrated_gradient \
+	--start_fold 1 \
+	--end_fold 1 
+
+ check_cig:
 	python ig_clam_cig_check.py \
 	--config configs_simea/clam_camelyon16.yaml \
 	--ig_name contrastive_gradient
