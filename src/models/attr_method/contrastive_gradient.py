@@ -38,10 +38,9 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     return logits_tensor
 
 
+
 class ContrastiveGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
-
-    expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
     def GetMask(self, **kwargs):
         x_value = kwargs.get("x_value")  # Expected: torch.Tensor [N, D]
