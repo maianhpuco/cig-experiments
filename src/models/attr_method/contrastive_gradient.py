@@ -34,8 +34,14 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
         print(f"call_model_function: Returning class {target_class_idx} logits, shape={class_logits.shape}, requires_grad={class_logits.requires_grad}, values={class_logits.detach().cpu().numpy()}")
         return class_logits
     print(f"call_model_function: Returning full logits, shape={logits_tensor.shape}")
-    return logits_tensor
+    return logits_tensor 
 
+# import os
+# import numpy as np
+# import torch
+# from tqdm import tqdm
+# from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+# from attr_method._common import PreprocessInputs, call_model_function
 # import os
 # import numpy as np
 # import torch
@@ -97,13 +103,14 @@ class ContrastiveGradients(CoreSaliency):
 
         # Gradient hook to debug
         def gradient_hook(module, grad_input, grad_output):
-            print(f"Gradient hook: module={module.__class__.__name__}, grad_output[0] shape={grad_output[0].shape if grad_output[0] is not None else None}, grad_output[0] requires_grad={grad_output[0].requires_grad if grad_output[0] is not None else False}")
+            grad_out = grad_output[0] if isinstance(grad_output, tuple) else grad_output
+            print(f"Gradient hook: module={module.__class__.__name__}, name={module._get_name()}, grad_output shape={grad_out.shape if grad_out is not None else None}, grad_output requires_grad={grad_out.requires_grad if grad_out is not None else False}")
 
-        # Register hook on model's classifier layer (adjust based on CLAM model structure)
+        # Register hooks on classifier and attention layers
         for name, module in model.named_modules():
-            if "classifier" in name.lower() or "fc" in name.lower():
-                module.register_backward_hook(gradient_hook)
-                print(f"Registered gradient hook on {name}")
+            if any(k in name.lower() for k in ["classifier", "fc", "attention", "attn"]):
+                module.register_full_backward_hook(gradient_hook)
+                print(f"Registered full backward hook on {name}")
 
         for alpha in tqdm(alphas, desc=f"Computing class {target_class_idx}:", ncols=100):
             x_step_batch = x_baseline_batch + alpha * x_diff
@@ -123,7 +130,7 @@ class ContrastiveGradients(CoreSaliency):
                 raise RuntimeError("logits_step detached from computation graph")
 
             logits_diff = (logits_step - logits_r).norm().item()
-            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_step.shape}, logits_diff: {logits_diff:.4f}, logits_r: {logits_r.detach().cpu().numpy()}, logits_step: {logits_step.detach().cpu().numpy()}, logits_step requires_grad: {logits_step.requires_grad}")
+            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_r.shape}, logits_diff: {logits_diff:.4f}, logits_r: {logits_r.detach().cpu().numpy()}, logits_step: {logits_step.detach().cpu().numpy()}, logits_step requires_grad: {logits_step.requires_grad}")
 
             # Compute counterfactual loss
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
