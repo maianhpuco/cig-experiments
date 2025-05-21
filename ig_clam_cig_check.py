@@ -55,7 +55,7 @@ def main(args):
     elif args.ig_name == 'integrated_decision_gradient':
         from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
     elif args.ig_name == 'optim_square_integrated_gradient':
-        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
+        from attr_method.optim_square_integrated_gradient import SquareIntegratedGradients as AttrMethod
     elif args.ig_name == 'square_integrated_gradient':
         from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
 
