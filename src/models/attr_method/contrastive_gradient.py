@@ -6,7 +6,27 @@ from saliency.core.base import CoreSaliency
 from saliency.core.base import INPUT_OUTPUT_GRADIENTS
 import torch
 import matplotlib.pyplot as plt
-from attr_method._common import PreprocessInputs, call_model_function 
+from attr_method._common import PreprocessInputs 
+
+def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
+    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor) 
+              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
+    
+    logits = model(inputs)
+    if isinstance(logits, tuple):
+        logits = logits[0]  # extract logits from (logits, Y_prob, Y_hat, _, instance_dict)
+    
+    if INPUT_OUTPUT_GRADIENTS in expected_keys:
+        target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
+        if logits.dim() == 2:
+            target_output = logits[:, target_class_idx].sum()
+        else:
+            target_output = logits[target_class_idx].sum()
+        gradients = torch.autograd.grad(target_output, inputs)[0]
+        return {INPUT_OUTPUT_GRADIENTS: gradients}
+    
+    return logits
+
 
 class ContrastiveGradients(CoreSaliency):
     """Contrastive Gradient Attribution using counterfactual loss."""

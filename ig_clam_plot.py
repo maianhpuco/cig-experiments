@@ -14,7 +14,6 @@ from utils_plot import (
     replace_outliers_with_bounds 
 )
 
-
 def load_config(config_file):
     import yaml 
     # Load configuration from the provided YAML file
@@ -39,7 +38,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         slide_path = os.path.join(args.slide_path, f"{basename}.tif")
 
         if not os.path.exists(slide_path):
-            print(f"  ⚠️  Slide not found: {slide_path}, skipping.")
+            print(f"Slide not found: {slide_path}, skipping.")
             continue
 
         slide = openslide.open_slide(slide_path)
@@ -54,26 +53,26 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 
         h5_path = os.path.join(args.features_h5_path, f"{basename}.h5")
         if not os.path.exists(h5_path):
-            print(f"  ⚠️  H5 not found: {h5_path}, skipping.")
+            print(f"H5 not found: {h5_path}, skipping.")
             continue
 
         with h5py.File(h5_path, "r") as f:
             coordinates = f['coords'][:]
 
-        # ✅ Load scores
+        #Load scores
         scores = np.load(score_path)
 
-        # ✅ Apply preprocessing: clip outliers and scale to [0, 1]
+        #  Apply preprocessing: clip outliers and scale to [0, 1]
         clipped_scores = replace_outliers_with_bounds(scores.copy())
         scaled_scores = min_max_scale(clipped_scores)
         # scaled_scores = scores.copy() 
-        # ✅ Plot heatmap
+
         save_path = os.path.join(plot_dir, f"{basename}.png")
         plot_heatmap_nobbox(
             scale_x, scale_y, new_height, new_width,
             coordinates, scaled_scores, name="", save_path=save_path
         )
-        print(f"  ✅ Saved to {save_path}")
+        print(f"Saved to {save_path}")
  
 def main(args, config):
     
@@ -104,7 +103,7 @@ def main(args, config):
                 args.ig_name, f"fold_{fold}", f"class_{class_id}"
             )
             if not os.path.exists(score_dir):
-                print(f"⚠️  Score folder not found: {score_dir}, skipping...")
+                print(f" Score folder not found: {score_dir}, skipping...")
                 continue
             plot_for_class(args, args.ig_name, fold, class_id, score_dir, plot_dir)
             print("-------")

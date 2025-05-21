@@ -156,7 +156,7 @@ def main(args):
                 features = features.to(args.device, dtype=torch.float32)
                 stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
 
-                for class_idx in range(args.n_classes):
+                for class_idx in  [1]: #range(args.n_classes):
                     print(f"⮕ Attribution for class {class_idx}")
                     kwargs = {
                         "x_value": features,
@@ -170,6 +170,7 @@ def main(args):
                     }
                     attribution_values = attribution_method.GetMask(**kwargs)
                     scores = attribution_values.mean(1)
+                    print(scores)
                     print(f"- Score shape: {scores.shape}")
 
                     score_save_path = os.path.join(
@@ -180,11 +181,11 @@ def main(args):
 
                     if isinstance(scores, torch.Tensor):
                         scores = scores.detach().cpu().numpy()
-                    np.save(save_path, scores)
+                    # np.save(save_path, scores)
 
-                    print(f"✅ Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
+                    print(f"Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
-                # break
+                break
 
 
 
