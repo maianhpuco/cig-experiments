@@ -29,11 +29,12 @@ def get_tcga_slide_mapping(split_folder, fold, class_label):
     df = pd.read_csv(split_csv_path, header=None)
     df.columns = ['uuid', 'slide', 'label']
     filtered = df[df['label'].str.lower() == class_label.lower()]
-    
+
     mapping = {
         os.path.splitext(row.slide)[0]: os.path.join(row.uuid, row.slide)
         for _, row in filtered.iterrows()
     }
+    print(mapping)
     return mapping
 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
