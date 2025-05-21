@@ -39,6 +39,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         print(f"  → Plotting [{idx+1}/{len(scores_to_plot)}]: {score_path}")
 
         basename = os.path.splitext(os.path.basename(score_path))[0]
+        print("---> score_path:", score_path)
         print(basename)
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
