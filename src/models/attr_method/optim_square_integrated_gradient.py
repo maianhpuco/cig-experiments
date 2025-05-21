@@ -1,7 +1,11 @@
 import torch
 import numpy as np
 from tqdm import tqdm
-from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS, REP_LAYER_VALUES, REP_DISTANCE_GRADIENTS
+from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+
+# Define missing constants manually
+REP_LAYER_VALUES = "REP_LAYER_VALUES"
+REP_DISTANCE_GRADIENTS = "REP_DISTANCE_GRADIENTS"
 
 def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
     """
