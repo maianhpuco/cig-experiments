@@ -74,7 +74,7 @@ def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimiz
         full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
         features = torch.load(full_path, weights_only=True, map_location='cuda:0')
 
-        bag_label = torch.tensor([0, 0, 0], dtype=torch.int64).cuda()
+        bag_label = torch.tensor([0, 0, 0], dtype=torch.float32).cuda()
         bag_label[label_dict[label]] = 1
         bag_label = bag_label.unsqueeze(0)
         print("LOG: bag_label", bag_label)
@@ -116,7 +116,10 @@ def test(args, test_csv_path, data_dir_map, label_dict, milnet, criterion, thres
             full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
             features = torch.load(full_path, weights_only=True, map_location='cuda:0')
 
-            bag_label = Tensor(label_dict[label]).unsqueeze(0)
+            bag_label = torch.tensor([0, 0, 0], dtype=torch.float32).cuda()
+            bag_label[label_dict[label]] = 1
+            bag_label = bag_label.unsqueeze(0)
+            print("LOG: bag_label", bag_label)
             bag_feats = features
             bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
             bag_feats = bag_feats.view(-1, args.feats_size)
