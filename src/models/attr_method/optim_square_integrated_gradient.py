@@ -1,127 +1,146 @@
-import os
-import numpy as np
-import saliency.core as saliency
-from tqdm import tqdm
-from saliency.core.base import CoreSaliency
-from saliency.core.base import INPUT_OUTPUT_GRADIENTS
 import torch
+import numpy as np
+from tqdm import tqdm
+from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS, REP_LAYER_VALUES, REP_DISTANCE_GRADIENTS
 
 def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor) 
-              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
+    """
+    Generic model call with gradient support for class attribution, extended for IG².
+    """
+    device = next(model.parameters()).device
+    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor)
+              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True).to(device)
 
-    logits = model(inputs)
-    if isinstance(logits, tuple):
-        logits = logits[0]
+    model.eval()
+    outputs = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
+    logits_tensor = outputs[0] if isinstance(outputs, tuple) else outputs
+    print(f"call_model_function: logits_tensor shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}")
 
-    if INPUT_OUTPUT_GRADIENTS in expected_keys:
-        target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
-        if logits.dim() == 2:
-            target_output = logits[:, target_class_idx].sum()
-        else:
-            target_output = logits[target_class_idx].sum()
+    if expected_keys:
+        result = {}
+        if INPUT_OUTPUT_GRADIENTS in expected_keys:
+            target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
+            if logits_tensor.dim() == 2:
+                target_output = logits_tensor[:, target_class_idx].sum()
+            else:
+                target_output = logits_tensor[target_class_idx].sum()
+            gradients = torch.autograd.grad(
+                outputs=target_output,
+                inputs=inputs,
+                grad_outputs=torch.ones_like(target_output),
+                create_graph=False,
+                retain_graph=True
+            )[0]
+            result[INPUT_OUTPUT_GRADIENTS] = gradients.detach().cpu().numpy()
+        
+        if REP_DISTANCE_GRADIENTS in expected_keys and 'layer_baseline' in call_model_args:
+            baseline_logits = call_model_args['layer_baseline']
+            logits_diff = logits_tensor - baseline_logits
+            loss = torch.norm(logits_diff, p=2) ** 2
+            loss.backward()
+            result[REP_DISTANCE_GRADIENTS] = inputs.grad.detach().cpu().numpy()
+            inputs.grad.zero_()  # Clear gradients to avoid accumulation
+        
+        if REP_LAYER_VALUES in expected_keys:
+            result[REP_LAYER_VALUES] = logits_tensor.detach().cpu().numpy()
+        
+        if result:
+            return result
 
-        gradients = torch.autograd.grad(target_output, inputs)[0]
-        return {INPUT_OUTPUT_GRADIENTS: gradients}
-    
-    return logits
+    target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
+    if logits_tensor.dim() == 2:
+        return logits_tensor[:, target_class_idx]
+    return logits_tensor
 
 def normalize_by_2norm(x):
+    """
+    Normalize input by 2-norm along the batch dimension.
+    """
     batch_size = x.shape[0]
-    norm = np.sqrt(np.sum(x**2, axis=1, keepdims=True))
-    norm = np.where(norm == 0, 1e-8, norm)
-    return x / norm
+    norm = np.power(np.sum(np.power(np.abs(x), 2).reshape(batch_size, -1), axis=1), 1.0 / 2)
+    norm = np.where(norm == 0, 1e-8, norm)  # Avoid division by zero
+    normed_x = np.moveaxis(x, 0, -1) / norm
+    return np.moveaxis(normed_x, -1, 0)
 
-class OptimSquareIntegratedGradients(CoreSaliency):
+class SquareIntegratedGradients(CoreSaliency):
+    """
+    Integrated Gradients Squared (IG²) with iterative gradient path optimization.
+    """
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
-    def GetMask(self, **kwargs): 
-        x_value = kwargs.get("x_value").to(kwargs.get("device", "cpu"))
-        call_model_function = kwargs.get("call_model_function")
-        model = kwargs.get("model")
-        call_model_args = kwargs.get("call_model_args", None)
-        baseline_features = kwargs.get("baseline_features").to(x_value.device)
-        x_steps = kwargs.get("x_steps", 5)
-        eta = kwargs.get("eta", 1)
-        memmap_path = kwargs.get("memmap_path")
-        device = x_value.device
+    def Get_GradPath(self, x_value, baselines, call_model_function, call_model_args=None, steps=201, step_size=1.0, clip_min_max=None):
+        """
+        Iteratively search the counterfactuals based on gradient descent.
+        """
+        # Calculate the layer representation of baselines
+        data = call_model_function(baselines, call_model_args=call_model_args, expected_keys=[REP_LAYER_VALUES])
+        call_model_args = call_model_args or {}
+        call_model_args.update({'layer_baseline': data[REP_LAYER_VALUES].detach()})
 
-        sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
-        x_baseline_batch = baseline_features[sampled_indices].squeeze(0)
+        # Iteratively search in sample space to close the reference rep
+        delta = np.zeros_like(x_value)
+        path = [x_value.copy()]
 
-        path, counterfactual_gradients_memmap = self.Get_GradPath(x_value, x_baseline_batch, model, x_steps, memmap_path, device)
-        np.testing.assert_allclose(x_value.cpu().numpy(), path[0], rtol=0.01)
+        for i in range(steps):
+            data = call_model_function(x_value + delta, call_model_args=call_model_args, expected_keys=[REP_DISTANCE_GRADIENTS])
+            grad = data[REP_DISTANCE_GRADIENTS]
+            loss = np.linalg.norm(x_value + delta - baselines.mean(axis=0)) ** 2  # Approximate loss
 
-        print('Integrating gradients on GradPath...')
-        attr = torch.zeros_like(x_value, dtype=torch.float32, device=device)
-        x_old = x_value.clone()
+            grad = normalize_by_2norm(grad)
+            delta = delta + grad * step_size
+            if clip_min_max:
+                delta = np.clip(x_value + delta, clip_min_max[0], clip_min_max[1]) - x_value
 
-        for i, x_step in enumerate(path[1:]):
-            x_step_tensor = torch.tensor(x_step, device=device, dtype=torch.float32)
-            x_old_tensor = x_old.clone().detach().requires_grad_(True)
+            x_adv = x_value + delta
+            if i % 100 == 0:
+                print(f'{i} iterations, rep distance Loss {loss:.4f}')
+            path.append(x_adv.copy())
 
+        return np.array(path)
+
+    def GetMask(self, **kwargs):
+        # Convert x_value and baseline_features to NumPy
+        x_value = kwargs["x_value"].detach().cpu().numpy() if isinstance(kwargs["x_value"], torch.Tensor) else kwargs["x_value"]
+        model = kwargs["model"]
+        call_model_args = kwargs.get("call_model_args", {})
+        baseline_features = kwargs["baseline_features"].detach().cpu().numpy() if isinstance(kwargs["baseline_features"], torch.Tensor) else kwargs["baseline_features"]
+        x_steps = kwargs.get("x_steps", 201)  # Match IG2 default
+        step_size = kwargs.get("step_size", 1.0)  # Adjustable step size
+        clip_min_max = kwargs.get("clip_min_max", None)  # Disable clipping by default for feature space
+        device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
+        target_class_idx = call_model_args.get("target_class_idx", 0)
+
+        # Batch x_value to match baselines shape
+        x_value = np.asarray([x_value], dtype=np.float32)
+        baselines = np.asarray(baseline_features, dtype=np.float32)
+        x_value = np.repeat(x_value, baselines.shape[0], axis=0)
+
+        # GradPath search
+        print('GradPath search...')
+        path = self.Get_GradPath(x_value, baselines, call_model_function, call_model_args, x_steps, step_size, clip_min_max)
+        np.testing.assert_allclose(x_value, path[0], rtol=0.01)
+
+        # Integrate gradients on GradPath
+        print('Integrate gradients on GradPath...')
+        attr = np.zeros_like(x_value, dtype=np.float32)
+        x_old = x_value
+
+        for i, x_step in enumerate(path[1:], 1):
+            x_old_tensor = torch.tensor(x_old, dtype=torch.float32, device=device)
             call_model_output = call_model_function(
                 x_old_tensor,
                 model,
                 call_model_args=call_model_args,
-                expected_keys=self.expected_keys
+                expected_keys=[INPUT_OUTPUT_GRADIENTS]
             )
-            self.format_and_check_call_model_output(call_model_output, x_old_tensor.shape, self.expected_keys)
+            gradients = call_model_output[INPUT_OUTPUT_GRADIENTS]
+            print(f"Step {i}, gradients shape: {gradients.shape}, norm: {np.linalg.norm(gradients):.4f}, min: {gradients.min():.4e}, max: {gradients.max():.4e}")
 
-            feature_gradient = torch.tensor(call_model_output[INPUT_OUTPUT_GRADIENTS], device=device).mean(dim=0)
-            counterfactual_gradient = torch.tensor(counterfactual_gradients_memmap[i], device=device)
+            # IG² attribution update
+            attr += (x_old - x_step) * gradients
+            x_old = x_step
 
-            W_j = torch.norm(feature_gradient) + 1e-8
-            attr += (x_old - x_step_tensor) * feature_gradient * counterfactual_gradient * (eta / W_j)
-            x_old = x_step_tensor
-
-        return attr.detach().cpu().numpy()
-
-    @staticmethod
-    def Get_GradPath(x_value, baselines, model, x_steps, memmap_path, device):
-        os.makedirs(memmap_path, exist_ok=True)
-        path_filename = os.path.join(memmap_path, "grad_path_memmap.npy")
-        counterfactual_grad_filename = os.path.join(memmap_path, "counterfactual_gradients_memmap.npy")
-
-        path_shape = (x_steps, *x_value.shape)
-        grad_shape = (x_steps - 1, *x_value.shape)
-
-        path_memmap = np.memmap(path_filename, dtype=np.float32, mode='w+', shape=path_shape)
-        counterfactual_grad_memmap = np.memmap(counterfactual_grad_filename, dtype=np.float32, mode='w+', shape=grad_shape)
-
-        x_baseline_torch = baselines.clone().detach().to(device)
-        logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])
-        if isinstance(logits_x_r, tuple):
-            logits_x_r = logits_x_r[0]
-
-        delta = torch.zeros_like(x_value, device=device)
-        path_memmap[0] = x_value.detach().cpu().numpy()
-
-        step_size = 1.0
-        prev_loss = float("inf")
-        for i in tqdm(range(1, x_steps), desc="Searching GradPath", ncols=100):
-            x_step = (x_value + delta).clone().detach().requires_grad_(True)
-            logits_x_step = model(x_step, [x_step.shape[0]])
-            if isinstance(logits_x_step, tuple):
-                logits_x_step = logits_x_step[0]
-
-            loss = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
-            grad = torch.autograd.grad(loss, x_step, retain_graph=True)[0]
-
-            if grad is None:
-                raise RuntimeError("Gradient is None; check model or requires_grad setting.")
-
-            grad_np = normalize_by_2norm(grad.detach().cpu().numpy())
-            counterfactual_grad_memmap[i - 1] = grad_np
-
-            step_size *= 1.1 if loss.item() < prev_loss else 0.9
-            prev_loss = loss.item()
-
-            delta = delta + torch.tensor(grad_np, device=device, dtype=torch.float32) * step_size
-            path_memmap[i] = (x_value + delta).detach().cpu().numpy()
-
-            path_memmap.flush()
-            counterfactual_grad_memmap.flush()
-            torch.cuda.empty_cache()
-
-        return path_memmap, counterfactual_grad_memmap
+        # Average over baselines
+        result = np.mean(attr, axis=0)
+        print(f"Raw attribution norm: {np.linalg.norm(result):.4f}, min: {result.min():.4e}, max: {result.max():.4e}")
+        return result

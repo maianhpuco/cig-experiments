@@ -184,7 +184,7 @@ def main(args):
                         "model": model,
                         "baseline_features": stacked_features_baseline,
                         "memmap_path": memmap_path,
-                        "x_steps": 10,
+                        "x_steps": 5,
                         "device": args.device,
                         "call_model_args": {"target_class_idx": class_idx}
                     }
