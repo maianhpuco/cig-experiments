@@ -10,7 +10,7 @@ paths:
   uuid_name_file: "/home/mvu9/datasets/TGCA-metadata/KICH/uuids.xlsx"
   preset_file: "/home/mvu9/folder_04_ma/wsi-data/presets/tcga_vilamil.csv"
   slide_list:  "/home/mvu9/processing_datasets/processing_tcga_256/kich/process_list_autogen.csv" 
-
+  
 # Processing parameters
 processing:
   patch_size: 256

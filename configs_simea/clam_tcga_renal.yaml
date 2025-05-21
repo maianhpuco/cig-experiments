@@ -11,7 +11,9 @@ paths:
   for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-20_03-31-00_ep200/s_1_checkpoint.pt"
   attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/tgca_renal"
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_tcga_renal"
-
+  slide_dir: 
+    kich: "/home/mvu9/processing_datasets/processing_tcga_256/kich
+  h5_files: "/home/mvu9/processing_datasets/processing_tcga_256/features_fp/h5_files" 
 embed_dim: 1024
 lr: 0.0001
 label_frac: 1.0

@@ -12,12 +12,11 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
               else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
 
     model.eval()
-    with torch.no_grad() if not inputs.requires_grad else torch.enable_grad():
-        logits = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
+    logits = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
 
     logits_tensor = logits[0] if isinstance(logits, tuple) else logits
 
-    print(f"call_model_function: expected_keys={expected_keys}, logits_tensor shape={logits_tensor.shape}")
+    print(f"call_model_function: expected_keys={expected_keys}, logits_tensor shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}")
 
     if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
         target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
@@ -36,6 +35,7 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     print(f"call_model_function: Returning full logits, shape={logits_tensor.shape}")
     return logits_tensor
 
+
 class ContrastiveGradients(CoreSaliency):
     """
     Contrastive Gradients Attribution for per-class computation.
@@ -49,6 +49,12 @@ class ContrastiveGradients(CoreSaliency):
         x_steps = kwargs.get("x_steps", 25)
         device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         target_class_idx = call_model_args.get("target_class_idx", 0)
+
+        # Ensure model parameters require gradients
+        for param in model.parameters():
+            if not param.requires_grad:
+                print("Warning: Some model parameters are frozen, setting requires_grad=True")
+                param.requires_grad_(True)
 
         # Prepare tensors
         x_value = (torch.tensor(x_value, dtype=torch.float32, device=device)
@@ -92,7 +98,7 @@ class ContrastiveGradients(CoreSaliency):
                 print(f"Error: Expected tensors, got logits_r: {type(logits_r)}, logits_step: {type(logits_step)}")
                 raise TypeError("call_model_function returned non-tensor outputs")
 
-            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_step.shape}")
+            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_step.shape}, logits_diff: {(logits_step - logits_r).norm().item():.4f}")
 
             # Compute counterfactual loss
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
@@ -106,6 +112,7 @@ class ContrastiveGradients(CoreSaliency):
 
             # Check gradients
             if x_step_batch.grad is None:
+                print(f"Error: No gradients for class {target_class_idx}, alpha {alpha:.2f}, loss={loss.item():.4f}")
                 raise RuntimeError("Gradients not computed! Ensure model parameters require gradients.")
 
             attribution_values += x_step_batch.grad

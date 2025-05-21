@@ -165,13 +165,17 @@ def main(args):
             args.n_classes = 2 
             # model = load_clam_model(args, args.paths['for_ig_checkpoint_path'], device=args.device)
             model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
+            for param in model.parameters():
+                assert param.requires_grad, "Model parameters are frozen!"
+            print("All model parameters are trainable.")
+            
             for idx, (features, label, coords) in enumerate(test_dataset):
                 basename = test_dataset.slide_data['slide_id'].iloc[idx]
                 print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
 
                 features = features.to(args.device, dtype=torch.float32)
                 stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
-
+                print("Baseline sample range:", stacked_features_baseline.min().item(), stacked_features_baseline.max().item())
                 for class_idx in  [1]: #range(args.n_classes):
                     print(f"⮕ Attribution for class {class_idx}")
                     kwargs = {
@@ -190,7 +194,9 @@ def main(args):
                     print(f"- Score shape: {scores.shape}")
                     if isinstance(scores, torch.Tensor):
                         scores = scores.detach().cpu().numpy()
-
+                    
+                    print(f"Scores for {basename}, class {class_idx}: min={scores.min()}, max={scores.max()}")
+                    
                     from utils_plot import min_max_scale  # if not already imported
                     normalized_scores = min_max_scale(scores.copy())
                     
@@ -210,9 +216,10 @@ def main(args):
 
                     if isinstance(scores, torch.Tensor):
                         scores = scores.detach().cpu().numpy()
+                        
                     # np.save(save_path, scores)
 
-                    print(f"Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
+                    # print(f"Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
                 # break
 
