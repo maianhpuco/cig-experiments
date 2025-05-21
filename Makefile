@@ -21,6 +21,14 @@ train_clam_tcga_4fold:
 	@echo "Activating conda environment for simea .."
 	python train_tcga.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 2 --k_end 5
 
+train_dsmil_tcga_1fold:
+	@echo "Activating conda environment for simea .."
+	python train_dsmil.py --config configs_simea/dsmil_tcga_renal.yaml --k_start 1 --k_end 1
+
+train_dsmil_tcga_4fold:
+	@echo "Activating conda environment for simea .."
+	python train_dsmil.py --config configs_simea/dsmil_tcga_renal.yaml --k_start 2 --k_end 5
+
 
 # test_ig_clam_camelyon16:
 # 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml  
