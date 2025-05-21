@@ -14,7 +14,7 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     model.eval()
     outputs = model(inputs)
     logits_tensor = outputs[0] if isinstance(outputs, tuple) else outputs
-
+    print(f"call_model_function: Raw logits shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}, is_leaf={logits_tensor.is_leaf}")
     if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
         target_class_idx = call_model_args.get('target_class_idx', 0)
         if logits_tensor.dim() == 2:
@@ -51,9 +51,11 @@ class SquareIntegratedGradients(CoreSaliency):
         try:
             sampled_indices = torch.randint(0, baseline_features.shape[0], (x_value.shape[0],), device=device)
             x_baseline_batch = baseline_features[sampled_indices]
+            print(f"Baseline norm: {torch.norm(x_baseline_batch):.4f}, min: {x_baseline_batch.min():.4f}, max: {x_baseline_batch.max():.4f}")
         except Exception:
             print("Warning: Invalid baseline sampling, using zero baseline")
             x_baseline_batch = torch.zeros_like(x_value, device=device)
+            print(f"Zero baseline norm: {torch.norm(x_baseline_batch):.4f}")
 
         x_diff = x_value - x_baseline_batch
 
@@ -68,7 +70,7 @@ class SquareIntegratedGradients(CoreSaliency):
         # Forward hook to debug requires_grad
         def forward_hook(module, input, output):
             output_tensor = output[0] if isinstance(output, tuple) else output
-            # print(f"Forward hook: module={module.__class__.__name__}, output shape={output_tensor.shape}, requires_grad={output_tensor.requires_grad}")
+            print(f"Forward hook: module={module.__class__.__name__}, output shape={output_tensor.shape}, requires_grad={output_tensor.requires_grad}")
 
         # Register hooks on key layers
         for name, module in model.named_modules():
@@ -96,12 +98,7 @@ class SquareIntegratedGradients(CoreSaliency):
 
             # Compute logits difference for the target class only
             target_logits_step = logits_step[:, target_class_idx]
-            target_logits_r = logits_r[:, target_class_idx]
-            logits_diff = (target_logits_step - target_logits_r).norm(p=2) ** 2
-
-            # Compute counterfactual gradient with allow_unused=True
-            grad_outputs = torch.ones_like(logits_diff)
-            counterfactual_grad = torch.autograd.grad(logits_diff, x_step_tensor, grad_outputs=grad_outputs, allow_unused=True)[0]
+            counterfactual_grad = torch.autograd.grad(target_logits_step.sum(), x_step_tensor, allow_unused=True)[0]
             if counterfactual_grad is None:
                 print(f"Warning: counterfactual_grad is None for alpha={alpha:.2f}, using zeros")
                 counterfactual_grad = torch.zeros_like(gradients_avg)
