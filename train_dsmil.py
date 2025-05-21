@@ -33,8 +33,10 @@ def train(args, data_loader, label_dict, milnet, criterion, optimizer):
         print("LOG: label_dict", label_dict)
         print("LOG: label", label)
 
+        label = label.astype(int)
+
         bag_label = torch.zeros(args.num_classes, dtype=torch.float32).cuda()
-        bag_label[label_dict[label]] = 1
+        bag_label[label] = 1
         bag_label = bag_label.unsqueeze(0)
         bag_feats = data.cuda()
         bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
@@ -66,8 +68,9 @@ def test(args, data_loader, label_dict, milnet, criterion, thresholds=None, retu
 
     with torch.no_grad():
         for batch_idx, (data, label) in enumerate(data_loader):
+            label = label.astype(int)
             bag_label = torch.zeros(args.num_classes, dtype=torch.float32).cuda()
-            bag_label[label_dict[label]] = 1
+            bag_label[label] = 1
             bag_label = bag_label.unsqueeze(0)
             bag_feats = data.cuda()
             bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
