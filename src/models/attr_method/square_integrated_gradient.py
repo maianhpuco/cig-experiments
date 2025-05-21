@@ -29,8 +29,8 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
         gradients = torch.autograd.grad(target_output, inputs)[0]
         print(f"call_model_function: Computed gradients shape={gradients.shape}, requires_grad={gradients.requires_grad}")
         return {INPUT_OUTPUT_GRADIENTS: gradients}
-    print(f"call_model_function: Returning logits shape={logits_tensor.shape}, requires_grad={logits_tensor.requires_grad}")
-    return logits_tensor
+    print(f"call_model_function: Returning raw outputs={type(outputs)}")
+    return outputs
 
 class SquareIntegratedGradients(CoreSaliency):
     """
@@ -78,9 +78,10 @@ class SquareIntegratedGradients(CoreSaliency):
 
         # Test direct gradient link
         x_test = x_value.clone().requires_grad_(True)
-        logits_test = call_model_function(x_test, model, call_model_args)
+        outputs_test = call_model_function(x_test, model, call_model_args)
+        logits_test = outputs_test[0] if isinstance(outputs_test, tuple) else outputs_test
         target_logits_test = logits_test[:, target_class_idx].sum()
-        grad_test = torch.autograd.grad(target_logits_test, x_test)[0]
+        grad_test = torch.autograd.grad(target_logits_test, x_test, allow_unused=True)[0]
         print(f"Direct gradient test: grad shape={grad_test.shape if grad_test is not None else None}, norm={torch.norm(grad_test) if grad_test is not None else 'None'}")
 
         for alpha in tqdm(alphas, desc=f"SIG class {target_class_idx}", ncols=100):
@@ -99,8 +100,10 @@ class SquareIntegratedGradients(CoreSaliency):
 
             # Step 2: Counterfactual gradients
             with torch.no_grad():
-                logits_r = call_model_function(x_baseline_batch, model, call_model_args)
-            logits_step = call_model_function(x_step_tensor, model, call_model_args)
+                outputs_r = call_model_function(x_baseline_batch, model, call_model_args)
+                logits_r = outputs_r[0] if isinstance(outputs_r, tuple) else outputs_r
+            outputs_step = call_model_function(x_step_tensor, model, call_model_args)
+            logits_step = outputs_step[0] if isinstance(outputs_step, tuple) else outputs_step
 
             # Compute counterfactual gradient directly
             target_logits_step = logits_step[:, target_class_idx]
