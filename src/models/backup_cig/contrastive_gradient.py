@@ -8,9 +8,8 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     """
     Generic model call with gradient support for class attribution.
     """
-    device = next(model.parameters()).device
     inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor)
-              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True).to(device)
+              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
 
     model.eval()
     outputs = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
@@ -25,15 +24,9 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
             target_output = logits_tensor[:, target_class_idx].sum()
         else:
             target_output = logits_tensor[target_class_idx].sum()
-        gradients = torch.autograd.grad(
-            outputs=target_output,
-            inputs=inputs,
-            grad_outputs=torch.ones_like(target_output),
-            create_graph=False,
-            retain_graph=False
-        )[0]
-        print(f"call_model_function: Returning gradients, shape={gradients.shape}")
-        return {INPUT_OUTPUT_GRADIENTS: gradients.detach().cpu().numpy()}
+        gradients = torch.autograd.grad(target_output, inputs)[0]
+        print("call_model_function: Returning gradients, shape={gradients.shape}")
+        return {INPUT_OUTPUT_GRADIENTS: gradients}
 
     target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
     if logits_tensor.dim() == 2:
@@ -43,11 +36,23 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     print(f"call_model_function: Returning full logits, shape={logits_tensor.shape}")
     return logits_tensor
 
+# import os
+# import numpy as np
+# import torch
+# from tqdm import tqdm
+# from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+# from attr_method._common import PreprocessInputs, call_model_function
+# import os
+# import numpy as np
+# import torch
+# from tqdm import tqdm
+# from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+# from attr_method._common import PreprocessInputs, call_model_function
+
 class ContrastiveGradients(CoreSaliency):
     """
-    Contrastive Gradients Attribution for per-class computation using autograd.
+    Contrastive Gradients Attribution for per-class computation.
     """
-    expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
     def GetMask(self, **kwargs):
         x_value = kwargs["x_value"]  # Expected: torch.Tensor [N, D]
@@ -73,7 +78,7 @@ class ContrastiveGradients(CoreSaliency):
         # Initialize attribution values
         attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
 
-        # Sample baseline
+        # Sample baseline indices
         try:
             sampled_indices = torch.randint(0, baseline_features.shape[0], (x_value.shape[0],), device=device)
             x_baseline_batch = baseline_features[sampled_indices]  # [N, D]
@@ -96,37 +101,54 @@ class ContrastiveGradients(CoreSaliency):
         model.eval()
         alphas = torch.linspace(0, 1, x_steps, device=device)
 
+        # Gradient hook to debug
+        def gradient_hook(module, grad_input, grad_output):
+            grad_out = grad_output[0] if isinstance(grad_output, tuple) else grad_output
+            print(f"Gradient hook: module={module.__class__.__name__}, name={module._get_name()}, grad_output shape={grad_out.shape if grad_out is not None else None}, grad_output requires_grad={grad_out.requires_grad if grad_out is not None else False}")
+
+        # Register hooks on classifier and attention layers
+        for name, module in model.named_modules():
+            if any(k in name.lower() for k in ["classifier", "fc", "attention", "attn"]):
+                module.register_full_backward_hook(gradient_hook)
+                print(f"Registered full backward hook on {name}")
+
         for alpha in tqdm(alphas, desc=f"Computing class {target_class_idx}:", ncols=100):
             x_step_batch = x_baseline_batch + alpha * x_diff
             x_step_batch = x_step_batch.clone().detach().requires_grad_(True).to(device)
             x_baseline_torch = x_baseline_batch.clone().detach().to(device)
 
-            # Compute logits for baseline (no gradients needed)
-            with torch.no_grad():
-                logits_r = call_model_function(x_baseline_torch, model, call_model_args)
+            # Forward pass
+            logits_r = call_model_function(x_baseline_torch, model, call_model_args)
+            logits_step = call_model_function(x_step_batch, model, call_model_args)
 
-            # Compute gradients for perturbed input
-            call_model_output = call_model_function(
-                x_step_batch,
-                model,
-                call_model_args=call_model_args,
-                expected_keys=self.expected_keys
-            )
+            # Check types and requires_grad
+            if not isinstance(logits_r, torch.Tensor) or not isinstance(logits_step, torch.Tensor):
+                print(f"Error: Expected tensors, got logits_r: {type(logits_r)}, logits_step: {type(logits_step)}")
+                raise TypeError("call_model_function returned non-tensor outputs")
+            if not logits_step.requires_grad:
+                print(f"Error: logits_step does not require gradients for class {target_class_idx}, alpha {alpha:.2f}")
+                raise RuntimeError("logits_step detached from computation graph")
 
-            if not isinstance(logits_r, torch.Tensor):
-                print(f"Error: logits_r is not a tensor, got {type(logits_r)}")
-                raise TypeError("logits_r must be a tensor")
-
-            # Get gradients
-            gradients = call_model_output[INPUT_OUTPUT_GRADIENTS]  # [N, D], numpy
-            gradients_torch = torch.tensor(gradients, device=device, dtype=torch.float32)
-
-            # Compute counterfactual contribution
-            logits_step = call_model_function(x_step_batch, model, call_model_args)  # [1]
             logits_diff = (logits_step - logits_r).norm().item()
-            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_step.shape}, logits_diff: {logits_diff:.4f}, logits_r: {logits_r.detach().cpu().numpy()}, logits_step: {logits_step.detach().cpu().numpy()}, gradients norm: {torch.norm(gradients_torch):.4f}")
+            print(f"Class {target_class_idx}, Alpha {alpha:.2f}, logits_r shape: {logits_r.shape}, logits_step shape: {logits_r.shape}, logits_diff: {logits_diff:.4f}, logits_r: {logits_r.detach().cpu().numpy()}, logits_step: {logits_step.detach().cpu().numpy()}, logits_step requires_grad: {logits_step.requires_grad}")
 
-            attribution_values += gradients_torch
+            # Compute counterfactual loss
+            loss = torch.norm(logits_step - logits_r, p=2) ** 2
+
+            # Zero gradients
+            if x_step_batch.grad is not None:
+                x_step_batch.grad.zero_()
+
+            # Backward pass
+            if loss.item() > 0:  # Only backward if loss is non-zero
+                loss.backward()
+                if x_step_batch.grad is None:
+                    print(f"Warning: No gradients for class {target_class_idx}, alpha {alpha:.2f}, loss={loss.item():.4f}, x_step_batch requires_grad={x_step_batch.requires_grad}")
+                else:
+                    attribution_values += x_step_batch.grad
+                    print(f"Class {target_class_idx}, Alpha {alpha:.2f}, Loss: {loss.item():.4f}, Grad norm: {torch.norm(x_step_batch.grad):.4f}")
+            else:
+                print(f"Class {target_class_idx}, Alpha {alpha:.2f}, Loss: {loss.item():.4f}, Skipping backward due to zero loss")
 
         x_diff_mean = x_diff.mean(dim=0)
         final_attribution = (attribution_values * x_diff_mean) / x_steps
