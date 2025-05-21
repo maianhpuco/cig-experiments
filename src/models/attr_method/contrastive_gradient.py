@@ -38,7 +38,7 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     return logits_tensor
 
 
-class ContrastiveGradients(CoreSaliency):
+\class ContrastiveGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
 
     def GetMask(self, **kwargs):
@@ -89,6 +89,12 @@ class ContrastiveGradients(CoreSaliency):
 
             # Interpolated input forward pass
             logits_x_step = call_model_function(x_step_batch, model, call_model_args)
+
+            # Debug: Check types and shapes
+            if not isinstance(logits_x_r, torch.Tensor) or not isinstance(logits_x_step, torch.Tensor):
+                print(f"Error: Expected tensors, got logits_x_r: {type(logits_x_r)}, logits_x_step: {type(logits_x_step)}")
+                raise TypeError("call_model_function returned non-tensor outputs")
+            print(f"Alpha {alpha:.2f}, logits_x_r shape: {logits_x_r.shape}, logits_x_step shape: {logits_x_step.shape}")
 
             # Compute counterfactual loss: ||logits_diff||²
             logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
