@@ -57,10 +57,10 @@ class ContrastiveGradients(CoreSaliency):
 
             # Baseline forward pass
             x_baseline_torch = x_baseline_batch.clone().detach().requires_grad_(False).to(device)
-            logits_x_r = call_model_function(x_baseline_torch, model, call_model_args)
+            logits_x_r =model(x_baseline_torch)
 
             # Interpolated input forward pass
-            logits_x_step = call_model_function(x_step_batch, model, call_model_args)
+            logits_x_step = model(x_step_batch)
 
             # Handle tuple outputs and select target class
             logits_x_r = logits_x_r[0] if isinstance(logits_x_r, tuple) else logits_x_r
