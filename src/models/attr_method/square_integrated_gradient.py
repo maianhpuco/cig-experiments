@@ -68,7 +68,7 @@ class SquareIntegratedGradients(CoreSaliency):
         # Forward hook to debug requires_grad
         def forward_hook(module, input, output):
             output_tensor = output[0] if isinstance(output, tuple) else output
-            print(f"Forward hook: module={module.__class__.__name__}, output shape={output_tensor.shape}, requires_grad={output_tensor.requires_grad}")
+            # print(f"Forward hook: module={module.__class__.__name__}, output shape={output_tensor.shape}, requires_grad={output_tensor.requires_grad}")
 
         # Register hooks on key layers
         for name, module in model.named_modules():
