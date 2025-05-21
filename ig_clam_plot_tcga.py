@@ -21,52 +21,25 @@ def load_config(config_file):
         config = yaml.safe_load(f)
     return config 
 
-# def get_tcga_slide_mapping(split_folder, fold, class_label):
-#     split_csv_path = os.path.join(split_folder, f"fold_{fold}", "test.csv")
-#     if not os.path.exists(split_csv_path):
-#         raise FileNotFoundError(f"Split file not found: {split_csv_path}")
-
-#     df = pd.read_csv(split_csv_path, header=None)
-#     df.columns = ['uuid', 'slide', 'label']
-
-#     filtered = df[df['label'].str.lower() == class_label.lower()]
-
-#     mapping = {
-#         os.path.splitext(row.slide)[0]: os.path.join(
-#             row.label.upper(), row.uuid, row.slide + ".svs"
-#         )
-#         for _, row in filtered.iterrows()
-#     }
-
-#     print(f"[Fold {fold} | Class {class_label}] Slide mapping created with {len(mapping)} entries")
-#     return mapping
- 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
     os.makedirs(plot_dir, exist_ok=True)
 
     already_plotted = {f.split(".")[0] for f in os.listdir(plot_dir) if f.endswith(".png")}
-    scores_to_plot = [p for p in all_scores_paths if os.path.basename(p).split(".")[0] not in already_plotted]
+    scores_to_plot = [
+        p for p in all_scores_paths 
+        if os.path.splitext(os.path.basename(p))[0] not in already_plotted
+    ]
 
     dataset_name = args.config_data["dataset_name"].lower()
-    slide_mapping = {}
-
-    if dataset_name == "tcga_renal":
-        class_labels = ["kirc", "kirp", "kich"]
-        split_folder = args.config_data["paths"]["split_folder"]
-        slide_mapping = get_tcga_slide_mapping(split_folder, fold, class_labels[class_id])
-        print("===> slide mapping", slide_mapping)
-        if len(slide_mapping) == 0:
-            print(f" No slides found for class '{class_labels[class_id]}' in fold {fold}, skipping.")
-            return
 
     print(f"[Fold {fold} | Class {class_id}] Found {len(scores_to_plot)} new .npy files to plot")
 
     for idx, score_path in enumerate(scores_to_plot):
         print(f"  → Plotting [{idx+1}/{len(scores_to_plot)}]: {score_path}")
 
-        basename = os.path.splitext(os.path.basename(score_path))[0] 
-        
+        basename = os.path.splitext(os.path.basename(score_path))[0]
+
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
 
@@ -74,49 +47,71 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             class_labels = ["KICH", "KIRP", "KIRC"]
             class_label = class_labels[class_id]
 
-            # Dynamically glob the file
-            slide_candidates = glob.glob(os.path.join(args.slide_path, class_label, "*", f"{basename}.svs"))
+            slide_candidates = glob.glob(
+                os.path.join(args.slide_path, class_label, "*", f"{basename}.svs")
+            )
 
             if len(slide_candidates) == 0:
-                print(f" Slide file for {basename} not found in {class_label}/, skipping.")
+                print(f" ❌ Slide file for {basename} not found in {class_label}/, skipping.")
                 continue
             elif len(slide_candidates) > 1:
-                print(f" Multiple slide matches for {basename}, using first.")
+                print(f" ⚠️  Multiple slide matches for {basename}, using first.")
 
-            slide_path = slide_candidates[0] 
+            slide_path = slide_candidates[0]
+
+        else:
+            raise ValueError("Unknown dataset.")
 
         if not os.path.exists(slide_path):
-            print(f"Slide not found: {slide_path}, skipping.")
+            print(f"❌ Slide not found: {slide_path}, skipping.")
             continue
 
-        slide = openslide.open_slide(slide_path)
+        try:
+            slide = openslide.open_slide(slide_path)
+        except Exception as e:
+            print(f"❌ Failed to open slide: {slide_path} | Error: {e}")
+            continue
 
-        (
-            _, new_width, new_height,
-            original_width, original_height
-        ) = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
+        try:
+            _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
+        except Exception as e:
+            print(f"❌ Failed to compute rescaling stats for {basename} | Error: {e}")
+            continue
 
         scale_x = new_width / original_width
         scale_y = new_height / original_height
 
         h5_path = os.path.join(args.features_h5_path, f"{basename}.h5")
         if not os.path.exists(h5_path):
-            print(f"H5 not found: {h5_path}, skipping.")
+            print(f"❌ H5 not found: {h5_path}, skipping.")
             continue
 
-        with h5py.File(h5_path, "r") as f:
-            coordinates = f['coords'][:]
+        try:
+            with h5py.File(h5_path, "r") as f:
+                coordinates = f['coords'][:]
+        except Exception as e:
+            print(f"❌ Failed to read coords from H5: {h5_path} | Error: {e}")
+            continue
 
-        scores = np.load(score_path)
-        clipped_scores = replace_outliers_with_bounds(scores.copy())
-        scaled_scores = min_max_scale(clipped_scores)
+        try:
+            scores = np.load(score_path)
+            clipped_scores = replace_outliers_with_bounds(scores.copy())
+            scaled_scores = min_max_scale(clipped_scores)
+        except Exception as e:
+            print(f"❌ Failed to load/process scores from {score_path} | Error: {e}")
+            continue
 
         save_path = os.path.join(plot_dir, f"{basename}.png")
-        plot_heatmap_nobbox(
-            scale_x, scale_y, new_height, new_width,
-            coordinates, scaled_scores, name="", save_path=save_path
-        )
-        print(f" Saved to {save_path}")
+
+        try:
+            plot_heatmap_nobbox(
+                scale_x, scale_y, new_height, new_width,
+                coordinates, scaled_scores, name="", save_path=save_path
+            )
+            print(f"✅ Saved to {save_path}")
+        except Exception as e:
+            print(f"❌ Failed to save plot for {basename} | Error: {e}")
+            continue
         
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
@@ -147,7 +142,7 @@ def main(args, config):
             )
 
             if not os.path.exists(score_dir):
-                print(f" Score folder not found: {score_dir}, skipping...")
+                print(f"⚠️ Score folder not found: {score_dir}, skipping...")
                 continue
 
             plot_for_class(args, args.ig_name, fold, class_id, score_dir, plot_dir)
