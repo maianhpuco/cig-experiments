@@ -191,6 +191,4 @@ check_cig:
 
 
 check_score: 
-	python check_score.py \
-	--config  configs_simea/clam_camelyon16.yaml \
-	--ig_name contrastive_gradient 
+	python check_score.py --config  configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient 
