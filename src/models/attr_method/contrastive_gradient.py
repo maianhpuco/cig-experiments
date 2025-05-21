@@ -38,7 +38,7 @@ def call_model_function(inputs, model, call_model_args=None, expected_keys=None)
     return logits_tensor
 
 
-\class ContrastiveGradients(CoreSaliency):
+class ContrastiveGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
 
     def GetMask(self, **kwargs):
