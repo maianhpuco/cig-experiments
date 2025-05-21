@@ -109,7 +109,7 @@ def main(args, config):
     args.features_h5_path = paths["h5_files"]
     base_score_folder = paths["attribution_scores_folder"]
     base_plot_folder = paths["ig_clam_plot_folder"]  # required key in config
-
+    args.config_data = config
     classes = []
     if dataset_name == "camelyon16":
         classes = [1, 0]
