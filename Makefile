@@ -270,7 +270,7 @@ plot_cam_integrated_gradient:
 	--start_fold 1 \
 	--end_fold 1 
 
- check_cig:
+check_cig:
 	python ig_clam_cig_check.py \
 	--config configs_simea/clam_camelyon16.yaml \
 	--ig_name optim_square_integrated_gradient
