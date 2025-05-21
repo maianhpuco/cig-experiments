@@ -174,8 +174,8 @@ def main(args):
                 print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
 
                 features = features.to(args.device, dtype=torch.float32)
-                stacked_features_baseline = torch.zeros_like(features).to(args.device, dtype=torch.float32) 
-                # stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
+                # stacked_features_baseline = torch.zeros_like(features).to(args.device, dtype=torch.float32) 
+                stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
                 print("Baseline sample range:", stacked_features_baseline.min().item(), stacked_features_baseline.max().item())
                 for class_idx in  [1]: #range(args.n_classes):
                     print(f"⮕ Attribution for class {class_idx}")
