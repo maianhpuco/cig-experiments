@@ -7,6 +7,7 @@ import h5py
 import numpy as np
 import openslide
 import pandas as pd 
+
 from utils_plot import (
     plot_heatmap_nobbox,
     rescaling_stat_for_segmentation, 
@@ -16,23 +17,24 @@ from utils_plot import (
 
 def load_config(config_file):
     import yaml 
-    # Load configuration from the provided YAML file
     with open(config_file, 'r') as f:
         config = yaml.safe_load(f)
     return config 
 
-def get_tcga_slide_mapping(split_csv_path, class_label):
+def get_tcga_slide_mapping(split_folder, fold, class_label):
+    split_csv_path = os.path.join(split_folder, f"fold_{fold}", "test.csv")
+    if not os.path.exists(split_csv_path):
+        raise FileNotFoundError(f"Split file not found: {split_csv_path}")
+
     df = pd.read_csv(split_csv_path, header=None)
     df.columns = ['uuid', 'slide', 'label']
-    # Filter for class (KIRC, KIRP, KICH)
-    filtered = df[df['label'] == class_label.upper()]
-    # Build map: slide_name (w/o .svs) → full path
+    filtered = df[df['label'].str.lower() == class_label.lower()]
+    
     mapping = {
         os.path.splitext(row.slide)[0]: os.path.join(row.uuid, row.slide)
         for _, row in filtered.iterrows()
     }
-    return mapping 
-
+    return mapping
 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
@@ -46,8 +48,11 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 
     if dataset_name == "tcga_renal":
         class_labels = ["kirc", "kirp", "kich"]
-        split_csv_path = os.path.join(args.config_data["paths"]["split_folder"], f"fold_{fold}.csv")
-        slide_mapping = get_tcga_slide_mapping(split_csv_path, class_labels[class_id])
+        split_folder = args.config_data["paths"]["split_folder"]
+        slide_mapping = get_tcga_slide_mapping(split_folder, fold, class_labels[class_id])
+        if len(slide_mapping) == 0:
+            print(f" No slides found for class '{class_labels[class_id]}' in fold {fold}, skipping.")
+            return
 
     print(f"[Fold {fold} | Class {class_id}] Found {len(scores_to_plot)} new .npy files to plot")
 
@@ -97,20 +102,18 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             scale_x, scale_y, new_height, new_width,
             coordinates, scaled_scores, name="", save_path=save_path
         )
-        print(f"Saved to {save_path}") 
-        break
+        print(f" Saved to {save_path}")
         
 def main(args, config):
-    
     dataset_name = config.get("dataset_name", "").lower()
     paths = config["paths"]
 
     args.slide_path = paths["slide_dir"]
     args.features_h5_path = paths["h5_files"]
     base_score_folder = paths["attribution_scores_folder"]
-    base_plot_folder = paths["ig_clam_plot_folder"]  # required key in config
+    base_plot_folder = paths["ig_clam_plot_folder"]
     args.config_data = config
-    classes = []
+
     if dataset_name == "camelyon16":
         classes = [1, 0]
     elif dataset_name == "tcga_renal":
@@ -128,13 +131,14 @@ def main(args, config):
                 base_plot_folder, dataset_name, "plots_nobar",
                 args.ig_name, f"fold_{fold}", f"class_{class_id}"
             )
+
             if not os.path.exists(score_dir):
                 print(f" Score folder not found: {score_dir}, skipping...")
                 continue
+
             plot_for_class(args, args.ig_name, fold, class_id, score_dir, plot_dir)
             print("-------------")
         print("===================")
-        break
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -146,5 +150,4 @@ if __name__ == '__main__':
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     config = load_config(args.config) 
-    
     main(args, config)
