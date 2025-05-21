@@ -55,11 +55,10 @@ def generate_pt_files(args, df):
 
 
 
-def train(args, train_csv_path, data_dir, label_dict, milnet, criterion, optimizer):
+def train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimizer):
     milnet.train()
 
-    df = pd.read_csv(train_csv_path)
-    
+    df = pd.read_csv(train_path)
     patient_ids = df["patient_id"].dropna().tolist()
     slides = df["slide"].dropna().tolist()
     labels= df["label"].dropna().tolist()
@@ -69,7 +68,7 @@ def train(args, train_csv_path, data_dir, label_dict, milnet, criterion, optimiz
     for i, (patient_id, slide_id, label) in enumerate(zip(patient_ids, slides, labels)):
         optimizer.zero_grad()
 
-        full_path = os.path.join(data_dir, 'pt_files', f"{slide_id}.pt")
+        full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
         features = torch.load(full_path, weights_only=True)
 
         bag_label = Tensor(label_dict[label]).unsqueeze(0)
@@ -94,7 +93,7 @@ def dropout_patches(feats, p):
     selected_rows = feats[random_indices]
     return selected_rows
 
-def test(args, test_csv_path, data_dir, label_dict, milnet, criterion, thresholds=None, return_predictions=False):
+def test(args, test_csv_path, data_dir_map, label_dict, milnet, criterion, thresholds=None, return_predictions=False):
     milnet.eval()
     total_loss = 0
     test_labels = []
@@ -108,7 +107,7 @@ def test(args, test_csv_path, data_dir, label_dict, milnet, criterion, threshold
     labels= df["label"].dropna().tolist()
     with torch.no_grad():
         for i, (patient_id, slide_id, label) in enumerate(zip(patient_ids, slides, labels)):
-            full_path = os.path.join(data_dir, 'pt_files', f"{slide_id}.pt")
+            full_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide_id}.pt")
             features = torch.load(full_path, weights_only=True)
 
             bag_label = Tensor(label_dict[label]).unsqueeze(0)
@@ -218,8 +217,8 @@ def print_save_message(args, save_name, thresholds_optimal):
 
 def main():
     parser = argparse.ArgumentParser(description='Train DSMIL on 20x patch features learned by SimCLR')
-    parser.add_argument('--num_classes', default=2, type=int, help='Number of output classes [2]')
-    parser.add_argument('--feats_size', default=512, type=int, help='Dimension of the feature size [512]')
+    parser.add_argument('--num_classes', default=3, type=int, help='Number of output classes [2]')
+    parser.add_argument('--feats_size', default=1024, type=int, help='Dimension of the feature size [512]')
     parser.add_argument('--lr', default=0.0001, type=float, help='Initial learning rate [0.0001]')
     parser.add_argument('--num_epochs', default=50, type=int, help='Number of total training epochs [100]')
     parser.add_argument('--stop_epochs', default=10, type=int, help='Skip remaining epochs if training has not improved after N epochs [10]')
@@ -233,7 +232,6 @@ def main():
     parser.add_argument('--non_linearity', default=1, type=float, help='Additional nonlinear operation [0]')
     parser.add_argument('--average', type=bool, default=False, help='Average the score of max-pooling and bag aggregating')
     parser.add_argument('--eval_scheme', default='5-fold-cv', type=str, help='Evaluation scheme [5-fold-cv | 5-fold-cv-standalone-test | 5-time-train+valid+test ]')
-    parser.add_argument('--split_folder', default='splits', type=str, help='Split folder name')
 
     
     args = parser.parse_args()
@@ -258,6 +256,13 @@ def main():
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.num_epochs, 0.000005)
         return milnet, criterion, optimizer, scheduler
 
+    args.split_folder = "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
+    label_dict = {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
+    data_dir_map = {
+        'kich': "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp",
+        'kirc': "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp",
+        'kirp': "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+    }
 
     if args.eval_scheme == '5-time-train+valid+test':
         # bags_path = bags_path.sample(n=50, random_state=42)
@@ -282,8 +287,8 @@ def main():
 
             for epoch in range(1, args.num_epochs + 1):
                 counter += 1
-                train_loss_bag = train(args, train_path, milnet, criterion, optimizer) # iterate all bags
-                test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, val_path, milnet, criterion)
+                train_loss_bag = train(args, train_path, data_dir_map, label_dict, milnet, criterion, optimizer) # iterate all bags
+                test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, val_path, data_dir_map, label_dict, milnet, criterion)
                 
                 print_epoch_info(epoch, args, train_loss_bag, test_loss_bag, avg_score, aucs)
                 scheduler.step()
@@ -297,7 +302,7 @@ def main():
                     save_model(args, iteration, run, save_path, milnet, thresholds_optimal)
                     best_model = copy.deepcopy(milnet)
                 if counter > args.stop_epochs: break
-            test_loss_bag, avg_score, aucs, thresholds_optimal = test(test_path, best_model, criterion, args)
+            test_loss_bag, avg_score, aucs, thresholds_optimal = test(test_path, data_dir_map, label_dict, best_model, criterion, args)
             fold_results.append((best_ac, best_auc))
         mean_ac = np.mean(np.array([i[0] for i in fold_results]))
         mean_auc = np.mean(np.array([i[1] for i in fold_results]), axis=0)
