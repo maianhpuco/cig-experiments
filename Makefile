@@ -270,6 +270,15 @@ plot_cam_integrated_gradient:
 	--start_fold 1 \
 	--end_fold 1 
 
+plot_tcga_ig:
+	python ig_clam_plot_tcga.py \
+	--config configs_simea/clam_tcga_renal.yaml \
+	--ig_name integrated_gradient \
+	--start_fold 1 \
+	--end_fold 1  
+
+
+	
 check_cig:
 	python ig_clam_cig_check.py \
 	--config configs_simea/clam_camelyon16.yaml \
