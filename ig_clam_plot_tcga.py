@@ -47,9 +47,10 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             class_labels = ["KICH", "KIRP", "KIRC"]
             class_label = class_labels[class_id]
             print("slide path", args.slide_path, "class", class_label)
+            slide_root = args.slide_path[class_label.lower()] 
             
             slide_candidates = glob.glob(
-                os.path.join(args.slide_path, class_label, "*", f"{basename}.svs")
+                os.path.join(slide_root, class_label, "*", f"{basename}.svs")
             )
             
 
