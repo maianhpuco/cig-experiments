@@ -6,82 +6,97 @@ from saliency.core.base import CoreSaliency
 from saliency.core.base import INPUT_OUTPUT_GRADIENTS
 import torch
 import matplotlib.pyplot as plt
-from attr_method._common import PreprocessInputs 
-
-def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor) 
-              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
-    
-    logits = model(inputs)
-    if isinstance(logits, tuple):
-        logits = logits[0]  # extract logits from (logits, Y_prob, Y_hat, _, instance_dict)
-    
-    if INPUT_OUTPUT_GRADIENTS in expected_keys:
-        target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
-        if logits.dim() == 2:
-            target_output = logits[:, target_class_idx].sum()
-        else:
-            target_output = logits[target_class_idx].sum()
-        gradients = torch.autograd.grad(target_output, inputs)[0]
-        return {INPUT_OUTPUT_GRADIENTS: gradients}
-    
-    return logits
-
+from attr_method._common import PreprocessInputs
 
 class ContrastiveGradients(CoreSaliency):
     """Contrastive Gradient Attribution using counterfactual loss."""
 
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
-    def GetMask(self, **kwargs): 
-        x_value = kwargs.get("x_value")                      # torch.Tensor
-        call_model_function = kwargs.get("call_model_function")
-        model = kwargs.get("model") 
+    def GetMask(self, **kwargs):
+        x_value = kwargs.get("x_value")  # torch.Tensor [N, D]
+        model = kwargs.get("model")
         call_model_args = kwargs.get("call_model_args", None)
         baseline_features = kwargs.get("baseline_features")  # torch.Tensor
-        x_steps = kwargs.get("x_steps", 25) 
-        device = kwargs.get("device", "cpu")  
+        x_steps = kwargs.get("x_steps", 25)
+        device = kwargs.get("device", "cpu")
+        target_class_idx = call_model_args.get("target_class_idx", 0) if call_model_args else 0
 
-        x_value = x_value.to(device)
-        baseline_features = baseline_features.to(device)
+        # Ensure inputs are on the correct device
+        x_value = x_value.to(device, dtype=torch.float32)
+        baseline_features = baseline_features.to(device, dtype=torch.float32)
 
+        # Initialize attribution values
         attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
         alphas = np.linspace(0, 1, x_steps)
 
-        # Sample random baseline for each patch
-        sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
-        x_baseline_batch = baseline_features[sampled_indices].squeeze(0)  # [N, D]
-        x_diff = x_value - x_baseline_batch                                # [N, D]
+        # Sample random baseline or use zero baseline if sampling fails
+        try:
+            sampled_indices = np.random.choice(baseline_features.shape[0], x_value.shape[0], replace=True)
+            x_baseline_batch = baseline_features[sampled_indices]  # [N, D]
+        except (IndexError, ValueError):
+            print("Warning: Invalid baseline sampling, using zero baseline")
+            x_baseline_batch = torch.zeros_like(x_value, device=device)
+
+        x_diff = x_value - x_baseline_batch  # [N, D]
+
+        # Check if x_diff is too small
+        if torch.norm(x_diff).item() < 1e-6:
+            print("Warning: x_diff is near zero, attributions may be zero")
+            x_baseline_batch = torch.zeros_like(x_value, device=device)
+            x_diff = x_value - x_baseline_batch
 
         for alpha in tqdm(alphas, desc="Computing Contrastive Gradients", ncols=100):
             # Interpolate
             x_step_batch = x_baseline_batch + alpha * x_diff
             x_step_batch = x_step_batch.clone().detach().requires_grad_(True).to(device)
 
+            # Ensure model is in evaluation mode
+            model.eval()
+
             # Forward passes
             logits_r = model(x_baseline_batch)
             logits_step = model(x_step_batch)
 
-            # Safely extract logits from tuple
+            # Handle tuple outputs and extract class-specific logits
             logits_r = logits_r[0] if isinstance(logits_r, tuple) else logits_r
             logits_step = logits_step[0] if isinstance(logits_step, tuple) else logits_step
 
+            # Select target class logits
+            if logits_r.dim() > 1:
+                logits_r = logits_r[:, target_class_idx]
+                logits_step = logits_step[:, target_class_idx]
+
             # Compute contrastive loss: ||logits_diff||²
             logits_difference = torch.norm(logits_step - logits_r, p=2) ** 2
+
+            # Zero gradients to prevent accumulation
+            if x_step_batch.grad is not None:
+                x_step_batch.grad.zero_()
+
+            # Backward pass
             logits_difference.backward()
 
-            # Get gradients
+            # Check gradients
             if x_step_batch.grad is None:
-                raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.")
+                raise RuntimeError("Gradients are not computed! Ensure model parameters require gradients.")
 
             grad_logits_diff = x_step_batch.grad.detach()  # [N, D]
             counterfactual_gradients = grad_logits_diff.mean(dim=0)  # [D]
             attribution_values += counterfactual_gradients
 
+            # Debug gradient norm
+            # print(f"Alpha {alpha:.2f}, Logits diff: {logits_difference.item():.4f}, Grad norm: {torch.norm(grad_logits_diff):.4f}")
+
         # Apply attribution
         x_diff_mean = x_diff.mean(dim=0)  # [D]
         attribution_values = attribution_values * x_diff_mean  # [D]
 
-        return attribution_values.detach().cpu().numpy() / x_steps
+        # Normalize and return as NumPy array
+        result = attribution_values.detach().cpu().numpy() / x_steps
 
+        # Check for zero attributions
+        if np.all(result == 0):
+            print("Warning: All attribution values are zero. Check model output or baseline.")
 
+        return result
