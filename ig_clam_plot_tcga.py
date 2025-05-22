@@ -151,7 +151,7 @@ def main(args, config):
         classes = [1, 0]
     elif dataset_name == "tcga_renal":
         # classes = [0, 1, 2]
-        classes = [1]
+        classes = [2]
     else:
         raise ValueError(f"Unsupported dataset_name: {dataset_name}")
 
