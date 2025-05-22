@@ -25,6 +25,8 @@ def find_slide_path_mapping(basename, slide_root):
     paths = glob.glob(pattern)
     print("Searching:", pattern)
     print("Found paths:", paths)
+    search_found = os.path.join("/home/mvu9/datasets/TCGA-datasets", "*/*", f"{basename}.svs") 
+    print("Searching found:", search_found)
     return paths[0] if paths else None
  
 # def find_slide_path_mapping(basename, slide_root):
