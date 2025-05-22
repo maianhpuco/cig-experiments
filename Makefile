@@ -213,19 +213,18 @@ plot_tcga_renal_optim_square_integrated_gradient:
 
 # === Grouped Targets ===
 
-group_plot_tcga_basic:
+group_plot_tcga_basic: #running 
 	make plot_tcga_renal_integrated_gradient
 	make plot_tcga_renal_vanilla_gradient
 	make plot_tcga_renal_expected_gradient
 	make plot_tcga_renal_integrated_decision_gradient
+	make plot_tcga_renal_contrastive_gradient
+
 
 group_plot_tcga_adv:
 	make plot_tcga_renal_contrastive_gradient
-	make plot_tcga_renal_square_integrated_gradient
-	make plot_tcga_renal_optim_square_integrated_gradient
-
-
-
+# make plot_tcga_renal_square_integrated_gradient
+# make plot_tcga_renal_optim_square_integrated_gradient
 
 # python check_score.py --config  configs_simea/clam_camelyon16.yaml
 

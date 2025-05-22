@@ -25,8 +25,8 @@ def find_slide_path_mapping(basename, slide_root):
     # slide root should be "datasets/TCGA-datasets"
     pattern = os.path.join(slide_root, "*/*", f"{basename}.svs")
     paths = glob.glob(pattern)
-    print("Searching:", pattern)
-    print("Found paths:", paths)
+    # print("Searching:", pattern)
+    # print("Found paths:", paths)
     return paths[0] if paths else None
 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
@@ -62,7 +62,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         else:
             raise ValueError("Unknown dataset.")
 
-        print("Slide path:", slide_path)
+        # print("Slide path:", slide_path)
         if not os.path.exists(slide_path):
             print(f"  Slide not found: {slide_path}, skipping.")
             
@@ -95,7 +95,6 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     print(f"  Error list: {error_list}") 
     print(f"  Total errors: {len(error_list)}")
     print(f"  Length of scores to plot: {len(scores_to_plot)}")
-    # print(f"  Number of already plotted: {len(already_plotted)}") 
 
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
