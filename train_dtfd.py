@@ -61,7 +61,7 @@ torch.cuda.manual_seed(32)
 np.random.seed(32)
 random.seed(32)
 
-data_dir = "/home/mvu9/processing_datasets/processing_camelyon16"
+data_dir = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
 
 def main():
     torch.autograd.set_detect_anomaly(True)  # Add this line for better error reporting
