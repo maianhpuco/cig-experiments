@@ -152,6 +152,6 @@ if __name__ == '__main__':
     slide_path = '/home/mvu9/datasets/TCGA-datasets/'
     for f in missing_files:
         print(f)
-        path_pattern  = os.path.join(slide_path,"*/*", f)
+        path_pattern  = os.path.join(slide_path,"*/*", f"{f}.svs")
         files = glob.glob(path_pattern)
         print(files)
