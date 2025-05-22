@@ -139,7 +139,13 @@ def main():
         slides_train = df["slide"].dropna().tolist()
         labels_train = df["label"].dropna().tolist()
         Label_train = [label_dict[label] for label in labels_train]
-        FeatList_train = [np.load(os.path.join(data_dir_map[label], f"{slide}.npy")) for label, slide in zip(labels_train, slides_train)]
+        FeatList_train = []
+        for label, slide in zip(labels_train, slides_train):
+            feat_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide}.pt")
+            if not os.path.exists(feat_path):
+                print(f"Feature file {feat_path} does not exist.")
+                continue
+            FeatList_train.append(torch.load(feat_path, weights_only=True, map_location='cuda:0'))
 
 
         df = pd.read_csv(val_path)
@@ -147,14 +153,26 @@ def main():
         slides_val = df["slide"].dropna().tolist()
         labels_val = df["label"].dropna().tolist()
         Label_val = [label_dict[label] for label in labels_val]
-        FeatList_val = [np.load(os.path.join(data_dir_map[label], f"{slide}.npy")) for label, slide in zip(labels_val, slides_val)]
+        FeatList_val = []
+        for label, slide in zip(labels_val, slides_val):
+            feat_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide}.pt")
+            if not os.path.exists(feat_path):
+                print(f"Feature file {feat_path} does not exist.")
+                continue
+            FeatList_val.append(torch.load(feat_path, weights_only=True, map_location='cuda:0'))
 
         df = pd.read_csv(test_path)
         SlideNames_test = df["patient_id"].dropna().tolist()
         slides_test = df["slide"].dropna().tolist()
         labels_test = df["label"].dropna().tolist()
         Label_test = [label_dict[label] for label in labels_test]
-        FeatList_test = [np.load(os.path.join(data_dir_map[label], f"{slide}.npy")) for label, slide in zip(labels_test, slides_test)]
+        FeatList_test = []
+        for label, slide in zip(labels_test, slides_test):
+            feat_path = os.path.join(data_dir_map[label], 'pt_files', f"{slide}.pt")
+            if not os.path.exists(feat_path):
+                print(f"Feature file {feat_path} does not exist.")
+                continue
+            FeatList_test.append(torch.load(feat_path, weights_only=True, map_location='cuda:0'))
 
 
         print_log(
