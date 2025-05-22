@@ -156,6 +156,7 @@ if __name__ == '__main__':
         files = glob.glob(path_pattern)
         print(files)
         
-    score_path = '/home/mvu9/cig_attributions/attr_scores/tgca_renal'
+    score_path = '/home/mvu9/cig_attributions/attr_scores/tgca_renal/integrated_gradient/fold_1'
+    
     path_pattern = os.path.join(score_path,"*","f")
     print(glob.glob(path_pattern))
