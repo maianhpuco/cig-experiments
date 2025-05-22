@@ -53,7 +53,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
 
         elif dataset_name == "tcga_renal":
-            slide_path = find_slide_path_mapping(basename, args.slide_dir)
+            slide_path = find_slide_path_mapping(basename, args.slide_path)
 
             if slide_path is None:
                 error_list.append(basename) 
@@ -103,7 +103,6 @@ def main(args, config):
     args.slide_path = paths["slide_dir"] 
     print("Slide Dir : ", args.slide_path)
     
-    args.slide_path_root = paths["slide_dir"] if dataset_name == "tcga_renal" else None
     args.features_h5_path = paths["h5_files"]
     base_score_folder = paths["attribution_scores_folder"]
     base_plot_folder = paths["ig_clam_plot_folder"]
