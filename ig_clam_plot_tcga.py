@@ -146,4 +146,12 @@ if __name__ == '__main__':
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     config = load_config(args.config) 
-    main(args, config)
+    # main(args, config)
+    
+    missing_files = ['TCGA-A3-3313-01Z-00-DX1.10f8cd5e-1c4f-4bb4-96f3-c612f093fc80']
+    slide_path = '/home/mvu9/datasets/TCGA-datasets/'
+    for f in missing_files:
+        print(f)
+        path_pattern  = os.path.join(slide_path, f)
+        files = glob.glob(path_pattern)
+        print(files)
