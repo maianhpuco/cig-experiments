@@ -57,14 +57,15 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
 
         elif dataset_name == "tcga_renal":
-            label_dict = config["label_dict"]
+            label_dict = dict(config["label_dict"])
             print("Label Dict: ", label_dict)
             # Reverse lookup: class_id → label
             id_to_label = {v: k for k, v in label_dict.items()}
             class_label = id_to_label[class_id]  # e.g., 'KIRP'
             slide_root = args.slide_path[class_label.lower()]  # e.g., slide_path['kirp']
-
+            print("Slide root: ", slide_root) 
             slide_path = find_slide_path_mapping(basename, slide_root)
+            
             if slide_path is None:
                 print(f"  Slide for {basename} not found in {class_label}, skipping.")
                 continue 
