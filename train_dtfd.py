@@ -267,11 +267,11 @@ def test_attention_DTFD_preFeat_MultipleMean(
 
             for tidx, tfeat in enumerate(slide_names):
                 tslideName = slide_names[tidx]
-                tslideLabel = label_tensor[tidx].unsqueeze(0)
+                tslideLabel = label_tensor[tidx].unsqueeze(0).to(params.device)
 
                 full_path = os.path.join(data_dir, 'pt_files', f"{tslideName}.pt")
                 features = torch.load(full_path, weights_only=True)
-                tfeat = features
+                tfeat = features.to(params.device)
 
                 midFeat = dimReduction(tfeat)
 
