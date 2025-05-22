@@ -20,29 +20,20 @@ def load_config(config_file):
     with open(config_file, 'r') as f:
         config = yaml.safe_load(f)
     return config 
+
 def find_slide_path_mapping(basename, slide_root):
     pattern = os.path.join(slide_root, "*", f"{basename}.svs")
     paths = glob.glob(pattern)
     print("Searching:", pattern)
     print("Found paths:", paths)
-    search_found = glob.glob(os.path.join("/home/mvu9/datasets/TCGA-datasets", "*/*", f"{basename}.svs"))
-    print("Searching found:", search_found)
-    
     return paths[0] if paths else None
- 
-# def find_slide_path_mapping(basename, slide_root):
-#     # Glob pattern to search in class folders (KICH/KIRP/KIRC) → UUID → slide
-#     pattern = os.path.join(slide_root, "*", "*", f"{basename}.svs")
-#     paths = glob.glob(pattern)
-#     print("Searching:", pattern)
-#     print("Found paths:", paths)
-#     return paths[0] if paths else None
 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
     os.makedirs(plot_dir, exist_ok=True)
 
     already_plotted = {f.split(".")[0] for f in os.listdir(plot_dir) if f.endswith(".png")}
+    
     scores_to_plot = [
         p for p in all_scores_paths 
         if os.path.splitext(os.path.basename(p))[0] not in already_plotted
@@ -50,7 +41,6 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
       
     dataset_name = args.config_data["dataset_name"].lower()
     print(f"[Fold {fold} | Class {class_id}] Found {len(scores_to_plot)} new .npy files to plot")
-    
     
     error_list = [] 
     for idx, score_path in enumerate(scores_to_plot):
@@ -63,21 +53,15 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 
         elif dataset_name == "tcga_renal":
             label_dict = dict(config["label_dict"])
-            print("Label Dict: ", label_dict)
-            # Reverse lookup: class_id → label
             id_to_label = {v: k for k, v in label_dict.items()}
-            class_label_lower = id_to_label[class_id].lower()  # e.g., 'KIRP'
-            print("Class label: ", class_label_lower)
-            print("Slide path :", args.slide_path_root)
-            slide_root = args.slide_path_root[class_label_lower]  # e.g., slide_path['kirp']
-            print("Slide root: ", slide_root) 
+            class_label_lower = id_to_label[class_id].lower()
+            slide_root = args.slide_path_root[class_label_lower]
             slide_path = find_slide_path_mapping(basename, slide_root)
-            
+
             if slide_path is None:
                 error_list.append(basename) 
-                
                 print(f"  Slide for {basename} not found in {class_label_lower}, skipping.")
-                continue 
+                 
         else:
             raise ValueError("Unknown dataset.")
 
@@ -86,18 +70,8 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             print(f"  Slide not found: {slide_path}, skipping.")
             continue
 
-        try:
-            slide = openslide.open_slide(slide_path)
-        except Exception as e:
-            print(f"  Failed to open slide: {slide_path} | Error: {e}")
-            continue
-
-        try:
-            _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
-        except Exception as e:
-            print(f"  Failed to compute rescaling stats for {basename} | Error: {e}")
-            continue
-
+        slide = openslide.open_slide(slide_path)
+        _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
         scale_x = new_width / original_width
         scale_y = new_height / original_height
 
@@ -106,36 +80,25 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             print(f"  H5 not found: {h5_path}, skipping.")
             continue
 
-        try:
-            with h5py.File(h5_path, "r") as f:
-                coordinates = f['coords'][:]
-        except Exception as e:
-            print(f"  Failed to read coords from H5: {h5_path} | Error: {e}")
-            continue
+        with h5py.File(h5_path, "r") as f:
+            coordinates = f['coords'][:]
 
-        try:
-            scores = np.load(score_path)
-            clipped_scores = replace_outliers_with_bounds(scores.copy())
-            scaled_scores = min_max_scale(clipped_scores)
-        except Exception as e:
-            print(f"  Failed to load/process scores from {score_path} | Error: {e}")
-            continue
+        scores = np.load(score_path)
+        clipped_scores = replace_outliers_with_bounds(scores.copy())
+        scaled_scores = min_max_scale(clipped_scores)
 
         save_path = os.path.join(plot_dir, f"{basename}.png")
+        plot_heatmap_nobbox(
+            scale_x, scale_y, new_height, new_width,
+            coordinates, scaled_scores, name="", save_path=save_path
+        )
+        print(f"  Saved to {save_path}")
 
-        try:
-            plot_heatmap_nobbox(
-                scale_x, scale_y, new_height, new_width,
-                coordinates, scaled_scores, name="", save_path=save_path
-            )
-            print(f"  Saved to {save_path}")
-        except Exception as e:
-            print(f"  Failed to save plot for {basename} | Error: {e}")
-            continue
     print(f"  Error list: {error_list}") 
     print(f"  Total errors: {len(error_list)}")
-    print(f"Len gth of scores to plot: {len(scores_to_plot)}")
+    print(f"  Length of scores to plot: {len(scores_to_plot)}")
     print(f"  Number of already plotted: {len(already_plotted)}") 
+
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
     paths = config["paths"]
@@ -150,8 +113,7 @@ def main(args, config):
     if dataset_name == "camelyon16":
         classes = [1, 0]
     elif dataset_name == "tcga_renal":
-        # classes = [0, 1, 2]
-        classes = [2]
+        classes = [0, 1, 2]
     else:
         raise ValueError(f"Unsupported dataset_name: {dataset_name}")
 
@@ -181,7 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('--start_fold', type=int, required=True)
     parser.add_argument('--end_fold', type=int, required=True)
     args = parser.parse_args()
-    # label_dict = {'KIRP': 0, 'KIRC': 1, 'KICH': 2} 
+
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     config = load_config(args.config) 
     main(args, config)
