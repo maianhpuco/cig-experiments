@@ -67,8 +67,11 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
             
-        elif dataset_name == "tcga_renal": 
-            new_path = find_slide_path_mapping(basename, args.slide_path_root) 
+        elif dataset_name == "tcga_renal":
+            print("------")
+            print(args.slide_path)
+            print(args.slide_path_root)
+            new_path = find_slide_path_mapping(basename, args.slide_path) 
             #print("find_slide_path_mapping: ", new_path)  
             if basename not in slide_path_mapping:
                 print(f"  Basename Slide {basename} not found in split CSV, skipping.")
