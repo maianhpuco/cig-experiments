@@ -61,13 +61,7 @@ torch.cuda.manual_seed(32)
 np.random.seed(32)
 random.seed(32)
 
-label_dict = {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
-
-data_dir_map = {
-    'KICH': "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp",
-    'KIRC': "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp",
-    'KIRP': "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
-}
+data_dir = "/home/mvu9/processing_datasets/processing_camelyon16"
 
 def main():
     torch.autograd.set_detect_anomaly(True)  # Add this line for better error reporting
@@ -129,29 +123,20 @@ def main():
     test_auc = 0
 
     for iteration in range(params.k_start, params.k_end + 1):
-        train_path = os.path.join(params.split_folder, f'fold_{iteration}/train.csv')
-        val_path = os.path.join(params.split_folder, f'fold_{iteration}/val.csv')
-        test_path = os.path.join(params.split_folder, f'fold_{iteration}/test.csv')
+        csv_path = os.path.join(params.split_folder, f'fold_{iteration}.csv')
 
 
-        df = pd.read_csv(train_path)
-        SlideNames_train = df["patient_id"].dropna().tolist()
-        slides_train = df["slide"].dropna().tolist()
-        labels_train = df["label"].dropna().tolist()
+        df = pd.read_csv(csv_path)
+        train_case_ids = df["train"].dropna().tolist()
+        val_case_ids = df["val"].dropna().tolist()
+        test_case_ids = df["test"].dropna().tolist()
 
-
-        df = pd.read_csv(val_path)
-        SlideNames_val = df["patient_id"].dropna().tolist()
-        slides_val = df["slide"].dropna().tolist()
-        labels_val = df["label"].dropna().tolist()
-
-        df = pd.read_csv(test_path)
-        SlideNames_test = df["patient_id"].dropna().tolist()
-        slides_test = df["slide"].dropna().tolist()
-        labels_test = df["label"].dropna().tolist()
+        train_labels = df["train_label"].dropna().astype(int).tolist()
+        val_labels = df["val_label"].dropna().astype(int).tolist()
+        test_labels = df["test_label"].dropna().astype(int).tolist()
 
         print_log(
-            f"training slides: {len(SlideNames_train)}, validation slides: {len(SlideNames_val)}, test slides: {len(SlideNames_test)}",
+            f"training slides: {len(train_case_ids)}, validation slides: {len(val_case_ids)}, test slides: {len(test_case_ids)}",
             log_file,
         )
 
@@ -166,7 +151,7 @@ def main():
                 dimReduction=dimReduction,
                 attention=attention,
                 UClassifier=attCls,
-                mDATA_list=(SlideNames_train, slides_train, labels_train),
+                mDATA_list=(train_case_ids, train_labels),
                 ce_cri=ce_cri,
                 optimizer0=optimizer_adam0,
                 optimizer1=optimizer_adam1,
@@ -184,7 +169,7 @@ def main():
                 dimReduction=dimReduction,
                 attention=attention,
                 UClassifier=attCls,
-                mDATA_list=(SlideNames_val, slides_val, labels_val),
+                mDATA_list=(val_case_ids, val_labels),
                 criterion=ce_cri,
                 epoch=ii,
                 params=params,
@@ -201,7 +186,7 @@ def main():
                 dimReduction=dimReduction,
                 attention=attention,
                 UClassifier=attCls,
-                mDATA_list=(SlideNames_test, slides_test, labels_test),
+                mDATA_list=(test_case_ids, test_labels),
                 criterion=ce_cri,
                 epoch=ii,
                 params=params,
@@ -254,7 +239,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
     dimReduction.eval()
     UClassifier.eval()
 
-    SlideNames, FeatLists, Label = mDATA_list
+    case_ids, labels = mDATA_list
     instance_per_group = total_instance // numGroup
 
     test_loss0 = AverageMeter()
@@ -267,7 +252,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
 
     with torch.no_grad():
 
-        numSlides = len(SlideNames)
+        numSlides = len(case_ids)
         numIter = numSlides // params.batch_size_v
         tIDX = list(range(numSlides))
 
@@ -276,15 +261,20 @@ def test_attention_DTFD_preFeat_MultipleMean(
             tidx_slide = tIDX[
                 idx * params.batch_size_v : (idx + 1) * params.batch_size_v
             ]
-            slide_names = [SlideNames[sst] for sst in tidx_slide]
-            tlabel = [Label[sst] for sst in tidx_slide]
+            slide_names = [case_ids[sst] for sst in tidx_slide]
+            tlabel = [labels[sst] for sst in tidx_slide]
             label_tensor = torch.LongTensor(tlabel).to(params.device)
-            batch_feat = [FeatLists[sst].to(params.device) for sst in tidx_slide]
 
-            for tidx, tfeat in enumerate(batch_feat):
+            for tidx, tfeat in enumerate(slide_names):
                 tslideName = slide_names[tidx]
                 tslideLabel = label_tensor[tidx].unsqueeze(0)
+
+                full_path = os.path.join(data_dir, 'pt_files', f"{tslideName}.pt")
+                features = torch.load(full_path, weights_only=True)
+                tfeat = features
+
                 midFeat = dimReduction(tfeat)
+
 
                 AA = attention(midFeat, isNorm=False).squeeze(0)  ## N
 
@@ -408,7 +398,7 @@ def train_attention_preFeature_DTFD(
     distill="MaxMinS",
 ):
 
-    SlideNames_list, slides_list, labels_list = mDATA_list
+    case_ids, labels = mDATA_list
 
     classifier.train()
     dimReduction.train()
@@ -420,7 +410,7 @@ def train_attention_preFeature_DTFD(
     Train_Loss0 = AverageMeter()
     Train_Loss1 = AverageMeter()
 
-    numSlides = len(SlideNames_list)
+    numSlides = len(case_ids)
     numIter = numSlides // params.batch_size
 
     tIDX = list(range(numSlides))
@@ -430,8 +420,8 @@ def train_attention_preFeature_DTFD(
 
         tidx_slide = tIDX[idx * params.batch_size : (idx + 1) * params.batch_size]
 
-        tslide_name = [SlideNames_list[sst] for sst in tidx_slide]
-        tlabel = [label_dict[labels_list[sst]] for sst in tidx_slide]
+        tslide_name = [case_ids[sst] for sst in tidx_slide]
+        tlabel = [labels[sst] for sst in tidx_slide]
         label_tensor = torch.LongTensor(tlabel).to(params.device)
 
         for tidx, (tslide, slide_idx) in enumerate(zip(tslide_name, tidx_slide)):
@@ -441,10 +431,10 @@ def train_attention_preFeature_DTFD(
             slide_sub_preds = []
             slide_sub_labels = []
 
-            full_path = os.path.join(data_dir_map[labels_list[slide_idx]], 'pt_files', f"{slides_list[slide_idx]}.pt")
-            features = torch.load(full_path, weights_only=True, map_location='cuda:0')
+            full_path = os.path.join(data_dir, 'pt_files', f"{tslide}.pt")
+            features = torch.load(full_path, weights_only=True)
 
-            tfeat_tensor = mFeat_list[slide_idx]
+            tfeat_tensor = features
             tfeat_tensor = tfeat_tensor.to(params.device)
 
             feat_index = list(range(tfeat_tensor.shape[0]))
