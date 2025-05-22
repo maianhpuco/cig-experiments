@@ -75,7 +75,8 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         h5_path = os.path.join(args.features_h5_pattern, f"{basename}.h5")
         if not os.path.exists(h5_path):
             print(f"  H5 not found: {h5_path}, skipping.")
-
+            error_list.append(h5_path)
+            continue 
 
         with h5py.File(h5_path, "r") as f:
             coordinates = f['coords'][:]
@@ -94,7 +95,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     print(f"  Error list: {error_list}") 
     print(f"  Total errors: {len(error_list)}")
     print(f"  Length of scores to plot: {len(scores_to_plot)}")
-    print(f"  Number of already plotted: {len(already_plotted)}") 
+    # print(f"  Number of already plotted: {len(already_plotted)}") 
 
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
