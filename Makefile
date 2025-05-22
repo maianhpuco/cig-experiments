@@ -155,25 +155,19 @@ group_cam_adv:
 # === CAMELYON16 IG Plotting Commands ===
 
 plot_camelyon16_integrated_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_vanilla_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name vanilla_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name vanilla_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_expected_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name expected_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name expected_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_integrated_decision_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_contrastive_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_square_integrated_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_optim_square_integrated_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient --start_fold 1 --end_fold 1  
+	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient --start_fold 1 --end_fold 1  
 
 # === Grouped Targets ===
 
@@ -191,25 +185,19 @@ group_plot_cam_adv:
 # === TCGA-RENAL IG Plotting Commands ===
 
 plot_tcga_renal_integrated_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_tcga.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient --start_fold 1 --end_fold 1  
 plot_tcga_renal_vanilla_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name vanilla_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_tcga.py --config configs_simea/clam_tcga_renal.yaml --ig_name vanilla_gradient --start_fold 1 --end_fold 1  
 plot_tcga_renal_expected_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name expected_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_tcga.py --config configs_simea/clam_tcga_renal.yaml --ig_name expected_gradient --start_fold 1 --end_fold 1  
 plot_tcga_renal_integrated_decision_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_decision_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_tcga.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_decision_gradient --start_fold 1 --end_fold 1  
 plot_tcga_renal_contrastive_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name contrastive_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_tcga.py --config configs_simea/clam_tcga_renal.yaml --ig_name contrastive_gradient --start_fold 1 --end_fold 1  
 plot_tcga_renal_square_integrated_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name square_integrated_gradient --start_fold 1 --end_fold 1  
-
+	python ig_clam_plot_tcga.py --config configs_simea/clam_tcga_renal.yaml --ig_name square_integrated_gradient --start_fold 1 --end_fold 1  
 plot_tcga_renal_optim_square_integrated_gradient:
-	python ig_clam_plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient --start_fold 1 --end_fold 1  
+	python ig_clam_plot_tcga.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient --start_fold 1 --end_fold 1  
 
 # === Grouped Targets ===
 
