@@ -22,7 +22,8 @@ def load_config(config_file):
     return config 
 
 def find_slide_path_mapping(basename, slide_root):
-    pattern = os.path.join(slide_root, "*", f"{basename}.svs")
+    # slide root should be "datasets/TCGA-datasets"
+    pattern = os.path.join(slide_root, "*/*", f"{basename}.svs")
     paths = glob.glob(pattern)
     print("Searching:", pattern)
     print("Found paths:", paths)
@@ -52,15 +53,11 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
 
         elif dataset_name == "tcga_renal":
-            label_dict = dict(config["label_dict"])
-            id_to_label = {v: k for k, v in label_dict.items()}
-            class_label_lower = id_to_label[class_id].lower()
-            slide_root = args.slide_path_root[class_label_lower]
-            slide_path = find_slide_path_mapping(basename, slide_root)
+            slide_path = find_slide_path_mapping(basename, config['slide_dir'])
 
             if slide_path is None:
                 error_list.append(basename) 
-                print(f"  Slide for {basename} not found in {class_label_lower}, skipping.")
+                print(f"  Slide for {basename} not found, skipping.")
                  
         else:
             raise ValueError("Unknown dataset.")
@@ -68,7 +65,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         print("Slide path:", slide_path)
         if not os.path.exists(slide_path):
             print(f"  Slide not found: {slide_path}, skipping.")
-            continue
+            
 
         slide = openslide.open_slide(slide_path)
         _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
@@ -78,7 +75,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         h5_path = os.path.join(args.features_h5_path, f"{basename}.h5")
         if not os.path.exists(h5_path):
             print(f"  H5 not found: {h5_path}, skipping.")
-            continue
+
 
         with h5py.File(h5_path, "r") as f:
             coordinates = f['coords'][:]
@@ -111,7 +108,7 @@ def main(args, config):
     args.config_data = config
 
     if dataset_name == "camelyon16":
-        classes = [1, 0]
+        classes = [0, 1]
     elif dataset_name == "tcga_renal":
         classes = [0, 1, 2]
     else:
@@ -119,6 +116,7 @@ def main(args, config):
 
     for fold in range(args.start_fold, args.end_fold + 1):
         for class_id in classes:
+            
             score_dir = os.path.join(
                 base_score_folder, args.ig_name,
                 f"fold_{fold}", f"class_{class_id}"
@@ -130,7 +128,7 @@ def main(args, config):
 
             if not os.path.exists(score_dir):
                 print(f"  Score folder not found: {score_dir}, skipping...")
-                continue
+                
 
             plot_for_class(args, args.ig_name, fold, class_id, score_dir, plot_dir)
             print("-------------")

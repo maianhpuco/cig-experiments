@@ -12,10 +12,7 @@ paths:
   attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/tgca_renal"
   ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/tcga_renal"   
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_tcga_renal"
-  slide_dir:
-    kich: "/home/mvu9/datasets/TCGA-datasets/KICH"
-    kirc: "/home/mvu9/datasets/TCGA-datasets/KIRC"
-    kirp: "/home/mvu9/datasets/TCGA-datasets/KIRP"
+  slide_dir: '/home/mvu9/datasets/TCGA-datasets'
   h5_files: "/home/mvu9/processing_datasets/processing_tcga_256/features_fp/h5_files" 
 
 label_dict: {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
