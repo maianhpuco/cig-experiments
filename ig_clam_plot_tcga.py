@@ -62,6 +62,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             # Reverse lookup: class_id → label
             id_to_label = {v: k for k, v in label_dict.items()}
             class_label = id_to_label[class_id]  # e.g., 'KIRP'
+            print("Class label: ", class_label)
             slide_root = args.slide_path[class_label.lower()]  # e.g., slide_path['kirp']
             print("Slide root: ", slide_root) 
             slide_path = find_slide_path_mapping(basename, slide_root)
