@@ -152,19 +152,3 @@ if __name__ == '__main__':
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     config = load_config(args.config) 
     main(args, config)
-    
-    # missing_files = ['TCGA-A3-3313-01Z-00-DX1.10f8cd5e-1c4f-4bb4-96f3-c612f093fc80']
-    # slide_path = '/home/mvu9/datasets/TCGA-datasets/'
-    # for f in missing_files:
-    #     print(f)
-    #     path_pattern  = os.path.join(slide_path,"*/*", f"{f}.svs")
-    #     files = glob.glob(path_pattern)
-    #     print(files)
-        
-    # score_path = '/home/mvu9/cig_attributions/attr_scores/tgca_renal/integrated_gradient/fold_1'
-    
-    # path_pattern = os.path.join(score_path,"*",f"{f}*")
-    # print(path_pattern)
-    # print(glob.glob(path_pattern))
-    # pattern = '/home/mvu9/processing_datasets/processing_tcga_256/*/features_fp/h5_files/TCGA-Y8-A897-01Z-00-DX1.2FE4B0F6-6BC3-4238-A7C5-B1B74884193C.h5'
-    # print(glob.glob(pattern))
