@@ -70,12 +70,11 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             print("----- ", relative_path)
 
             slide_path = os.path.join(args.slide_path_root, relative_path)
-            
             print("-----", slide_path)
             
         else:
             raise ValueError("Unknown dataset.")
-
+        print("Slide path: ", slide_path) 
         if not os.path.exists(slide_path):
             print(f"  Slide not found: {slide_path}, skipping.")
             break
