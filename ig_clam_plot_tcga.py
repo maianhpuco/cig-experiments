@@ -72,7 +72,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         scale_x = new_width / original_width
         scale_y = new_height / original_height
 
-        h5_path = os.path.join(args.features_h5_path, f"{basename}.h5")
+        h5_path = os.path.join(args.features_h5_pattern, f"{basename}.h5")
         if not os.path.exists(h5_path):
             print(f"  H5 not found: {h5_path}, skipping.")
 
@@ -99,11 +99,16 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
     paths = config["paths"]
-
+    patterns = config["patterns"]
+     
     args.slide_path = paths["slide_dir"] 
-    print("Slide Dir : ", args.slide_path)
+    #print("Slide Dir : ", args.slide_path)
     
-    args.features_h5_path = paths["h5_files"]
+    if dataset_name=='camelyon16': 
+        args.features_h5_path = paths["h5_files"]
+    elif dataset_name =='tcga_renal':
+        args.features_h5_pattern = patterns["h5_files"]  
+        
     base_score_folder = paths["attribution_scores_folder"]
     base_plot_folder = paths["ig_clam_plot_folder"]
     args.config_data = config

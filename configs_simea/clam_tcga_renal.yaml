@@ -13,7 +13,8 @@ paths:
   ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/tcga_renal"   
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_tcga_renal"
   slide_dir: '/home/mvu9/datasets/TCGA-datasets'
-  h5_files: "/home/mvu9/processing_datasets/processing_tcga_256/features_fp/h5_files" 
+patterns: 
+  h5_files: "/home/mvu9/processing_datasets/processing_tcga_256/*/features_fp/h5_files" 
 
 label_dict: {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
 embed_dim: 1024
