@@ -147,19 +147,19 @@ group_cam_adv:
 # === CAMELYON16 IG Plotting Commands ===
 
 plot_camelyon16_integrated_gradient:
-	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_gradient --start_fold 1 --end_fold 1  
+	python scripts/plotting/ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_vanilla_gradient:
-	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name vanilla_gradient --start_fold 1 --end_fold 1  
+	python scripts/plotting/ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name vanilla_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_expected_gradient:
-	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name expected_gradient --start_fold 1 --end_fold 1  
+	python scripts/plotting/ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name expected_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_integrated_decision_gradient:
-	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --start_fold 1 --end_fold 1  
+	python scripts/plotting/ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_contrastive_gradient:
-	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient --start_fold 1 --end_fold 1  
+	python scripts/plotting/ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_square_integrated_gradient:
-	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient --start_fold 1 --end_fold 1  
+	python scripts/plotting/ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient --start_fold 1 --end_fold 1  
 plot_camelyon16_optim_square_integrated_gradient:
-	python ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient --start_fold 1 --end_fold 1  
+	python scripts/plotting/ig_clam_plot_cam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient --start_fold 1 --end_fold 1  
 
 # === Grouped Targets ===
 
@@ -252,7 +252,9 @@ check_cig:
 	--ig_name optim_square_integrated_gradient
 
 
-
+check_acc: 
+	python scripts/metrics/compute_acc.py --config configs_simea/clam_camelyon16.yaml  --start_fold 1 --end_fold 1
+	
 
 check_score: 
 	python check_score.py --config  configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient 
