@@ -71,7 +71,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             slide_path = find_slide_path_mapping(basename, slide_root)
             
             if slide_path is None:
-                print(f"  Slide for {basename} not found in {class_label}, skipping.")
+                print(f"  Slide for {basename} not found in {class_label_lower}, skipping.")
                 continue 
         else:
             raise ValueError("Unknown dataset.")
