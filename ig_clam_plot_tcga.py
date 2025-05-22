@@ -27,6 +27,7 @@ def find_slide_path_mapping(basename, slide_root):
     print("Found paths:", paths)
     search_found = glob.glob(os.path.join("/home/mvu9/datasets/TCGA-datasets", "*/*", f"{basename}.svs"))
     print("Searching found:", search_found)
+    
     return paths[0] if paths else None
  
 # def find_slide_path_mapping(basename, slide_root):
@@ -49,6 +50,7 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
       
     dataset_name = args.config_data["dataset_name"].lower()
     print(f"[Fold {fold} | Class {class_id}] Found {len(scores_to_plot)} new .npy files to plot")
+    
     
     error_list = [] 
     for idx, score_path in enumerate(scores_to_plot):
@@ -132,7 +134,8 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             continue
     print(f"  Error list: {error_list}") 
     print(f"  Total errors: {len(error_list)}")
-        
+    print(f"Len gth of scores to plot: {len(scores_to_plot)}")
+    print(f"  Number of already plotted: {len(already_plotted)}") 
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
     paths = config["paths"]
