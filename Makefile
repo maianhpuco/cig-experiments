@@ -201,7 +201,7 @@ plot_tcga_renal_optim_square_integrated_gradient:
 
 # === Grouped Targets ===
 
-group_plot_tcga_basic: #running 
+group_plot_tcga_basic: #running in tmux == plot_tcga 
 	make plot_tcga_renal_integrated_gradient
 	make plot_tcga_renal_vanilla_gradient
 	make plot_tcga_renal_expected_gradient
