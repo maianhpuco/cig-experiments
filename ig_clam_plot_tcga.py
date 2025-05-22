@@ -63,8 +63,8 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             id_to_label = {v: k for k, v in label_dict.items()}
             class_label_lower = id_to_label[class_id].lower()  # e.g., 'KIRP'
             print("Class label: ", class_label_lower)
-            print("Slide path :", args.slide_path)
-            slide_root = args.slide_path[class_label_lower]  # e.g., slide_path['kirp']
+            print("Slide path :", args.slide_path_root)
+            slide_root = args. args.slide_path[class_label_lower]  # e.g., slide_path['kirp']
             print("Slide root: ", slide_root) 
             slide_path = find_slide_path_mapping(basename, slide_root)
             
