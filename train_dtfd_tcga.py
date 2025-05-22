@@ -121,25 +121,40 @@ def main():
     best_epoch = -1
     test_auc = 0
 
+    label_dict = {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
+    data_dir_map = {
+        'KICH': "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp",
+        'KIRC': "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp",
+        'KIRP': "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+    }
+
     for iteration in range(params.k_start, params.k_end + 1):
         train_path = os.path.join(params.split_folder, f'fold_{iteration}/train.csv')
         val_path = os.path.join(params.split_folder, f'fold_{iteration}/val.csv')
         test_path = os.path.join(params.split_folder, f'fold_{iteration}/test.csv')
 
+
         df = pd.read_csv(train_path)
         SlideNames_train = df["patient_id"].dropna().tolist()
-        FeatList_train = df["slide"].dropna().tolist()
-        Label_train = df["label"].dropna().tolist()
+        slides_train = df["slide"].dropna().tolist()
+        labels_train = df["label"].dropna().tolist()
+        Label_train = [label_dict[label] for label in labels_train]
+        FeatList_train = [np.load(os.path.join(data_dir_map[label], f"{slide}.npy")) for label, slide in zip(labels_train, slides_train)]
+
 
         df = pd.read_csv(val_path)
         SlideNames_val = df["patient_id"].dropna().tolist()
-        FeatList_val = df["slide"].dropna().tolist()
-        Label_val = df["label"].dropna().tolist()
+        slides_val = df["slide"].dropna().tolist()
+        labels_val = df["label"].dropna().tolist()
+        Label_val = [label_dict[label] for label in labels_val]
+        FeatList_val = [np.load(os.path.join(data_dir_map[label], f"{slide}.npy")) for label, slide in zip(labels_val, slides_val)]
 
         df = pd.read_csv(test_path)
         SlideNames_test = df["patient_id"].dropna().tolist()
-        FeatList_test = df["slide"].dropna().tolist()
-        Label_test = df["label"].dropna().tolist()
+        slides_test = df["slide"].dropna().tolist()
+        labels_test = df["label"].dropna().tolist()
+        Label_test = [label_dict[label] for label in labels_test]
+        FeatList_test = [np.load(os.path.join(data_dir_map[label], f"{slide}.npy")) for label, slide in zip(labels_test, slides_test)]
 
 
         print_log(
