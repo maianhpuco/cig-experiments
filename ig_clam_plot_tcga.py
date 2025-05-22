@@ -146,16 +146,16 @@ if __name__ == '__main__':
     config = load_config(args.config) 
     # main(args, config)
     
-    missing_files = ['TCGA-A3-3313-01Z-00-DX1.10f8cd5e-1c4f-4bb4-96f3-c612f093fc80']
-    slide_path = '/home/mvu9/datasets/TCGA-datasets/'
-    for f in missing_files:
-        print(f)
-        path_pattern  = os.path.join(slide_path,"*/*", f"{f}.svs")
-        files = glob.glob(path_pattern)
-        print(files)
+    # missing_files = ['TCGA-A3-3313-01Z-00-DX1.10f8cd5e-1c4f-4bb4-96f3-c612f093fc80']
+    # slide_path = '/home/mvu9/datasets/TCGA-datasets/'
+    # for f in missing_files:
+    #     print(f)
+    #     path_pattern  = os.path.join(slide_path,"*/*", f"{f}.svs")
+    #     files = glob.glob(path_pattern)
+    #     print(files)
         
-    score_path = '/home/mvu9/cig_attributions/attr_scores/tgca_renal/integrated_gradient/fold_1'
+    # score_path = '/home/mvu9/cig_attributions/attr_scores/tgca_renal/integrated_gradient/fold_1'
     
-    path_pattern = os.path.join(score_path,"*",f"{f}*")
-    print(path_pattern)
-    print(glob.glob(path_pattern))
+    # path_pattern = os.path.join(score_path,"*",f"{f}*")
+    # print(path_pattern)
+    # print(glob.glob(path_pattern))
