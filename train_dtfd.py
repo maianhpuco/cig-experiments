@@ -425,14 +425,14 @@ def train_attention_preFeature_DTFD(
         label_tensor = torch.LongTensor(tlabel).to(params.device)
 
         for tidx, (tslide, slide_idx) in enumerate(zip(tslide_name, tidx_slide)):
-            tslideLabel = label_tensor[tidx].unsqueeze(0)
+            tslideLabel = label_tensor[tidx].unsqueeze(0).to(params.device)
 
             slide_pseudo_feat = []
             slide_sub_preds = []
             slide_sub_labels = []
 
             full_path = os.path.join(data_dir, 'pt_files', f"{tslide}.pt")
-            features = torch.load(full_path, weights_only=True)
+            features = torch.load(full_path, weights_only=True).to(params.device)
 
             tfeat_tensor = features
             tfeat_tensor = tfeat_tensor.to(params.device)
