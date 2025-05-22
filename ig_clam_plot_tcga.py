@@ -101,6 +101,8 @@ def main(args, config):
     paths = config["paths"]
 
     args.slide_path = paths["slide_dir"] 
+    print("Slide Dir : ", args.slide_path)
+    
     args.slide_path_root = paths["slide_dir"] if dataset_name == "tcga_renal" else None
     args.features_h5_path = paths["h5_files"]
     base_score_folder = paths["attribution_scores_folder"]
