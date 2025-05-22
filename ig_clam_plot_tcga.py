@@ -167,4 +167,4 @@ if __name__ == '__main__':
     # print(path_pattern)
     # print(glob.glob(path_pattern))
     pattern = '/home/mvu9/processing_datasets/processing_tcga_256/*/features_fp/h5_files/TCGA-Y8-A897-01Z-00-DX1.2FE4B0F6-6BC3-4238-A7C5-B1B74884193C.h5'
-    print(pattern)
+    print(glob.glob(pattern))
