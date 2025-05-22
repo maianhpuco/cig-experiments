@@ -276,8 +276,6 @@ plot_tcga_ig:
 	--ig_name integrated_gradient \
 	--start_fold 1 \
 	--end_fold 1  
-
-
 	
 check_cig:
 	python ig_clam_cig_check.py \

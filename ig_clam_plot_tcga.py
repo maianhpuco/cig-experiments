@@ -21,25 +21,13 @@ def load_config(config_file):
         config = yaml.safe_load(f)
     return config 
 
-def build_slide_path_mapping(split_csv_path):
-    df = pd.read_csv(split_csv_path, header=None)
-    df.columns = ['uuid', 'slide', 'label']
-    mapping = {
-        os.path.splitext(row.slide)[0]: os.path.join(
-            row.label.upper(), row.uuid, row.slide + ".svs"
-        )
-        for _, row in df.iterrows()
-    }
-    print ("Slide path mapping: ", mapping) 
-    return mapping
-
-def find_slide_path_mapping(basename, slide_path):
-    slide_path = "/home/mvu9/datasets/TCGA-datasets"
-    
-    paths = glob.glob(os.path.join(slide_path, f"*/*/{basename}.svs"))
-    print("Paths: ", paths)
+def find_slide_path_mapping(basename, slide_root):
+    # Glob pattern to search in class folders (KICH/KIRP/KIRC) → UUID → slide
+    pattern = os.path.join(slide_root, "*", "*", f"{basename}.svs")
+    paths = glob.glob(pattern)
+    print("Searching:", pattern)
+    print("Found paths:", paths)
     return paths[0] if paths else None
-    
 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
@@ -52,14 +40,6 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     ]
 
     dataset_name = args.config_data["dataset_name"].lower()
-
-    # Build CSV-based mapping for TCGA
-    if dataset_name == "tcga_renal":
-        split_csv = os.path.join(
-            args.config_data["paths"]["split_folder"], f"fold_{fold}", "test.csv"
-        )
-        slide_path_mapping = build_slide_path_mapping(split_csv)
-
     print(f"[Fold {fold} | Class {class_id}] Found {len(scores_to_plot)} new .npy files to plot")
 
     for idx, score_path in enumerate(scores_to_plot):
@@ -69,31 +49,21 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
 
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
-            
-        elif dataset_name == "tcga_renal":
-            print("------")
-            print(args.slide_path)
-            print(args.slide_path_root)
-            new_path = find_slide_path_mapping(basename, args.slide_path) 
-            #print("find_slide_path_mapping: ", new_path)  
-            if basename not in slide_path_mapping:
-                print(f"  Basename Slide {basename} not found in split CSV, skipping.")
-                break 
-                
-            relative_path = slide_path_mapping[basename]
-            print("----- ", basename)
-            print("----- ", relative_path)
 
-            slide_path = os.path.join(args.slide_path_root, relative_path)
-            print("-----", slide_path)
-            
+        elif dataset_name == "tcga_renal":
+            slide_path = find_slide_path_mapping(basename, args.slide_path_root)
+            if slide_path is None:
+                print(f"  Slide for {basename} not found, skipping.")
+                continue
+
         else:
             raise ValueError("Unknown dataset.")
-        print("Slide path: ", slide_path) 
+
+        print("Slide path:", slide_path)
         if not os.path.exists(slide_path):
             print(f"  Slide not found: {slide_path}, skipping.")
-            break
-            # continue
+            continue
+
         try:
             slide = openslide.open_slide(slide_path)
         except Exception as e:
