@@ -20,14 +20,20 @@ def load_config(config_file):
     with open(config_file, 'r') as f:
         config = yaml.safe_load(f)
     return config 
-
 def find_slide_path_mapping(basename, slide_root):
-    # Glob pattern to search in class folders (KICH/KIRP/KIRC) → UUID → slide
-    pattern = os.path.join(slide_root, "*", "*", f"{basename}.svs")
+    pattern = os.path.join(slide_root, "*", f"{basename}.svs")
     paths = glob.glob(pattern)
     print("Searching:", pattern)
     print("Found paths:", paths)
     return paths[0] if paths else None
+ 
+# def find_slide_path_mapping(basename, slide_root):
+#     # Glob pattern to search in class folders (KICH/KIRP/KIRC) → UUID → slide
+#     pattern = os.path.join(slide_root, "*", "*", f"{basename}.svs")
+#     paths = glob.glob(pattern)
+#     print("Searching:", pattern)
+#     print("Found paths:", paths)
+#     return paths[0] if paths else None
 
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
@@ -51,11 +57,17 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
 
         elif dataset_name == "tcga_renal":
-            slide_path = find_slide_path_mapping(basename, args.slide_path_root)
-            if slide_path is None:
-                print(f"  Slide for {basename} not found, skipping.")
-                continue
+            label_dict = config["label_dict"]
+            print("Label Dict: ", label_dict)
+            # Reverse lookup: class_id → label
+            id_to_label = {v: k for k, v in label_dict.items()}
+            class_label = id_to_label[class_id]  # e.g., 'KIRP'
+            slide_root = args.slide_path[class_label.lower()]  # e.g., slide_path['kirp']
 
+            slide_path = find_slide_path_mapping(basename, slide_root)
+            if slide_path is None:
+                print(f"  Slide for {basename} not found in {class_label}, skipping.")
+                continue 
         else:
             raise ValueError("Unknown dataset.")
 
@@ -155,7 +167,7 @@ if __name__ == '__main__':
     parser.add_argument('--start_fold', type=int, required=True)
     parser.add_argument('--end_fold', type=int, required=True)
     args = parser.parse_args()
-
+    # label_dict = {'KIRP': 0, 'KIRC': 1, 'KICH': 2} 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     config = load_config(args.config) 
     main(args, config)

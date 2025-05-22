@@ -17,6 +17,8 @@ paths:
     kirc: "/home/mvu9/datasets/TCGA-datasets/KIRC"
     kirp: "/home/mvu9/datasets/TCGA-datasets/KIRP"
   h5_files: "/home/mvu9/processing_datasets/processing_tcga_256/features_fp/h5_files" 
+
+label_dict: {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
 embed_dim: 1024
 lr: 0.0001
 label_frac: 1.0
