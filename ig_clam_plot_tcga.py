@@ -34,6 +34,7 @@ def build_slide_path_mapping(split_csv_path):
     return mapping
 
 def find_slide_path_mapping(basename, slide_path):
+    slide_path = "/home/mvu9/datasets/TCGA-datasets"
     paths = glob.glob(os.path.join(slide_path, f"*/*/{basename}.svs"))
     return paths[0] if paths else None
     
