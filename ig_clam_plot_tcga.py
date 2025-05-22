@@ -33,6 +33,11 @@ def build_slide_path_mapping(split_csv_path):
     print ("Slide path mapping: ", mapping) 
     return mapping
 
+def find_slide_path_mapping(basename, slide_path):
+    paths = glob.glob(os.path.join(slide_path, f"*/*/{basename}.svs"))
+    return paths[0] if paths else None
+    
+
 def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
     all_scores_paths = sorted(glob.glob(os.path.join(score_dir, "*.npy")))
     os.makedirs(plot_dir, exist_ok=True)
@@ -62,12 +67,13 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.slide_path, f"{basename}.tif")
             
-        elif dataset_name == "tcga_renal":
-            
+        elif dataset_name == "tcga_renal": 
+            new_path = find_slide_path_mapping(basename, args.slide_path_root) 
+            #print("find_slide_path_mapping: ", new_path)  
             if basename not in slide_path_mapping:
                 print(f"  Basename Slide {basename} not found in split CSV, skipping.")
                 break 
-            
+                
             relative_path = slide_path_mapping[basename]
             print("----- ", basename)
             print("----- ", relative_path)
