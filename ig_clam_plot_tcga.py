@@ -46,10 +46,11 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         p for p in all_scores_paths 
         if os.path.splitext(os.path.basename(p))[0] not in already_plotted
     ]
-
+      
     dataset_name = args.config_data["dataset_name"].lower()
     print(f"[Fold {fold} | Class {class_id}] Found {len(scores_to_plot)} new .npy files to plot")
-
+    
+    error_list = [] 
     for idx, score_path in enumerate(scores_to_plot):
         print(f"  → Plotting [{idx+1}/{len(scores_to_plot)}]: {score_path}")
 
@@ -71,6 +72,8 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
             slide_path = find_slide_path_mapping(basename, slide_root)
             
             if slide_path is None:
+                error_list.append(basename) 
+                
                 print(f"  Slide for {basename} not found in {class_label_lower}, skipping.")
                 continue 
         else:
@@ -127,6 +130,8 @@ def plot_for_class(args, method, fold, class_id, score_dir, plot_dir):
         except Exception as e:
             print(f"  Failed to save plot for {basename} | Error: {e}")
             continue
+    print(f"  Error list: {error_list}") 
+    print(f"  Total errors: {len(error_list)}")
         
 def main(args, config):
     dataset_name = config.get("dataset_name", "").lower()
