@@ -16,6 +16,7 @@ train_clam_camelyon16_4fold:
 	@echo "Activating conda environment for simea .."
 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 2 --k_end 5
 	
+
 train_clam_tcga_1fold:
 	@echo "Activating conda environment for simea .."
 	python train_tcga.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 1 --k_end 1
@@ -25,6 +26,7 @@ train_clam_tcga_23fold:
 train_clam_tcga_45fold:
 	@echo "Activating conda environment for simea .."
 	python train_clam_tcga.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 4 --k_end 5
+
 
 train_clam_cam_23fold:
 	@echo "Activating conda environment for simea .."
@@ -46,29 +48,19 @@ test_ig_clam_tcga:
 
 ig_clam_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_gradient
-
 ig_clam_expected_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name expected_gradient
-
 ig_clam_integrated_decision_gradient:
 	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --device cpu
-
 ig_clam_contrastive_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
-
 ig_clam_vanilla_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name vanilla_gradient
-
 ig_clam_square_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
-
 ig_clam_optim_square_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
-
-dr_idg:
-	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --device cpu
 
 # ----- Grouped Methods -----
 group_basic: #done, done , done 
@@ -210,7 +202,7 @@ group_plot_tcga_basic: #running in tmux == plot_tcga
 
 
 group_plot_tcga_adv:
-	make plot_tcga_renal_contrastive_gradient
+# make plot_tcga_renal_contrastive_gradient
 # make plot_tcga_renal_square_integrated_gradient
 # make plot_tcga_renal_optim_square_integrated_gradient
 
@@ -223,16 +215,16 @@ group_plot_tcga_adv:
 dr_cig:
 	python ig_clam_test.py -sig-config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
 
-
 dr_sig:
 	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
-
 
 dr_osig:
 	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
 
-
-
+dr_idg:
+	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+	python ig_clam_test.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --device cpu
+ 
 plot_cam_integrated_gradient: 
 	python ig_clam_plot.py \
 	--config configs_simea/clam_camelyon16.yaml \
