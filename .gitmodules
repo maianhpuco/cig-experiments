@@ -1,3 +1,9 @@
 [submodule "src/externals/CLAM"]
 	path = src/externals/CLAM
 	url = https://github.com/mahmoodlab/CLAM.git
+[submodule "src/externals/dsmil-wsi"]
+	path = src/externals/dsmil-wsi
+	url = https://github.com/binli123/dsmil-wsi.git
+[submodule "src/externals/dtfd-mil"]
+	url = https://github.com/kuro2907/dtfd-mil-clone.git
+	path = src/externals/dtfd-mil
