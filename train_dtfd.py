@@ -301,7 +301,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
                     test_loss0.update(loss0.item(), numGroup)
 
                     gSlidePred = UClassifier(slide_d_feat)
-                    print("--test pred", gSlidePred)
+                    # print("--test pred", gSlidePred)
                     allSlide_pred_softmax.append(torch.softmax(gSlidePred, dim=1))
 
                 allSlide_pred_softmax = torch.cat(allSlide_pred_softmax, dim=0)
@@ -477,7 +477,7 @@ def train_attention_preFeature_DTFD(
 
             ## optimization for the second tier
             gSlidePred = UClassifier(slide_pseudo_feat)
-            print("--train pred", gSlidePred)
+            # print("--train pred", gSlidePred)
             loss1 = ce_cri(gSlidePred, tslideLabel).mean()
             optimizer1.zero_grad()
             loss1.backward()
