@@ -19,42 +19,8 @@ from Model.network import Classifier_1fc, DimReduction
 import numpy as np
 from utils import eval_metric
 import pandas as pd
+import yaml
 
-
-torch.autograd.set_detect_anomaly(True)
-parser = argparse.ArgumentParser(description="abc")
-
-parser.add_argument("--name", default="abc", type=str)
-parser.add_argument("--EPOCH", default=200, type=int)
-parser.add_argument("--epoch_step", default="[100]", type=str)
-parser.add_argument("--device", default="cuda", type=str)
-parser.add_argument("--isPar", default=False, type=bool)
-parser.add_argument("--log_dir", default="./debug_log", type=str)  ## log file path
-parser.add_argument("--train_show_freq", default=40, type=int)
-parser.add_argument("--droprate", default="0", type=float)
-parser.add_argument("--droprate_2", default="0", type=float)
-parser.add_argument("--lr", default=1e-4, type=float)
-parser.add_argument("--weight_decay", default=1e-4, type=float)
-parser.add_argument("--lr_decay_ratio", default=0.2, type=float)
-parser.add_argument("--batch_size", default=1, type=int)
-parser.add_argument("--batch_size_v", default=1, type=int)
-parser.add_argument("--num_workers", default=4, type=int)
-parser.add_argument("--num_cls", default=2, type=int)
-parser.add_argument("--numGroup", default=4, type=int)
-parser.add_argument("--total_instance", default=4, type=int)
-parser.add_argument("--numGroup_test", default=4, type=int)
-parser.add_argument("--total_instance_test", default=4, type=int)
-parser.add_argument("--mDim", default=512, type=int)
-parser.add_argument("--grad_clipping", default=5, type=float)
-parser.add_argument("--isSaveModel", action="store_false")
-parser.add_argument("--debug_DATA_dir", default="", type=str)
-parser.add_argument("--numLayer_Res", default=0, type=int)
-parser.add_argument("--temperature", default=1, type=float)
-parser.add_argument("--num_MeanInference", default=1, type=int)
-parser.add_argument("--distill_type", default="AFS", type=str)  ## MaxMinS, MaxS, AFS
-parser.add_argument("--k_start", default=1, type=int)
-parser.add_argument("--k_end", default=5, type=int)
-parser.add_argument("--split_folder", default="", type=str)
 
 torch.manual_seed(32)
 torch.cuda.manual_seed(32)
@@ -63,38 +29,37 @@ random.seed(32)
 
 data_dir = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
 
-def main():
+def main(args):
     torch.autograd.set_detect_anomaly(True)  # Add this line for better error reporting
-    params = parser.parse_args()
-    epoch_step = json.loads(params.epoch_step)
-    writer = SummaryWriter(os.path.join(params.log_dir, "LOG", params.name))
+    epoch_step = json.loads(args.epoch_step)
+    writer = SummaryWriter(os.path.join(args.log_dir, "LOG", args.name))
 
     in_chn = 1024
 
-    classifier = Classifier_1fc(params.mDim, params.num_cls, params.droprate).to(
-        params.device
+    classifier = Classifier_1fc(args.mDim, args.num_cls, args.droprate).to(
+        args.device
     )
-    attention = Attention(params.mDim).to(params.device)
+    attention = Attention(args.mDim).to(args.device)
     dimReduction = DimReduction(
-        in_chn, params.mDim, numLayer_Res=params.numLayer_Res
-    ).to(params.device)
+        in_chn, args.mDim, numLayer_Res=args.numLayer_Res
+    ).to(args.device)
     attCls = Attention_with_Classifier(
-        L=params.mDim, num_cls=params.num_cls, droprate=params.droprate_2
-    ).to(params.device)
+        L=args.mDim, num_cls=args.num_cls, droprate=args.droprate_2
+    ).to(args.device)
 
-    if params.isPar:
+    if args.isPar:
         classifier = DataParallel(classifier)
         attention = DataParallel(attention)
         dimReduction = DataParallel(dimReduction)
         attCls = DataParallel(attCls)
 
-    ce_cri = torch.nn.CrossEntropyLoss(reduction="none").to(params.device)
+    ce_cri = torch.nn.CrossEntropyLoss(reduction="none").to(args.device)
 
-    if not os.path.exists(params.log_dir):
-        os.makedirs(params.log_dir)
-    log_dir = os.path.join(params.log_dir, "log.txt")
-    save_dir = os.path.join(params.log_dir, "best_model.pth")
-    z = vars(params).copy()
+    if not os.path.exists(args.log_dir):
+        os.makedirs(args.log_dir)
+    log_dir = os.path.join(args.log_dir, "log.txt")
+    save_dir = os.path.join(args.log_dir, "best_model.pth")
+    z = vars(args).copy()
     with open(log_dir, "a") as f:
         f.write(json.dumps(z))
     log_file = open(log_dir, "a")
@@ -104,27 +69,18 @@ def main():
     trainable_parameters = trainable_parameters + list(attention.parameters())
     trainable_parameters = trainable_parameters + list(dimReduction.parameters())
 
-    optimizer_adam0 = torch.optim.Adam(
-        trainable_parameters, lr=params.lr, weight_decay=params.weight_decay
-    )
-    optimizer_adam1 = torch.optim.Adam(
-        attCls.parameters(), lr=params.lr, weight_decay=params.weight_decay
-    )
+    optimizer_adam0 = torch.optim.Adam(trainable_parameters, lr=args.lr, weight_decay=args.weight_decay)
+    optimizer_adam1 = torch.optim.Adam(attCls.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-    scheduler0 = torch.optim.lr_scheduler.MultiStepLR(
-        optimizer_adam0, epoch_step, gamma=params.lr_decay_ratio
-    )
-    scheduler1 = torch.optim.lr_scheduler.MultiStepLR(
-        optimizer_adam1, epoch_step, gamma=params.lr_decay_ratio
-    )
+    scheduler0 = torch.optim.lr_scheduler.MultiStepLR(optimizer_adam0, epoch_step, gamma=args.lr_decay_ratio)
+    scheduler1 = torch.optim.lr_scheduler.MultiStepLR(optimizer_adam1, epoch_step, gamma=args.lr_decay_ratio)
 
     best_auc = 0
     best_epoch = -1
     test_auc = 0
 
-    for iteration in range(params.k_start, params.k_end + 1):
-        csv_path = os.path.join(params.split_folder, f'fold_{iteration}.csv')
-
+    for iteration in range(args.k_start, args.k_end + 1):
+        csv_path = os.path.join(args.split_folder, f'fold_{iteration}.csv')
 
         df = pd.read_csv(csv_path)
         train_case_ids = df["train"].dropna().tolist()
@@ -140,8 +96,7 @@ def main():
             log_file,
         )
 
-        for ii in range(params.EPOCH):
-
+        for ii in range(args.EPOCH):
             for param_group in optimizer_adam1.param_groups:
                 curLR = param_group["lr"]
                 print_log(f" current learn rate {curLR}", log_file)
@@ -156,12 +111,12 @@ def main():
                 optimizer0=optimizer_adam0,
                 optimizer1=optimizer_adam1,
                 epoch=ii,
-                params=params,
+                args=args,
                 f_log=log_file,
                 writer=writer,
-                numGroup=params.numGroup,
-                total_instance=params.total_instance,
-                distill=params.distill_type,
+                numGroup=args.numGroup,
+                total_instance=args.total_instance,
+                distill=args.distill_type,
             )
             print_log(f">>>>>>>>>>> Validation Epoch: {ii}", log_file)
             auc_val = test_attention_DTFD_preFeat_MultipleMean(
@@ -172,12 +127,12 @@ def main():
                 mDATA_list=(val_case_ids, val_labels),
                 criterion=ce_cri,
                 epoch=ii,
-                params=params,
+                args=args,
                 f_log=log_file,
                 writer=writer,
-                numGroup=params.numGroup_test,
-                total_instance=params.total_instance_test,
-                distill=params.distill_type,
+                numGroup=args.numGroup_test,
+                total_instance=args.total_instance_test,
+                distill=args.distill_type,
             )
             print_log(" ", log_file)
             print_log(f">>>>>>>>>>> Test Epoch: {ii}", log_file)
@@ -189,21 +144,21 @@ def main():
                 mDATA_list=(test_case_ids, test_labels),
                 criterion=ce_cri,
                 epoch=ii,
-                params=params,
+                args=args,
                 f_log=log_file,
                 writer=writer,
-                numGroup=params.numGroup_test,
-                total_instance=params.total_instance_test,
-                distill=params.distill_type,
+                numGroup=args.numGroup_test,
+                total_instance=args.total_instance_test,
+                distill=args.distill_type,
             )
             print_log(" ", log_file)
 
-            if ii > int(params.EPOCH * 0.8):
+            if ii > int(args.EPOCH * 0.8):
                 if auc_val > best_auc:
                     best_auc = auc_val
                     best_epoch = ii
                     test_auc = tauc
-                    if params.isSaveModel:
+                    if args.isSaveModel:
                         tsave_dict = {
                             "classifier": classifier.state_dict(),
                             "dim_reduction": dimReduction.state_dict(),
@@ -226,7 +181,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
     UClassifier,
     epoch,
     criterion=None,
-    params=None,
+    args=None,
     f_log=None,
     writer=None,
     numGroup=3,
@@ -245,33 +200,33 @@ def test_attention_DTFD_preFeat_MultipleMean(
     test_loss0 = AverageMeter()
     test_loss1 = AverageMeter()
 
-    gPred_0 = torch.FloatTensor().to(params.device)
-    gt_0 = torch.LongTensor().to(params.device)
-    gPred_1 = torch.FloatTensor().to(params.device)
-    gt_1 = torch.LongTensor().to(params.device)
+    gPred_0 = torch.FloatTensor().to(args.device)
+    gt_0 = torch.LongTensor().to(args.device)
+    gPred_1 = torch.FloatTensor().to(args.device)
+    gt_1 = torch.LongTensor().to(args.device)
 
     with torch.no_grad():
 
         numSlides = len(case_ids)
-        numIter = numSlides // params.batch_size_v
+        numIter = numSlides // args.batch_size_v
         tIDX = list(range(numSlides))
 
         for idx in range(numIter):
 
             tidx_slide = tIDX[
-                idx * params.batch_size_v : (idx + 1) * params.batch_size_v
+                idx * args.batch_size_v : (idx + 1) * args.batch_size_v
             ]
             slide_names = [case_ids[sst] for sst in tidx_slide]
             tlabel = [labels[sst] for sst in tidx_slide]
-            label_tensor = torch.LongTensor(tlabel).to(params.device)
+            label_tensor = torch.LongTensor(tlabel).to(args.device)
 
             for tidx, tfeat in enumerate(slide_names):
                 tslideName = slide_names[tidx]
-                tslideLabel = label_tensor[tidx].unsqueeze(0).to(params.device)
+                tslideLabel = label_tensor[tidx].unsqueeze(0).to(args.device)
 
                 full_path = os.path.join(data_dir, 'pt_files', f"{tslideName}.pt")
                 features = torch.load(full_path, weights_only=True)
-                tfeat = features.to(params.device)
+                tfeat = features.to(args.device)
 
                 midFeat = dimReduction(tfeat)
 
@@ -280,7 +235,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
 
                 allSlide_pred_softmax = []
 
-                for jj in range(params.num_MeanInference):
+                for jj in range(args.num_MeanInference):
 
                     feat_index = list(range(tfeat.shape[0]))
                     random.shuffle(feat_index)
@@ -293,7 +248,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
 
                     for tindex in index_chunk_list:
                         slide_sub_labels.append(tslideLabel)
-                        idx_tensor = torch.LongTensor(tindex).to(params.device)
+                        idx_tensor = torch.LongTensor(tindex).to(args.device)
                         tmidFeat = midFeat.index_select(dim=0, index=idx_tensor)
 
                         tAA = AA.index_select(dim=0, index=idx_tensor)
@@ -390,7 +345,7 @@ def train_attention_preFeature_DTFD(
     optimizer1,
     epoch,
     ce_cri=None,
-    params=None,
+    args=None,
     f_log=None,
     writer=None,
     numGroup=3,
@@ -411,31 +366,32 @@ def train_attention_preFeature_DTFD(
     Train_Loss1 = AverageMeter()
 
     numSlides = len(case_ids)
-    numIter = numSlides // params.batch_size
+    numIter = numSlides // args.batch_size
 
     tIDX = list(range(numSlides))
     random.shuffle(tIDX)
 
+
     for idx in range(numIter):
 
-        tidx_slide = tIDX[idx * params.batch_size : (idx + 1) * params.batch_size]
+        tidx_slide = tIDX[idx * args.batch_size : (idx + 1) * args.batch_size]
 
         tslide_name = [case_ids[sst] for sst in tidx_slide]
         tlabel = [labels[sst] for sst in tidx_slide]
-        label_tensor = torch.LongTensor(tlabel).to(params.device)
+        label_tensor = torch.LongTensor(tlabel).to(args.device)
 
         for tidx, (tslide, slide_idx) in enumerate(zip(tslide_name, tidx_slide)):
-            tslideLabel = label_tensor[tidx].unsqueeze(0).to(params.device)
+            tslideLabel = label_tensor[tidx].unsqueeze(0)
 
             slide_pseudo_feat = []
             slide_sub_preds = []
             slide_sub_labels = []
 
             full_path = os.path.join(data_dir, 'pt_files', f"{tslide}.pt")
-            features = torch.load(full_path, weights_only=True).to(params.device)
+            features = torch.load(full_path, weights_only=True)
 
             tfeat_tensor = features
-            tfeat_tensor = tfeat_tensor.to(params.device)
+            tfeat_tensor = tfeat_tensor.to(args.device)
 
             feat_index = list(range(tfeat_tensor.shape[0]))
             random.shuffle(feat_index)
@@ -447,7 +403,7 @@ def train_attention_preFeature_DTFD(
 
                 # Create fresh tensor with no history
                 with torch.no_grad():
-                    indices = torch.LongTensor(tindex).to(params.device)
+                    indices = torch.LongTensor(tindex).to(args.device)
                     subFeat_tensor_raw = tfeat_tensor.index_select(0, indices).detach()
 
                 # Create completely new tensor
@@ -510,11 +466,11 @@ def train_attention_preFeature_DTFD(
             optimizer0.zero_grad()
             loss0.backward(retain_graph=True)
             torch.nn.utils.clip_grad_norm_(
-                dimReduction.parameters(), params.grad_clipping
+                dimReduction.parameters(), args.grad_clipping
             )
-            torch.nn.utils.clip_grad_norm_(attention.parameters(), params.grad_clipping)
+            torch.nn.utils.clip_grad_norm_(attention.parameters(), args.grad_clipping)
             torch.nn.utils.clip_grad_norm_(
-                classifier.parameters(), params.grad_clipping
+                classifier.parameters(), args.grad_clipping
             )
             optimizer0.step()
 
@@ -524,14 +480,14 @@ def train_attention_preFeature_DTFD(
             optimizer1.zero_grad()
             loss1.backward()
             torch.nn.utils.clip_grad_norm_(
-                UClassifier.parameters(), params.grad_clipping
+                UClassifier.parameters(), args.grad_clipping
             )
             optimizer1.step()
 
             Train_Loss0.update(loss0.item(), numGroup)
             Train_Loss1.update(loss1.item(), 1)
 
-        if idx % params.train_show_freq == 0:
+        if idx % args.train_show_freq == 0:
             tstr = "epoch: {} idx: {}".format(epoch, idx)
             tstr += f" First Loss : {Train_Loss0.avg}, Second Loss : {Train_Loss1.avg} "
             print_log(tstr, f_log)
@@ -567,61 +523,48 @@ def print_log(tstr, f):
     f.write(tstr)
     print(tstr)
 
-
-def reOrganize_mDATA_test(mDATA):
-
-    tumorSlides = os.listdir(testMask_dir)
-    tumorSlides = [sst.split(".")[0] for sst in tumorSlides]
-
-    SlideNames = []
-    FeatList = []
-    Label = []
-    for slide_name in mDATA.keys():
-        SlideNames.append(slide_name)
-
-        if slide_name in tumorSlides:
-            label = 1
-        else:
-            label = 0
-        Label.append(label)
-
-        patch_data_list = mDATA[slide_name]
-        featGroup = []
-        for tpatch in patch_data_list:
-            tfeat = torch.from_numpy(tpatch["feature"])
-            featGroup.append(tfeat.unsqueeze(0))
-        featGroup = torch.cat(featGroup, dim=0)  ## numPatch x fs
-        FeatList.append(featGroup)
-
-    return SlideNames, FeatList, Label
-
-
-def reOrganize_mDATA(mDATA):
-
-    SlideNames = []
-    FeatList = []
-    Label = []
-    for slide_name in mDATA.keys():
-        SlideNames.append(slide_name)
-
-        if slide_name.startswith("tumor"):
-            label = 1
-        elif slide_name.startswith("normal"):
-            label = 0
-        else:
-            raise RuntimeError("Undefined slide type")
-        Label.append(label)
-
-        patch_data_list = mDATA[slide_name]
-        featGroup = []
-        for tpatch in patch_data_list:
-            tfeat = torch.from_numpy(tpatch["feature"])
-            featGroup.append(tfeat.unsqueeze(0))
-        featGroup = torch.cat(featGroup, dim=0)  ## numPatch x fs
-        FeatList.append(featGroup)
-
-    return SlideNames, FeatList, Label
-
-
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="abc")
+    parser.add_argument("--name", default="abc", type=str)
+    parser.add_argument("--EPOCH", default=200, type=int)
+    parser.add_argument("--epoch_step", default="[100]", type=str)
+    parser.add_argument("--device", default="cuda", type=str)
+    parser.add_argument("--isPar", default=False, type=bool)
+    parser.add_argument("--log_dir", default="./debug_log", type=str)  ## log file path
+    parser.add_argument("--train_show_freq", default=40, type=int)
+    parser.add_argument("--droprate", default="0", type=float)
+    parser.add_argument("--droprate_2", default="0", type=float)
+    parser.add_argument("--lr", default=1e-4, type=float)
+    parser.add_argument("--weight_decay", default=1e-4, type=float)
+    parser.add_argument("--lr_decay_ratio", default=0.2, type=float)
+    parser.add_argument("--batch_size", default=1, type=int)
+    parser.add_argument("--batch_size_v", default=1, type=int)
+    parser.add_argument("--num_workers", default=4, type=int)
+    parser.add_argument("--num_cls", default=2, type=int)
+    parser.add_argument("--numGroup", default=4, type=int)
+    parser.add_argument("--total_instance", default=4, type=int)
+    parser.add_argument("--numGroup_test", default=4, type=int)
+    parser.add_argument("--total_instance_test", default=4, type=int)
+    parser.add_argument("--mDim", default=512, type=int)
+    parser.add_argument("--grad_clipping", default=5, type=float)
+    parser.add_argument("--isSaveModel", action="store_false")
+    parser.add_argument("--debug_DATA_dir", default="", type=str)
+    parser.add_argument("--numLayer_Res", default=0, type=int)
+    parser.add_argument("--temperature", default=1, type=float)
+    parser.add_argument("--num_MeanInference", default=1, type=int)
+    parser.add_argument("--distill_type", default="AFS", type=str)  ## MaxMinS, MaxS, AFS
+    parser.add_argument("--k_start", default=1, type=int)
+    parser.add_argument("--k_end", default=5, type=int)
+    parser.add_argument("--split_folder", default="", type=str)
+    parser.add_argument("--data_dir", default="", type=str)
+
+    args = parser.parse_args()
+
+    config_path = args.config
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+
+    # Merge YAML config into args
+    for key, value in config.items():
+        setattr(args, key, value)
+    main(args)
