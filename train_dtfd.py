@@ -528,7 +528,7 @@ def print_log(tstr, f):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="abc")
     parser.add_argument("--name", default="abc", type=str)
-    parser.add_argument("--EPOCH", default=200, type=int)
+    parser.add_argument("--num_epochs", default=200, type=int)
     parser.add_argument("--epoch_step", default="[100]", type=str)
     parser.add_argument("--device", default="cuda", type=str)
     parser.add_argument("--isPar", default=False, type=bool)
