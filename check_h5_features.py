@@ -21,4 +21,5 @@ def list_h5_keys(h5_dir):
 
 # Example usage
 
-list_h5_keys("/home/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files")
+list_h5_keys("/home/mvu9/processing_datasets/processing_camelyon16/patches")
+
