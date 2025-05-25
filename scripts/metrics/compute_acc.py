@@ -78,7 +78,7 @@ def main(args):
         "square_integrated_gradient"
     ])
 
-    scores_root = config["scores_path"]
+    scores_root = config["attribution_scores_folder"]
     gt_root = config["gt_path"]
     output_csv = config.get("save_csv", "results.csv")
     df = pd.read_csv(config["split_csv"])

@@ -10,7 +10,7 @@ paths:
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_camelyon16"
   slide_dir: "/home/mvu9/datasets/camelyon16/raw_data/camelyon16/images"
   h5_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files" 
-  
+
 
 embed_dim: 1024
 lr: 0.0001
