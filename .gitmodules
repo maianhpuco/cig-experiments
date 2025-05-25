@@ -7,3 +7,10 @@
 [submodule "src/externals/dtfd-mil"]
 	url = https://github.com/kuro2907/dtfd-mil-clone.git
 	path = src/externals/dtfd-mil
+[submodule "src/externals/dsmil-wsi-forked"]
+	path = src/externals/dsmil-wsi-forked
+	url = https://github.com/maianhpuco/dsmil-wsi-forked.git
+[submodule "src/externals/dsmil-wsi-forked"]
+    path = src/externals/dsmil-wsi-forked
+    url = https://github.com/maianhpuco/dsmil-wsi-forked.git
+
