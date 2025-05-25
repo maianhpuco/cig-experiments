@@ -20,6 +20,7 @@ from src.datasets.classification.camelyon16 import return_splits_custom
 sys.path.append(os.path.join("src/externals/dsmil-wsi"))
 
 import dsmil as mil
+import yaml
 
 
 def train(args, data_loader, label_dict, milnet, criterion, optimizer):
@@ -173,33 +174,7 @@ def print_save_message(args, save_name, thresholds_optimal):
         print('Best model saved at: ' + save_name)
         print('Best thresholds ===>>> '+ '|'.join('class-{}>>{}'.format(*k) for k in enumerate(thresholds_optimal)))
 
-def main():
-    parser = argparse.ArgumentParser(description='Train DSMIL on 20x patch features learned by SimCLR')
-    parser.add_argument('--num_classes', default=2, type=int, help='Number of output classes [2]')
-    parser.add_argument('--feats_size', default=1024, type=int, help='Dimension of the feature size [512]')
-    parser.add_argument('--lr', default=0.0001, type=float, help='Initial learning rate [0.0001]')
-    parser.add_argument('--num_epochs', default=50, type=int, help='Number of total training epochs [100]')
-    parser.add_argument('--stop_epochs', default=10, type=int, help='Skip remaining epochs if training has not improved after N epochs [10]')
-    parser.add_argument('--gpu_index', type=int, nargs='+', default=(0,), help='GPU ID(s) [0]')
-    parser.add_argument('--weight_decay', default=1e-3, type=float, help='Weight decay [1e-3]')
-    parser.add_argument('--dataset', default='TCGA-lung-default', type=str, help='Dataset folder name')
-    parser.add_argument('--split', default=0.2, type=float, help='Training/Validation split [0.2]')
-    parser.add_argument('--model', default='dsmil', type=str, help='MIL model [dsmil]')
-    parser.add_argument('--dropout_patch', default=0, type=float, help='Patch dropout rate [0]')
-    parser.add_argument('--dropout_node', default=0, type=float, help='Bag classifier dropout rate [0]')
-    parser.add_argument('--non_linearity', default=1, type=float, help='Additional nonlinear operation [0]')
-    parser.add_argument('--average', type=bool, default=False, help='Average the score of max-pooling and bag aggregating')
-    parser.add_argument('--eval_scheme', default='5-fold-cv', type=str, help='Evaluation scheme [5-fold-cv | 5-fold-cv-standalone-test | 5-time-train+valid+test ]')
-    parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
-    parser.add_argument('--k_end', default=1, type=int, help='End fold number')
-
-    
-    args = parser.parse_args()
-    print(args.eval_scheme)
-
-    gpu_ids = tuple(args.gpu_index)
-    os.environ['CUDA_VISIBLE_DEVICES']=','.join(str(x) for x in gpu_ids)
-    
+def main(args):
     def apply_sparse_init(m):
         if isinstance(m, (nn.Linear, nn.Conv2d, nn.Conv1d)):
             nn.init.orthogonal_(m.weight)
@@ -273,4 +248,37 @@ def main():
         print(f"Class {i}: Mean AUC = {mean_score:.4f}")
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Train DSMIL on 20x patch features learned by SimCLR')
+    parser.add_argument('--num_classes', default=2, type=int, help='Number of output classes [2]')
+    parser.add_argument('--feats_size', default=1024, type=int, help='Dimension of the feature size [512]')
+    parser.add_argument('--lr', default=0.0001, type=float, help='Initial learning rate [0.0001]')
+    parser.add_argument('--num_epochs', default=50, type=int, help='Number of total training epochs [100]')
+    parser.add_argument('--stop_epochs', default=10, type=int, help='Skip remaining epochs if training has not improved after N epochs [10]')
+    parser.add_argument('--gpu_index', type=int, nargs='+', default=(0,), help='GPU ID(s) [0]')
+    parser.add_argument('--weight_decay', default=1e-3, type=float, help='Weight decay [1e-3]')
+    parser.add_argument('--dataset', default='TCGA-lung-default', type=str, help='Dataset folder name')
+    parser.add_argument('--split', default=0.2, type=float, help='Training/Validation split [0.2]')
+    parser.add_argument('--model', default='dsmil', type=str, help='MIL model [dsmil]')
+    parser.add_argument('--dropout_patch', default=0, type=float, help='Patch dropout rate [0]')
+    parser.add_argument('--dropout_node', default=0, type=float, help='Bag classifier dropout rate [0]')
+    parser.add_argument('--non_linearity', default=1, type=float, help='Additional nonlinear operation [0]')
+    parser.add_argument('--average', type=bool, default=False, help='Average the score of max-pooling and bag aggregating')
+    parser.add_argument('--eval_scheme', default='5-fold-cv', type=str, help='Evaluation scheme [5-fold-cv | 5-fold-cv-standalone-test | 5-time-train+valid+test ]')
+    parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
+    parser.add_argument('--k_end', default=1, type=int, help='End fold number')
+    parser.add_argument("--config", default="./configs_simea/dsmil_camelyon16.yaml", type=str)
+
+    args = parser.parse_args()
+    print(args.eval_scheme)
+
+    gpu_ids = tuple(args.gpu_index)
+    os.environ['CUDA_VISIBLE_DEVICES']=','.join(str(x) for x in gpu_ids)
+
+    config_path = args.config
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+
+    # Merge YAML config into args
+    for key, value in config.items():
+        setattr(args, key, value)
+    main(args)
