@@ -191,13 +191,11 @@ def main(args):
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.num_epochs, 0.000005)
         return milnet, criterion, optimizer, scheduler
 
-    args.split_folder = "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
-    data_dir = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
     label_dict = {'normal': 0, 'tumor': 1}
     # bags_path = bags_path.sample(n=50, random_state=42)
     fold_results = []
 
-    save_path = os.path.join('weights', datetime.date.today().strftime("%Y%m%d"))
+    save_path = os.path.join(args.save_path, datetime.date.today().strftime("%Y%m%d"))
     os.makedirs(save_path, exist_ok=True)
     run = len(glob.glob(os.path.join(save_path, '*.pth')))
 
@@ -209,7 +207,7 @@ def main(args):
 
         train_dataset, val_dataset, test_dataset = return_splits_custom(
             csv_path=split_csv_path,
-            data_dir=data_dir,
+            data_dir=args.data_dir,
             label_dict= label_dict,  # This won't affect direct labels
             seed=42,
             print_info=False
@@ -267,7 +265,11 @@ if __name__ == '__main__':
     parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
     parser.add_argument('--k_end', default=1, type=int, help='End fold number')
     parser.add_argument("--config", default="./configs_simea/dsmil_camelyon16.yaml", type=str)
-
+    parser.add_argument("--split_folder", default="/home/mvu9/processing_datasets/processing_camelyon16/splits_csv", type=str)
+    parser.add_argument("--data_dir", default="/home/mvu9/processing_datasets/processing_camelyon16/features_fp", type=str)
+    parser.add_argument("--save_path", default="/home/mvu9/processing_datasets/processing_camelyon16/results", type=str)
+    
+    
     args = parser.parse_args()
     print(args.eval_scheme)
 
