@@ -17,12 +17,14 @@ import json
 from tqdm import tqdm
 from src.datasets.classification.camelyon16 import return_splits_custom 
 
-sys.path.append(os.path.join("src/externals/dsmil-wsi"))
+sys.path.append(os.path.join("src/externals/dsmil-wsi-fork"))
 
 import dsmil as mil
 import yaml
 
-
+'''
+Note: DSMIl model was fromm mil.MILNet(i_classifier, b_classifier).cuda() 
+'''
 def train(args, data_loader, label_dict, milnet, criterion, optimizer):
     milnet.train()
 
@@ -233,7 +235,9 @@ def main(args):
                 fold_best_score = current_score
                 best_ac = avg_score
                 best_auc = aucs
+                
                 save_model(args, iteration, run, save_path, milnet, thresholds_optimal)
+                
                 best_model = copy.deepcopy(milnet)
             if counter > args.stop_epochs: break
         test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, test_dataset, label_dict, best_model, criterion)
