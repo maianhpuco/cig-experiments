@@ -531,6 +531,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", default="cuda", type=str)
     parser.add_argument("--isPar", default=False, type=bool)
     parser.add_argument("--log_dir", default="./debug_log", type=str)  ## log file path
+    parser.add_argument("--config", default="./configs_simea/dtfd_camelyon16.yaml", type=str)
     parser.add_argument("--train_show_freq", default=40, type=int)
     parser.add_argument("--droprate", default="0", type=float)
     parser.add_argument("--droprate_2", default="0", type=float)
