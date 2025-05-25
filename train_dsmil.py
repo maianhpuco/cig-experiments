@@ -242,8 +242,7 @@ def main(args):
                 
                 best_model = copy.deepcopy(milnet)
             if counter > args.stop_epochs: break
-        
-            break 
+         
         
         test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, test_dataset, label_dict, best_model, criterion)
         fold_results.append((best_ac, best_auc))
