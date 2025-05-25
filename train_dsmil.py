@@ -17,7 +17,7 @@ import json
 from tqdm import tqdm
 from src.datasets.classification.camelyon16 import return_splits_custom 
 
-sys.path.append(os.path.join("src/externals/dsmil-wsi-fork"))
+sys.path.append(os.path.join("src/externals/dsmil-wsi"))
 
 import dsmil as mil
 import yaml
@@ -42,6 +42,8 @@ def train(args, data_loader, label_dict, milnet, criterion, optimizer):
         bag_feats = dropout_patches(bag_feats, 1-args.dropout_patch)
         bag_feats = bag_feats.view(-1, args.feats_size)
         ins_prediction, bag_prediction, _, _ = milnet(bag_feats)
+        print('ins_prediction:', ins_prediction)
+        print('bag_prediction:', bag_prediction) 
         max_prediction, _ = torch.max(ins_prediction, 0)        
         bag_loss = criterion(bag_prediction.view(1, -1), bag_label.view(1, -1))
         max_loss = criterion(max_prediction.view(1, -1), bag_label.view(1, -1))
@@ -240,6 +242,9 @@ def main(args):
                 
                 best_model = copy.deepcopy(milnet)
             if counter > args.stop_epochs: break
+        
+            break 
+        
         test_loss_bag, avg_score, aucs, thresholds_optimal = test(args, test_dataset, label_dict, best_model, criterion)
         fold_results.append((best_ac, best_auc))
     mean_ac = np.mean(np.array([i[0] for i in fold_results]))
