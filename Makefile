@@ -29,19 +29,19 @@ train_clam_tcga_45fold:
 
 train_dsmil_camelyon16_1fold:
 	@echo "Activating conda environment for simea .."
-	python train_dsmil.py --num_epochs 200 --k_start 1 --k_end 1
+	python train_dsmil.py --config configs_simea/dsmil_camelyon16.yaml --num_epochs 200 --k_start 1 --k_end 1
 
 train_dsmil_camelyon16_4fold:
 	@echo "Activating conda environment for simea .."
-	python train_dsmil.py --num_epochs 200 --k_start 2 --k_end 5
+	python train_dsmil.py --config configs_simea/dsmil_camelyon16.yaml --num_epochs 200 --k_start 2 --k_end 5
 
-train_dtfd_camelyon16:
+train_dtfd_camelyon16_1fold:
 	@echo "Activating conda environment for simea .."
-	python train_dtfd.py --config configs_simea/dtfd_camelyon16.yaml --k_start 1 --k_end 1
+	python train_dtfd.py --config configs_simea/dtfd_camelyon16.yaml --num_epochs 200 --k_start 1 --k_end 1
 
-train_dtfd_tcga_4fold:
+train_dtfd_camelyon16_4fold:
 	@echo "Activating conda environment for simea .."
-	python train_dtfd.py --config configs_simea/dtfd_tcga_renal.yaml --k_start 2 --k_end 5
+	python train_dtfd.py --config configs_simea/dtfd_camelyon16.yaml --num_epochs 200 --k_start 2 --k_end 5
 
 train_clam_cam_23fold:
 	@echo "Activating conda environment for simea .."
@@ -57,6 +57,7 @@ train_dsmil_camelyon16_1fold:
 train_dsmil_camelyon16_4fold:
 	@echo "Activating conda environment for simea .."
 	python train_dsmil.py --num_epochs 200 --k_start 2 --k_end 5
+	python train_dtfd.py --config configs_simea/dtfd_camelyon16.yaml --num_epochs 200 --k_start 2 --k_end 5
 
 # test_ig_clam_camelyon16:
 # 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml  
