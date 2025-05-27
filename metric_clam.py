@@ -20,27 +20,24 @@ from src.metrics import (
     rank_methods
 )
 
-def sample_random_features(dataset, num_files=3, feature_dim=1024):
-    """Sample random features from the dataset, ensuring shape [N, feature_dim]."""
-    indices = np.random.choice(len(dataset), num_files, replace=False)
-    feature_list = []
-    for idx in indices:
-        features, _, _ = dataset[idx]
-        features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
-        # Squeeze all extra dimensions
-        features = features.view(-1, features.size(-1))
-        if features.size(1) != feature_dim:
-            raise ValueError(f"Expected features shape [N, {feature_dim}], got {features.shape}")
-        if features.size(0) > 64:
-            indices = torch.randperm(features.size(0))[:64]
-            features = features[indices]
-        feature_list.append(features)
-    # Concatenate features to form a single bag
-    concatenated = torch.cat(feature_list, dim=0)
-    # Limit to a reasonable bag size
-    max_instances = min(concatenated.size(0), 256)
-    indices = torch.randperm(concatenated.size(0))[:max_instances]
-    return concatenated[indices]
+def sample_random_features(dataset, feature_dim=1024):
+    """Sample features from a single random slide, ensuring shape [N, feature_dim]."""
+    idx = np.random.choice(len(dataset), 1)[0]
+    features, _, _ = dataset[idx]
+    features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
+    # Reshape to [N, D]
+    if features.dim() > 2:
+        features = features.squeeze()
+    if features.dim() != 2:
+        raise ValueError(f"Expected 2D features, got shape {features.shape}")
+    if features.size(1) != feature_dim:
+        raise ValueError(f"Expected feature dim {feature_dim}, got {features.size(1)}")
+    # Limit number of patches
+    max_patches = min(features.size(0), 1024)
+    if max_patches < features.size(0):
+        indices = torch.randperm(features.size(0))[:max_patches]
+        features = features[indices]
+    return features
 
 def main(args):
     methods = [
@@ -70,27 +67,38 @@ def main(args):
 
             # Ensure features is [N, D]
             features = features.to(args.device)
-            features = features.view(-1, features.size(-1))
-            if features.dim() != 2 or features.size(1) != args.embed_dim:
-                print(f"    ⚠️ Skipping slide {basename}: Expected features shape [N, {args.embed_dim}], got {features.shape}")
+            if features.dim() > 2:
+                features = features.squeeze()
+            if features.dim() != 2:
+                print(f"    ⚠️ Skipping slide {basename}: Expected 2D features, got shape {features.shape}")
                 continue
+            if features.size(1) != args.embed_dim:
+                print(f"    ⚠️ Skipping slide {basename}: Expected feature dim {args.embed_dim}, got {features.size(1)}")
+                continue
+            # Limit number of patches
+            max_patches = min(features.size(0), 1024)
+            if max_patches < features.size(0):
+                indices = torch.randperm(features.size(0))[:max_patches]
+                features = features[indices]
+            print(f"Features shape: {features.shape}")
 
             # Generate baseline features
-            baseline = sample_random_features(test_dataset, num_files=3, feature_dim=args.embed_dim).to(args.device)
-            if baseline.dim() != 2 or baseline.size(1) != args.embed_dim:
-                print(f"    ⚠️ Skipping slide {basename}: Expected baseline shape [N, {args.embed_dim}], got {baseline.shape}")
-                continue
+            baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
+            print(f"Baseline shape: {baseline.shape}")
 
             # Compute logits once for features and baseline
             def call_model_function(model, input_tensor, target_class_idx=None):
-                input_tensor = input_tensor.view(-1, input_tensor.size(-1))
+                if input_tensor.dim() > 2:
+                    input_tensor = input_tensor.squeeze()
                 if input_tensor.dim() != 2:
                     raise ValueError(f"Expected 2D input tensor, got shape {input_tensor.shape}")
                 if input_tensor.size(1) != args.embed_dim:
                     raise ValueError(f"Expected feature dim {args.embed_dim}, got {input_tensor.size(1)}")
+                print(f"call_model_function input shape: {input_tensor.shape}")
                 try:
                     with torch.no_grad():
                         logits, _, _ = model(input_tensor.unsqueeze(0))
+                    print(f"Logits shape: {logits.shape}")
                     return logits
                 except Exception as e:
                     raise RuntimeError(f"Model forward failed: {str(e)}")
