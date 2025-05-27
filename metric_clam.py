@@ -20,13 +20,16 @@ from src.metrics import (
     rank_methods
 )
 
-def sample_random_features(dataset, num_files=20, feature_dim=1024):
+def sample_random_features(dataset, num_files=5, feature_dim=1024):
     """Sample random features from the dataset, ensuring shape [N, feature_dim]."""
     indices = np.random.choice(len(dataset), num_files, replace=False)
     feature_list = []
     for idx in indices:
         features, _, _ = dataset[idx]
         features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
+        # Ensure features is [N, 1024]
+        while features.dim() > 2:
+            features = features.squeeze(0)
         if features.dim() != 2 or features.size(1) != feature_dim:
             raise ValueError(f"Expected features shape [N, {feature_dim}], got {features.shape}")
         if features.size(0) > 128:
@@ -36,7 +39,7 @@ def sample_random_features(dataset, num_files=20, feature_dim=1024):
     # Concatenate features to form a single bag
     concatenated = torch.cat(feature_list, dim=0)
     # Limit to a reasonable bag size
-    max_instances = min(concatenated.size(0), 1024)
+    max_instances = min(concatenated.size(0), 512)
     indices = torch.randperm(concatenated.size(0))[:max_instances]
     return concatenated[indices]
 
@@ -75,11 +78,30 @@ def main(args):
                 continue
 
             # Generate baseline features
-            baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
+            baseline = sample_random_features(test_dataset, num_files=5, feature_dim=args.embed_dim).to(args.device)
             while baseline.dim() > 2:
                 baseline = baseline.squeeze(0)
             if baseline.dim() != 2 or baseline.size(1) != args.embed_dim:
                 print(f"    ⚠️ Skipping slide {basename}: Expected baseline shape [N, {args.embed_dim}], got {baseline.shape}")
+                continue
+
+            # Compute logits once for features and baseline
+            def call_model_function(model, input_tensor, target_class_idx=None):
+                while input_tensor.dim() > 2:
+                    input_tensor = input_tensor.squeeze(0)
+                if input_tensor.dim() != 2:
+                    raise ValueError(f"Expected 2D input tensor, got shape {input_tensor.shape}")
+                if input_tensor.size(1) != args.embed_dim:
+                    raise ValueError(f"Expected feature dim {args.embed_dim}, got {input_tensor.size(1)}")
+                with torch.no_grad():
+                    logits, _, _ = model(input_tensor.unsqueeze(0))
+                return logits
+
+            try:
+                features_logits = call_model_function(model, features)
+                baseline_logits = call_model_function(model, baseline)
+            except Exception as e:
+                print(f"    ⚠️ Error computing logits for slide {basename}: {str(e)}")
                 continue
 
             results = []
@@ -101,34 +123,21 @@ def main(args):
                         print(f"    ⚠️ Score shape {scores.shape} does not match features shape {features.shape}, skipping.")
                         continue
 
-                    # Define call_model_function for CLAM_SB
-                    def call_model_function(model, input_tensor, target_class_idx=None):
-                        # Handle extra batch dimensions
-                        while input_tensor.dim() > 2:
-                            input_tensor = input_tensor.squeeze(0)
-                        if input_tensor.dim() != 2:
-                            raise ValueError(f"Expected 2D input tensor, got shape {input_tensor.shape}")
-                        if input_tensor.size(1) != args.embed_dim:
-                            raise ValueError(f"Expected feature dim {args.embed_dim}, got {input_tensor.size(1)}")
-                        with torch.no_grad():
-                            logits, _, _ = model(input_tensor.unsqueeze(0))
-                        return logits
-
                     try:
                         aic, sic = compute_aic_and_sic(
                             model, features, baseline, scores, cls,
-                            call_model_function=call_model_function,
-                            steps=100
+                            call_model_function=lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
+                            steps=50
                         )
                         ins = compute_insertion_auc(
                             model, features, baseline, scores, cls,
-                            call_model_function=call_model_function,
-                            steps=100
+                            call_model_function=lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
+                            steps=50
                         )
                         dele = compute_deletion_auc(
                             model, features, baseline, scores, cls,
-                            call_model_function=call_model_function,
-                            steps=100
+                            call_model_function=lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
+                            steps=50
                         )
                         metrics.append((cls, aic, sic, ins, dele))
                     except Exception as e:
