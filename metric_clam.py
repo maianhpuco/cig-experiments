@@ -33,7 +33,7 @@ def sample_random_features(dataset, feature_dim=1024):
     if features.size(1) != feature_dim:
         raise ValueError(f"Expected feature dim {feature_dim}, got {features.size(1)}")
     # Limit number of patches
-    max_patches = 64
+    max_patches = 32
     if features.size(0) > max_patches:
         indices = torch.randperm(features.size(0))[:max_patches]
         features = features[indices]
@@ -77,10 +77,12 @@ def main(args):
                 print(f"    ⚠️ Skipping slide {basename}: Expected feature dim {args.embed_dim}, got {features.size(1)}")
                 continue
             # Limit number of patches
-            max_patches = 64
+            max_patches = 32
             if features.size(0) > max_patches:
                 indices = torch.randperm(features.size(0))[:max_patches]
                 features = features[indices]
+            # Normalize features
+            features = (features - features.mean()) / (features.std() + 1e-8)
             print(f"Features shape: {features.shape}")
             print(f"Features min/max: {features.min().item()}/{features.max().item()}")
 
@@ -91,6 +93,8 @@ def main(args):
 
             # Generate baseline features
             baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
+            # Normalize baseline
+            baseline = (baseline - baseline.mean()) / (baseline.std() + 1e-8)
             print(f"Baseline shape: {baseline.shape}")
             print(f"Baseline min/max: {baseline.min().item()}/{baseline.max().item()}")
 
