@@ -68,13 +68,19 @@ def main(args):
 
             # Ensure features is [N, D]
             features = features.to(args.device)
+            while features.dim() > 2:
+                features = features.squeeze(0)
             if features.dim() != 2 or features.size(1) != args.embed_dim:
-                raise ValueError(f"Expected features shape [N, {args.embed_dim}], got {features.shape}")
+                print(f"    ⚠️ Skipping slide {basename}: Expected features shape [N, {args.embed_dim}], got {features.shape}")
+                continue
 
             # Generate baseline features
             baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
+            while baseline.dim() > 2:
+                baseline = baseline.squeeze(0)
             if baseline.dim() != 2 or baseline.size(1) != args.embed_dim:
-                raise ValueError(f"Expected baseline shape [N, {args.embed_dim}], got {baseline.shape}")
+                print(f"    ⚠️ Skipping slide {basename}: Expected baseline shape [N, {args.embed_dim}], got {baseline.shape}")
+                continue
 
             results = []
             for method in tqdm(methods, desc="Computing metrics", leave=False):
@@ -97,6 +103,9 @@ def main(args):
 
                     # Define call_model_function for CLAM_SB
                     def call_model_function(model, input_tensor, target_class_idx=None):
+                        # Handle extra batch dimensions
+                        while input_tensor.dim() > 2:
+                            input_tensor = input_tensor.squeeze(0)
                         if input_tensor.dim() != 2:
                             raise ValueError(f"Expected 2D input tensor, got shape {input_tensor.shape}")
                         if input_tensor.size(1) != args.embed_dim:
