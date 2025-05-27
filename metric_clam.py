@@ -79,7 +79,7 @@ def main(args):
                     scores = torch.from_numpy(np.load(score_path)).to(args.device)
 
                     # Define call_model_function to handle CLAM_SB's forward method
-                    def call_model_function(model, input_tensor):
+                    def call_model_function(model, input_tensor, target_class_idx=None):
                         with torch.no_grad():
                             logits, _, _ = model(input_tensor.unsqueeze(0))
                             return logits
