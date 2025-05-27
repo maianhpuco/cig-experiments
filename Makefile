@@ -51,7 +51,7 @@ train_dtfd_camelyon16_5fold:
 
 # ========= metric ========= 
 metric_clam_camelyon16:
-	python metrics.py --config configs_simea/clam_camelyon16.yaml --fold_start 1 --fold_end 1 
+	python metric_clam.py --config configs_simea/clam_camelyon16.yaml --fold_start 1 --fold_end 1 
 
 # test_ig_clam_camelyon16:
 # 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml  
