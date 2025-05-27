@@ -10,8 +10,8 @@ from tqdm import tqdm
 clf_path = os.path.abspath(os.path.join("src", "models"))
 sys.path.append(clf_path)
 
-from src.datasets import return_splits_custom
-from src.datasets.classification import return_splits_custom as camelyon16
+# from src.datasets import return_splits_custom
+from src.datasets.classification import return_splits_custom as return_splits_camelyon
 from src.models import load_clam_model
 from src.metrics import (
     compute_aic_and_sic,
