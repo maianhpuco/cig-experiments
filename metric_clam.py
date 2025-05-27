@@ -33,7 +33,7 @@ def sample_random_features(dataset, feature_dim=1024):
     if features.size(1) != feature_dim:
         raise ValueError(f"Expected feature dim {feature_dim}, got {features.size(1)}")
     # Limit number of patches
-    max_patches = min(features.size(0), 1024)
+    max_patches = min(features.size(0), 512)
     if max_patches < features.size(0):
         indices = torch.randperm(features.size(0))[:max_patches]
         features = features[indices]
@@ -76,15 +76,25 @@ def main(args):
                 print(f"    ⚠️ Skipping slide {basename}: Expected feature dim {args.embed_dim}, got {features.size(1)}")
                 continue
             # Limit number of patches
-            max_patches = min(features.size(0), 1024)
+            max_patches = min(features.size(0), 512)
             if max_patches < features.size(0):
                 indices = torch.randperm(features.size(0))[:max_patches]
                 features = features[indices]
             print(f"Features shape: {features.shape}")
 
+            # Check for invalid values
+            if torch.isnan(features).any() or torch.isinf(features).any():
+                print(f"    ⚠️ Skipping slide {basename}: Features contain NaN or Inf values")
+                continue
+
             # Generate baseline features
             baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
             print(f"Baseline shape: {baseline.shape}")
+
+            # Check for invalid values in baseline
+            if torch.isnan(baseline).any() or torch.isinf(baseline).any():
+                print(f"    ⚠️ Skipping slide {basename}: Baseline contains NaN or Inf values")
+                continue
 
             # Compute logits once for features and baseline
             def call_model_function(model, input_tensor, target_class_idx=None):
@@ -95,6 +105,7 @@ def main(args):
                 if input_tensor.size(1) != args.embed_dim:
                     raise ValueError(f"Expected feature dim {args.embed_dim}, got {input_tensor.size(1)}")
                 print(f"call_model_function input shape: {input_tensor.shape}")
+                print(f"call_model_function input shape after unsqueeze: {input_tensor.unsqueeze(0).shape}")
                 try:
                     with torch.no_grad():
                         logits, _, _ = model(input_tensor.unsqueeze(0))
