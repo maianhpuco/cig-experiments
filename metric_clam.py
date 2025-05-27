@@ -20,18 +20,25 @@ from src.metrics import (
     rank_methods
 )
 
-def sample_random_features(dataset, num_files=20):
+def sample_random_features(dataset, num_files=20, feature_dim=1024):
+    """Sample random features from the dataset, ensuring shape [N, feature_dim]."""
     indices = np.random.choice(len(dataset), num_files, replace=False)
     feature_list = []
     for idx in indices:
         features, _, _ = dataset[idx]
         features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
+        if features.dim() != 2 or features.size(1) != feature_dim:
+            raise ValueError(f"Expected features shape [N, {feature_dim}], got {features.shape}")
         if features.size(0) > 128:
-            features = features[:128]
+            indices = torch.randperm(features.size(0))[:128]
+            features = features[indices]
         feature_list.append(features)
-    padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
-    flattened = padded.view(-1, padded.size(-1))
-    return flattened
+    # Concatenate features to form a single bag
+    concatenated = torch.cat(feature_list, dim=0)
+    # Limit to a reasonable bag size
+    max_instances = min(concatenated.size(0), 1024)
+    indices = torch.randperm(concatenated.size(0))[:max_instances]
+    return concatenated[indices]
 
 def main(args):
     methods = [
@@ -59,8 +66,15 @@ def main(args):
             basename = test_dataset.slide_data['slide_id'].iloc[idx]
             print(f"\n[{idx+1}/{len(test_dataset)}] Slide: {basename}")
 
+            # Ensure features is [N, D]
             features = features.to(args.device)
-            baseline = sample_random_features(test_dataset).to(args.device)
+            if features.dim() != 2 or features.size(1) != args.embed_dim:
+                raise ValueError(f"Expected features shape [N, {args.embed_dim}], got {features.shape}")
+
+            # Generate baseline features
+            baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
+            if baseline.dim() != 2 or baseline.size(1) != args.embed_dim:
+                raise ValueError(f"Expected baseline shape [N, {args.embed_dim}], got {baseline.shape}")
 
             results = []
             for method in tqdm(methods, desc="Computing metrics", leave=False):
@@ -77,30 +91,40 @@ def main(args):
                         continue
 
                     scores = torch.from_numpy(np.load(score_path)).to(args.device)
+                    if scores.shape[0] != features.shape[0]:
+                        print(f"    ⚠️ Score shape {scores.shape} does not match features shape {features.shape}, skipping.")
+                        continue
 
-                    # Define call_model_function to handle CLAM_SB's forward method
+                    # Define call_model_function for CLAM_SB
                     def call_model_function(model, input_tensor, target_class_idx=None):
+                        if input_tensor.dim() != 2:
+                            raise ValueError(f"Expected 2D input tensor, got shape {input_tensor.shape}")
+                        if input_tensor.size(1) != args.embed_dim:
+                            raise ValueError(f"Expected feature dim {args.embed_dim}, got {input_tensor.size(1)}")
                         with torch.no_grad():
                             logits, _, _ = model(input_tensor.unsqueeze(0))
-                            return logits
+                        return logits
 
-                    aic, sic = compute_aic_and_sic(
-                        model, features, baseline, scores, cls,
-                        call_model_function=call_model_function,
-                        steps=100
-                    )
-                    ins = compute_insertion_auc(
-                        model, features, baseline, scores, cls,
-                        call_model_function=call_model_function,
-                        steps=100
-                    )
-                    dele = compute_deletion_auc(
-                        model, features, baseline, scores, cls,
-                        call_model_function=call_model_function,
-                        steps=100
-                    )
-
-                    metrics.append((cls, aic, sic, ins, dele))
+                    try:
+                        aic, sic = compute_aic_and_sic(
+                            model, features, baseline, scores, cls,
+                            call_model_function=call_model_function,
+                            steps=100
+                        )
+                        ins = compute_insertion_auc(
+                            model, features, baseline, scores, cls,
+                            call_model_function=call_model_function,
+                            steps=100
+                        )
+                        dele = compute_deletion_auc(
+                            model, features, baseline, scores, cls,
+                            call_model_function=call_model_function,
+                            steps=100
+                        )
+                        metrics.append((cls, aic, sic, ins, dele))
+                    except Exception as e:
+                        print(f"    ⚠️ Error computing metrics for class {cls}: {str(e)}")
+                        continue
 
                 if metrics:
                     avg_metrics = tuple(np.mean([m[i] for m in metrics]) for i in range(1, 5))
@@ -110,11 +134,9 @@ def main(args):
                 ranked = rank_methods(results)
                 out_dir = args.paths['metrics_dir']
                 os.makedirs(out_dir, exist_ok=True)
-
                 np.save(os.path.join(out_dir, f"clam_fold{fold_id}_{basename}.npy"), np.array(ranked, dtype=object))
                 print(f"     Saved: clam_fold{fold_id}_{basename}.npy")
 
-        # Optional: aggregate fold result summary
         print(f" Fold {fold_id} complete.")
 
 if __name__ == "__main__":
