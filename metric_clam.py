@@ -25,33 +25,22 @@ def sample_random_features(dataset, feature_dim=1024):
     idx = np.random.randint(0, len(dataset))
     features, _, _ = dataset[idx]
     features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
-    if features.dim() > 2:
-        features = features.squeeze()
-    if features.dim() != 2:
-        raise ValueError(f"Expected 2D features, got shape {features.shape}")
-    if features.size(1) != feature_dim:
-        raise ValueError(f"Expected feature dim {feature_dim}, got {features.size(1)}")
-    max_patches = 32
-    if features.size(0) > max_patches:
-        indices = torch.randperm(features.size(0))[:max_patches]
-        features = features[indices]
+    features = features.squeeze() if features.dim() > 2 else features
+    if features.dim() != 2 or features.size(1) != feature_dim:
+        raise ValueError(f"Invalid feature shape: {features.shape}")
+    if features.size(0) > 32:
+        features = features[torch.randperm(features.size(0))[:32]]
     return features
 
 def call_model_function(model, input_tensor, target_class_idx=None):
     if input_tensor.dim() != 2:
         raise ValueError(f"Expected input shape [N, D], got {input_tensor.shape}")
-    try:
-        with torch.no_grad():
-            out = model(input_tensor)
-            if isinstance(out, tuple) and len(out) == 3:
-                logits, _, _ = out
-            elif isinstance(out, tuple) and len(out) == 5:
-                logits, _, _, _, _ = out
-            else:
-                raise RuntimeError("Unexpected model output structure")
-        return logits
-    except Exception as e:
-        raise RuntimeError(f"Model forward failed: {str(e)}")
+    with torch.no_grad():
+        out = model(input_tensor)
+        if isinstance(out, tuple):
+            logits = out[0]
+            return logits
+        raise RuntimeError("Unexpected model output structure")
 
 def main(args):
     methods = [
@@ -79,10 +68,9 @@ def main(args):
         for idx, (features, label, coords) in enumerate(tqdm(test_dataset, desc=f"Slides Fold {fold_id}")):
             basename = test_dataset.slide_data['slide_id'].iloc[idx]
 
-            features = features.to(args.device)
-            if features.dim() > 2:
-                features = features.squeeze()
+            features = features.to(args.device).squeeze()
             if features.dim() != 2 or features.size(1) != args.embed_dim:
+                print(f"Skipping {basename}: invalid feature shape {features.shape}")
                 continue
             if features.size(0) > 32:
                 features = features[torch.randperm(features.size(0))[:32]]
@@ -92,21 +80,24 @@ def main(args):
             baseline = (baseline - baseline.mean()) / (baseline.std() + 1e-8)
 
             if torch.isnan(features).any() or torch.isinf(features).any():
+                print(f"Skipping {basename}: NaN or Inf in features")
                 continue
             if torch.isnan(baseline).any() or torch.isinf(baseline).any():
+                print(f"Skipping {basename}: NaN or Inf in baseline")
                 continue
             if baseline.size(0) != features.size(0):
+                print(f"Skipping {basename}: Patch count mismatch")
                 continue
 
             try:
-                features_logits = call_model_function(model, features, args)
-                baseline_logits = call_model_function(model, baseline, args)
+                features_logits = call_model_function(model, features)
+                baseline_logits = call_model_function(model, baseline)
             except Exception as e:
-                print(f" Model forward failed for slide {basename}: {str(e)}")
+                print(f"Model forward failed for slide {basename}: {e}")
                 continue
 
             results = []
-            for method in tqdm(methods, desc="Metrics", leave=False):
+            for method in methods:
                 metrics = []
                 for cls in range(args.n_classes):
                     score_path = os.path.join(
@@ -114,9 +105,11 @@ def main(args):
                         f'fold_{fold_id}', f'class_{cls}', f'{basename}.npy'
                     )
                     if not os.path.exists(score_path):
+                        print(f"Missing score: {score_path}")
                         continue
                     scores = torch.from_numpy(np.load(score_path)).to(args.device)
                     if scores.shape[0] != features.shape[0]:
+                        print(f"Score shape mismatch for {basename}: {scores.shape[0]} vs {features.shape[0]}")
                         continue
                     try:
                         aic, sic = compute_aic_and_sic(model, features, baseline, scores, cls,
@@ -130,8 +123,7 @@ def main(args):
                             steps=50)
                         metrics.append((cls, aic, sic, ins, dele))
                     except Exception as e:
-                        print(f"     Error computing metrics for class {cls}: {str(e)}")
-                        continue
+                        print(f"Error computing metrics for class {cls} on {basename}: {e}")
 
                 if metrics:
                     avg_metrics = tuple(np.mean([m[i] for m in metrics]) for i in range(1, 5))
@@ -143,6 +135,7 @@ def main(args):
                 os.makedirs(out_dir, exist_ok=True)
                 result_file = os.path.join(out_dir, f"clam_fold{fold_id}_{basename}.npy")
                 np.save(result_file, np.array(ranked, dtype=object))
+                print(f"Saved: {result_file}")
 
                 for method, aic, sic, ins, dele in ranked:
                     all_results.append({
@@ -155,15 +148,14 @@ def main(args):
                         "Deletion AUC": dele
                     })
 
-        print(f"Fold {fold_id} complete.")
-
-    # Save as CSV
     if all_results:
         df = pd.DataFrame(all_results)
         csv_path = os.path.join(os.getcwd(), f"clam_metrics_folds_{args.fold_start}_to_{args.fold_end}.csv")
         df.to_csv(csv_path, index=False)
         print(f"\n✅ Metrics saved to: {csv_path}")
         print(df.groupby("Method")[["AIC", "SIC", "Insertion AUC", "Deletion AUC"]].mean().round(4))
+    else:
+        print("⚠️ No metrics computed. Check score files or feature shapes.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
