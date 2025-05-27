@@ -33,10 +33,11 @@ def sample_random_features(dataset, feature_dim=1024):
     if features.size(1) != feature_dim:
         raise ValueError(f"Expected feature dim {feature_dim}, got {features.size(1)}")
     # Limit number of patches
-    max_patches = min(features.size(0), 128)
-    if max_patches > max_patches:
+    max_patches = 64
+    if features.size(0) > max_patches:
         indices = torch.randperm(features.size(0))[:max_patches]
         features = features[indices]
+    print(f"Sampled baseline shape: {features.shape}")
     return features
 
 def main(args):
@@ -76,8 +77,8 @@ def main(args):
                 print(f"    ⚠️ Skipping slide {basename}: Expected feature dim {args.embed_dim}, got {features.size(1)}")
                 continue
             # Limit number of patches
-            max_patches = min(features.size(0), 128)
-            if max_patches < features.size(0):
+            max_patches = 64
+            if features.size(0) > max_patches:
                 indices = torch.randperm(features.size(0))[:max_patches]
                 features = features[indices]
             print(f"Features shape: {features.shape}")
@@ -96,6 +97,11 @@ def main(args):
             # Check for invalid values in baseline
             if torch.isnan(baseline).any() or torch.isinf(baseline).any():
                 print(f"    ⚠️ Skipping slide {basename}: Baseline contains NaN or Inf values")
+                continue
+
+            # Ensure baseline matches features patch count
+            if baseline.size(0) != features.size(0):
+                print(f"    ⚠️ Skipping slide {basename}: Baseline patches {baseline.size(0)} do not match features patches {features.size(0)}")
                 continue
 
             # Compute logits once for features and baseline
@@ -117,7 +123,9 @@ def main(args):
                     raise RuntimeError(f"Model forward failed: {str(e)}")
 
             try:
+                print("Computing features logits...")
                 features_logits = call_model_function(model, features)
+                print("Computing baseline logits...")
                 baseline_logits = call_model_function(model, baseline)
             except Exception as e:
                 print(f"    ⚠️ Error computing logits for slide {basename}: {str(e)}")
@@ -197,11 +205,11 @@ if __name__ == "__main__":
     args.embed_dim = config.get('embed_dim', 1024)
     args.bag_loss = config.get('bag_loss', 'ce')
     args.model_size = config.get('model_size', 'small')
-    args.no_inst_cluster = config.get('no_inst_cluster', True)  # Simplified model
+    args.no_inst_cluster = config.get('no_inst_cluster', True)
     args.inst_loss = config.get('inst_loss', None)
     args.subtyping = config.get('subtyping', False)
     args.bag_weight = config.get('bag_weight', 0.7)
-    args.B = config.get('B', 1)  # Single attention head
+    args.B = config.get('B', 1)
     
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     main(args)
