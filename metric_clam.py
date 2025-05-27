@@ -7,12 +7,12 @@ from torch.nn.functional import softmax
 import sys
 from tqdm import tqdm
 
-clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
-sys.path.append(clf_path)
+clf_path = os.path.abspath(os.path.join("src", "models"))
+sys.path.append(clf_src)
 
-from src.datasets.classification.tcga import return_splits_custom
-from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon
-from clam import load_clam_model
+from src.datasets import return_splits_custom
+from src.datasets.classification import return_splits_custom as camelyon16
+from src.models import load_clam_model
 from src.metrics import (
     compute_aic_and_sic,
     compute_insertion_auc,
@@ -22,7 +22,7 @@ from src.metrics import (
 
 def sample_random_features(dataset, feature_dim=1024):
     """Sample features from a single random slide, ensuring shape [N, feature_dim]."""
-    idx = np.random.choice(len(dataset), 1)[0]
+    idx = np.random.randint(0, len(dataset))
     features, _, _ = dataset[idx]
     features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
     # Reshape to [N, D]
@@ -33,8 +33,8 @@ def sample_random_features(dataset, feature_dim=1024):
     if features.size(1) != feature_dim:
         raise ValueError(f"Expected feature dim {feature_dim}, got {features.size(1)}")
     # Limit number of patches
-    max_patches = min(features.size(0), 512)
-    if max_patches < features.size(0):
+    max_patches = min(features.size(0), 128)
+    if max_patches > max_patches:
         indices = torch.randperm(features.size(0))[:max_patches]
         features = features[indices]
     return features
@@ -76,11 +76,12 @@ def main(args):
                 print(f"    ⚠️ Skipping slide {basename}: Expected feature dim {args.embed_dim}, got {features.size(1)}")
                 continue
             # Limit number of patches
-            max_patches = min(features.size(0), 512)
+            max_patches = min(features.size(0), 128)
             if max_patches < features.size(0):
                 indices = torch.randperm(features.size(0))[:max_patches]
                 features = features[indices]
             print(f"Features shape: {features.shape}")
+            print(f"Features min/max: {features.min().item()}/{features.max().item()}")
 
             # Check for invalid values
             if torch.isnan(features).any() or torch.isinf(features).any():
@@ -90,6 +91,7 @@ def main(args):
             # Generate baseline features
             baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
             print(f"Baseline shape: {baseline.shape}")
+            print(f"Baseline min/max: {baseline.min().item()}/{baseline.max().item()}")
 
             # Check for invalid values in baseline
             if torch.isnan(baseline).any() or torch.isinf(baseline).any():
@@ -195,11 +197,11 @@ if __name__ == "__main__":
     args.embed_dim = config.get('embed_dim', 1024)
     args.bag_loss = config.get('bag_loss', 'ce')
     args.model_size = config.get('model_size', 'small')
-    args.no_inst_cluster = config.get('no_inst_cluster', False)
+    args.no_inst_cluster = config.get('no_inst_cluster', True)  # Simplified model
     args.inst_loss = config.get('inst_loss', None)
     args.subtyping = config.get('subtyping', False)
     args.bag_weight = config.get('bag_weight', 0.7)
-    args.B = config.get('B', 8)
+    args.B = config.get('B', 1)  # Single attention head
     
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     main(args)
