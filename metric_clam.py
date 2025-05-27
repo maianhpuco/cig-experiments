@@ -36,22 +36,19 @@ def sample_random_features(dataset, feature_dim=1024):
         features = features[indices]
     return features
 
-def call_model_function(model, input_tensor, args):
-    if input_tensor.dim() > 2:
-        input_tensor = input_tensor.squeeze()
+def call_model_function(model, input_tensor, target_class_idx=None):
+    # input_tensor: [N, D]
     if input_tensor.dim() != 2:
-        raise ValueError(f"Expected 2D input tensor, got shape {input_tensor.shape}")
-    if input_tensor.size(1) != args.embed_dim:
-        raise ValueError(f"Expected feature dim {args.embed_dim}, got {input_tensor.size(1)}")
+        raise ValueError(f"Expected input shape [N, D], got {input_tensor.shape}")
     try:
         with torch.no_grad():
-            output = model(input_tensor.unsqueeze(0))
-            if isinstance(output, (list, tuple)) and len(output) == 5:
-                logits, _, _, _, _ = output
-            elif isinstance(output, (list, tuple)) and len(output) == 3:
-                logits, _, _ = output
+            out = model(input_tensor)  # no unsqueeze here
+            if isinstance(out, tuple) and len(out) == 3:
+                logits, _, _ = out
+            elif isinstance(out, tuple) and len(out) == 5:
+                logits, _, _, _, _ = out
             else:
-                raise RuntimeError(f"Unexpected number of outputs from model: {len(output)}")
+                raise RuntimeError("Unexpected model output structure")
         return logits
     except Exception as e:
         raise RuntimeError(f"Model forward failed: {str(e)}")
