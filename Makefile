@@ -59,7 +59,9 @@ metric_clam_camelyon16:
 test_ig_clam_tcga:
 	python ig_clam_tcga_test.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient 
 
-
+pr_metric:
+	python print_metrics.py --config configs_simea/clam_camelyon16.yaml --fold_start 1 --fold_end 1
+ 
 # Makefile for running different IG variants ===== on TCGA-Renal
 
 # Makefile for running different IG variants ===== on camelyon16 
