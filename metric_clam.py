@@ -7,12 +7,12 @@ from torch.nn.functional import softmax
 import sys
 from tqdm import tqdm
 
-clf_path = os.path.abspath(os.path.join("src", "models"))
+clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 sys.path.append(clf_path)
 
-# from src.datasets import return_splits_custom
-from src.datasets.classification import return_splits_custom as return_splits_camelyon
-from src.models import load_clam_model
+from src.datasets.classification.tcga import return_splits_custom
+from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon
+from clam import load_clam_model
 from src.metrics import (
     compute_aic_and_sic,
     compute_insertion_auc,
