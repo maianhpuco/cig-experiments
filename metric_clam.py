@@ -8,7 +8,7 @@ import sys
 from tqdm import tqdm
 
 clf_path = os.path.abspath(os.path.join("src", "models"))
-sys.path.append(clf_src)
+sys.path.append(clf_path)
 
 from src.datasets import return_splits_custom
 from src.datasets.classification import return_splits_custom as camelyon16
