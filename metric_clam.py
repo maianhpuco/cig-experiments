@@ -5,29 +5,23 @@ import numpy as np
 import torch
 from torch.nn.functional import softmax
 import sys
+from tqdm import tqdm
 
 # Get the absolute path of the parent of the parent directory
-# base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-# sys.path.append(base_path)
-# print("Search path:", base_path)
-
-# ig_path = os.path.abspath(os.path.join("src/models"))
 clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 
-sys.path.append(clf_path)   
+sys.path.append(clf_path)
 
-from src.datasets.classification.tcga import return_splits_custom  
-from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon 
-from clam import load_clam_model  
-# from attr_method._common import call_model_function
-# from sample_features import sample_random_features 
-
+from src.datasets.classification.tcga import return_splits_custom
+from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon
+from clam import load_clam_model
 from src.metrics import (
     compute_aic_and_sic,
     compute_insertion_auc,
     compute_deletion_auc,
     rank_methods
 )
+
 def sample_random_features(dataset, num_files=20):
     indices = np.random.choice(len(dataset), num_files, replace=False)
     feature_list = []
@@ -55,7 +49,7 @@ def main(args):
         'expected_gradient', 'integrated_decision_gradient', 'square_integrated_gradient'
     ]
 
-    for fold_id in range(args.fold_start, args.fold_end + 1):
+    for fold_id in tqdm(range(args.fold_start, args.fold_end + 1), desc="Processing folds"):
         print(f"Processing Fold {fold_id}")
 
         split_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
@@ -71,7 +65,7 @@ def main(args):
         model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
         model.eval()
 
-        for idx, (features, label, coords) in enumerate(test_dataset):
+        for idx, (features, label, coords) in enumerate(tqdm(test_dataset, desc=f"Processing slides (Fold {fold_id})")):
             basename = test_dataset.slide_data['slide_id'].iloc[idx]
             print(f"\n[{idx+1}/{len(test_dataset)}] Slide: {basename}")
 
@@ -79,7 +73,7 @@ def main(args):
             baseline = sample_random_features(test_dataset).to(args.device)
 
             results = []
-            for method in methods:
+            for method in tqdm(methods, desc="Computing metrics", leave=False):
                 print(f"  - {method}")
                 metrics = []
 
@@ -134,7 +128,6 @@ if __name__ == "__main__":
     parser.add_argument('--fold_end', type=int, default=1)
     parser.add_argument('--device', default=None, choices=['cuda', 'cpu'])
     parser.add_argument('--seed', type=int, default=42)
-    
     
     args = parser.parse_args()
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
