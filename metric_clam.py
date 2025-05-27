@@ -6,6 +6,7 @@ import torch
 from torch.nn.functional import softmax
 from tqdm import tqdm
 import sys
+import pandas as pd
 
 clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 sys.path.append(clf_path)
@@ -37,12 +38,11 @@ def sample_random_features(dataset, feature_dim=1024):
     return features
 
 def call_model_function(model, input_tensor, target_class_idx=None):
-    # input_tensor: [N, D]
     if input_tensor.dim() != 2:
         raise ValueError(f"Expected input shape [N, D], got {input_tensor.shape}")
     try:
         with torch.no_grad():
-            out = model(input_tensor)  # no unsqueeze here
+            out = model(input_tensor)
             if isinstance(out, tuple) and len(out) == 3:
                 logits, _, _ = out
             elif isinstance(out, tuple) and len(out) == 5:
@@ -58,6 +58,8 @@ def main(args):
         'contrastive_gradient', 'integrated_gradient', 'vanilla_gradient',
         'expected_gradient', 'integrated_decision_gradient', 'square_integrated_gradient'
     ]
+
+    all_results = []
 
     for fold_id in tqdm(range(args.fold_start, args.fold_end + 1), desc="Processing folds"):
         print(f"Processing Fold {fold_id}")
@@ -139,9 +141,29 @@ def main(args):
                 ranked = rank_methods(results)
                 out_dir = args.paths['metrics_dir']
                 os.makedirs(out_dir, exist_ok=True)
-                np.save(os.path.join(out_dir, f"clam_fold{fold_id}_{basename}.npy"), np.array(ranked, dtype=object))
+                result_file = os.path.join(out_dir, f"clam_fold{fold_id}_{basename}.npy")
+                np.save(result_file, np.array(ranked, dtype=object))
+
+                for method, aic, sic, ins, dele in ranked:
+                    all_results.append({
+                        "Fold": fold_id,
+                        "Slide": basename,
+                        "Method": method,
+                        "AIC": aic,
+                        "SIC": sic,
+                        "Insertion AUC": ins,
+                        "Deletion AUC": dele
+                    })
 
         print(f"Fold {fold_id} complete.")
+
+    # Save as CSV
+    if all_results:
+        df = pd.DataFrame(all_results)
+        csv_path = os.path.join(os.getcwd(), f"clam_metrics_folds_{args.fold_start}_to_{args.fold_end}.csv")
+        df.to_csv(csv_path, index=False)
+        print(f"\n✅ Metrics saved to: {csv_path}")
+        print(df.groupby("Method")[["AIC", "SIC", "Insertion AUC", "Deletion AUC"]].mean().round(4))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
