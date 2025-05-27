@@ -1,13 +1,12 @@
 import os
-import sys
 import argparse
 import yaml
 import numpy as np
 import torch
 from torch.nn.functional import softmax
 from tqdm import tqdm
+import sys
 
-# Add classifier path
 clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 sys.path.append(clf_path)
 
@@ -27,12 +26,35 @@ def sample_random_features(dataset, feature_dim=1024):
     features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
     if features.dim() > 2:
         features = features.squeeze()
-    if features.dim() != 2 or features.size(1) != feature_dim:
-        raise ValueError(f"Invalid sampled feature shape: {features.shape}")
-    if features.size(0) > 32:
-        indices = torch.randperm(features.size(0))[:32]
+    if features.dim() != 2:
+        raise ValueError(f"Expected 2D features, got shape {features.shape}")
+    if features.size(1) != feature_dim:
+        raise ValueError(f"Expected feature dim {feature_dim}, got {features.size(1)}")
+    max_patches = 32
+    if features.size(0) > max_patches:
+        indices = torch.randperm(features.size(0))[:max_patches]
         features = features[indices]
     return features
+
+def call_model_function(model, input_tensor, args):
+    if input_tensor.dim() > 2:
+        input_tensor = input_tensor.squeeze()
+    if input_tensor.dim() != 2:
+        raise ValueError(f"Expected 2D input tensor, got shape {input_tensor.shape}")
+    if input_tensor.size(1) != args.embed_dim:
+        raise ValueError(f"Expected feature dim {args.embed_dim}, got {input_tensor.size(1)}")
+    try:
+        with torch.no_grad():
+            output = model(input_tensor.unsqueeze(0))
+            if isinstance(output, (list, tuple)) and len(output) == 5:
+                logits, _, _, _, _ = output
+            elif isinstance(output, (list, tuple)) and len(output) == 3:
+                logits, _, _ = output
+            else:
+                raise RuntimeError(f"Unexpected number of outputs from model: {len(output)}")
+        return logits
+    except Exception as e:
+        raise RuntimeError(f"Model forward failed: {str(e)}")
 
 def main(args):
     methods = [
@@ -41,6 +63,7 @@ def main(args):
     ]
 
     for fold_id in tqdm(range(args.fold_start, args.fold_end + 1), desc="Processing folds"):
+        print(f"Processing Fold {fold_id}")
         split_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
         _, _, test_dataset = return_splits_camelyon(
             csv_path=split_path,
@@ -54,7 +77,7 @@ def main(args):
         model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
         model.eval()
 
-        for idx, (features, label, coords) in enumerate(tqdm(test_dataset, desc=f"Slides (Fold {fold_id})")):
+        for idx, (features, label, coords) in enumerate(tqdm(test_dataset, desc=f"Slides Fold {fold_id}")):
             basename = test_dataset.slide_data['slide_id'].iloc[idx]
 
             features = features.to(args.device)
@@ -63,35 +86,28 @@ def main(args):
             if features.dim() != 2 or features.size(1) != args.embed_dim:
                 continue
             if features.size(0) > 32:
-                indices = torch.randperm(features.size(0))[:32]
-                features = features[indices]
+                features = features[torch.randperm(features.size(0))[:32]]
             features = (features - features.mean()) / (features.std() + 1e-8)
+
+            baseline = sample_random_features(test_dataset, args.embed_dim).to(args.device)
+            baseline = (baseline - baseline.mean()) / (baseline.std() + 1e-8)
+
             if torch.isnan(features).any() or torch.isinf(features).any():
                 continue
-
-            baseline = sample_random_features(test_dataset, feature_dim=args.embed_dim).to(args.device)
-            baseline = (baseline - baseline.mean()) / (baseline.std() + 1e-8)
             if torch.isnan(baseline).any() or torch.isinf(baseline).any():
                 continue
             if baseline.size(0) != features.size(0):
                 continue
 
-            def call_model_function(model, input_tensor, target_class_idx=None):
-                if input_tensor.dim() != 2 or input_tensor.size(1) != args.embed_dim:
-                    raise ValueError(f"Invalid input tensor shape: {input_tensor.shape}")
-                with torch.no_grad():
-                    logits, _, _ = model(input_tensor)
-                return logits
-
             try:
-                features_logits = call_model_function(model, features)
-                baseline_logits = call_model_function(model, baseline)
+                features_logits = call_model_function(model, features, args)
+                baseline_logits = call_model_function(model, baseline, args)
             except Exception as e:
-                print(f"⚠️ Model forward failed for slide {basename}: {e}")
+                print(f"⚠️ Model forward failed for slide {basename}: {str(e)}")
                 continue
 
             results = []
-            for method in tqdm(methods, desc="Computing metrics", leave=False):
+            for method in tqdm(methods, desc="Metrics", leave=False):
                 metrics = []
                 for cls in range(args.n_classes):
                     score_path = os.path.join(
@@ -104,27 +120,18 @@ def main(args):
                     if scores.shape[0] != features.shape[0]:
                         continue
                     try:
-                        aic, sic = compute_aic_and_sic(
-                            model, features, baseline, scores, cls,
-                            call_model_function=lambda m, x, target_class_idx=None:
-                                features_logits if torch.equal(x, features) else baseline_logits,
-                            steps=50
-                        )
-                        ins = compute_insertion_auc(
-                            model, features, baseline, scores, cls,
-                            call_model_function=lambda m, x, target_class_idx=None:
-                                features_logits if torch.equal(x, features) else baseline_logits,
-                            steps=50
-                        )
-                        dele = compute_deletion_auc(
-                            model, features, baseline, scores, cls,
-                            call_model_function=lambda m, x, target_class_idx=None:
-                                features_logits if torch.equal(x, features) else baseline_logits,
-                            steps=50
-                        )
+                        aic, sic = compute_aic_and_sic(model, features, baseline, scores, cls,
+                            lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
+                            steps=50)
+                        ins = compute_insertion_auc(model, features, baseline, scores, cls,
+                            lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
+                            steps=50)
+                        dele = compute_deletion_auc(model, features, baseline, scores, cls,
+                            lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
+                            steps=50)
                         metrics.append((cls, aic, sic, ins, dele))
                     except Exception as e:
-                        print(f"⚠️ Metric error for {method}, class {cls}: {e}")
+                        print(f"    ⚠️ Error computing metrics for class {cls}: {str(e)}")
                         continue
 
                 if metrics:
@@ -146,8 +153,8 @@ if __name__ == "__main__":
     parser.add_argument('--fold_end', type=int, default=1)
     parser.add_argument('--device', default=None, choices=['cuda', 'cpu'])
     parser.add_argument('--seed', type=int, default=42)
-    args = parser.parse_args()
 
+    args = parser.parse_args()
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
