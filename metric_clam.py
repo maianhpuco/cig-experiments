@@ -100,7 +100,7 @@ def main(args):
                 features_logits = call_model_function(model, features, args)
                 baseline_logits = call_model_function(model, baseline, args)
             except Exception as e:
-                print(f"⚠️ Model forward failed for slide {basename}: {str(e)}")
+                print(f" Model forward failed for slide {basename}: {str(e)}")
                 continue
 
             results = []
@@ -128,7 +128,7 @@ def main(args):
                             steps=50)
                         metrics.append((cls, aic, sic, ins, dele))
                     except Exception as e:
-                        print(f"    ⚠️ Error computing metrics for class {cls}: {str(e)}")
+                        print(f"     Error computing metrics for class {cls}: {str(e)}")
                         continue
 
                 if metrics:
