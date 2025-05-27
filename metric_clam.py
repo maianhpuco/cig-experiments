@@ -78,19 +78,25 @@ def main(args):
 
                     scores = torch.from_numpy(np.load(score_path)).to(args.device)
 
+                    # Define call_model_function to handle CLAM_SB's forward method
+                    def call_model_function(model, input_tensor):
+                        with torch.no_grad():
+                            logits, _, _ = model(input_tensor.unsqueeze(0))
+                            return logits
+
                     aic, sic = compute_aic_and_sic(
                         model, features, baseline, scores, cls,
-                        call_model_function=lambda m, x, target_class_idx: m(x, target_class_idx=target_class_idx),
+                        call_model_function=call_model_function,
                         steps=100
                     )
                     ins = compute_insertion_auc(
                         model, features, baseline, scores, cls,
-                        call_model_function=lambda m, x, target_class_idx: m(x, target_class_idx=target_class_idx),
+                        call_model_function=call_model_function,
                         steps=100
                     )
                     dele = compute_deletion_auc(
                         model, features, baseline, scores, cls,
-                        call_model_function=lambda m, x, target_class_idx: m(x, target_class_idx=target_class_idx),
+                        call_model_function=call_model_function,
                         steps=100
                     )
 
