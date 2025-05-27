@@ -7,7 +7,6 @@ from torch.nn.functional import softmax
 import sys
 from tqdm import tqdm
 
-# Get the absolute path of the parent of the parent directory
 clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 
 sys.path.append(clf_path)
@@ -35,13 +34,13 @@ def sample_random_features(dataset, num_files=20):
     flattened = padded.view(-1, padded.size(-1))
     return flattened
 
-def main(args):
-    with open(args.config, 'r') as f:
-        config = yaml.safe_load(f)
-
+def main(args, config):
+    # Set config-derived parameters in args for compatibility with load_clam_model
     args.dataset_name = config['dataset_name']
     args.paths = config['paths']
-    args.n_classes = 2
+    args.n_classes = config.get('n_classes', 2)  # Default to 2 for Camelyon16
+    args.drop_out = config.get('drop_out', 0.25)  # Default to 0.25 if not specified
+    args.model_type = config.get('model_type', 'clam_sb')  # Default to clam_sb
     args.device = args.device or ('cuda' if torch.cuda.is_available() else 'cpu')
 
     methods = [
@@ -52,17 +51,17 @@ def main(args):
     for fold_id in tqdm(range(args.fold_start, args.fold_end + 1), desc="Processing folds"):
         print(f"Processing Fold {fold_id}")
 
-        split_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
+        split_path = os.path.join(config['paths']['split_folder'], f'fold_{fold_id}.csv')
         _, _, test_dataset = return_splits_camelyon(
             csv_path=split_path,
-            data_dir=args.paths['pt_files'],
+            data_dir=config['paths']['pt_files'],
             label_dict={'normal': 0, 'tumor': 1},
             seed=args.seed,
             print_info=False,
             use_h5=True
         )
 
-        model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
+        model = load_clam_model(args, config['paths'][f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
         model.eval()
 
         for idx, (features, label, coords) in enumerate(tqdm(test_dataset, desc=f"Processing slides (Fold {fold_id})")):
@@ -77,9 +76,9 @@ def main(args):
                 print(f"  - {method}")
                 metrics = []
 
-                for cls in range(args.n_classes):
+                for cls in range(config['n_classes']):
                     score_path = os.path.join(
-                        args.paths['attribution_scores_folder'], method,
+                        config['paths']['attribution_scores_folder'], method,
                         f'fold_{fold_id}', f'class_{cls}', f'{basename}.npy'
                     )
                     if not os.path.exists(score_path):
@@ -112,7 +111,7 @@ def main(args):
 
             if results:
                 ranked = rank_methods(results)
-                out_dir = args.paths['metrics_dir']
+                out_dir = config['paths']['metrics_dir']
                 os.makedirs(out_dir, exist_ok=True)
 
                 np.save(os.path.join(out_dir, f"clam_fold{fold_id}_{basename}.npy"), np.array(ranked, dtype=object))
@@ -130,5 +129,8 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42)
     
     args = parser.parse_args()
+    with open(args.config, 'r') as f:
+        config = yaml.safe_load(f)
+    
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    main(args)
+    main(args, config)
