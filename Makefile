@@ -23,6 +23,15 @@ train_clam_camelyon16_5fold:
 	conda activate clam_env && \
 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 1 --k_end 5
 
+train_clam_tcga_renal_1fold:
+	@echo "Activating conda environment for simea .."
+	conda activate clam_env && \
+	python train_clam.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 1 --k_end 1
+train_clam_tcga_renal_5fold:
+	@echo "Activating conda environment for simea .."
+	conda activate clam_env && \
+	python train_clam.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 1 --k_end 5
+
 train_dsmil_camelyon16_1fold:
 	@echo "Activating conda environment for simea .."
 	conda activate clam_env && \
@@ -35,6 +44,14 @@ train_dsmil_camelyon16_5fold:
 	@echo "Activating conda environment for simea .."
 	conda activate clam_env && \
 	python train_dsmil.py --config configs_simea/dsmil_camelyon16.yaml --num_epochs 200 --k_start 1 --k_end 5
+train_dsmil_tcga_renal_1fold:
+	@echo "Activating conda environment for simea .."
+	conda activate clam_env && \
+	python train_dsmil_tcga.py --config configs_simea/dsmil_tcga.yaml --num_epochs 200 --k_start 1 --k_end 1
+train_dsmil_tcga_renal_5fold:
+	@echo "Activating conda environment for simea .."
+	conda activate clam_env && \
+	python train_dsmil_tcga.py --config configs_simea/dsmil_tcga.yaml --num_epochs 200 --k_start 1 --k_end 5
 
 train_dtfd_camelyon16_1fold:
 	@echo "Activating conda environment for simea .."
@@ -48,6 +65,16 @@ train_dtfd_camelyon16_5fold:
 	@echo "Activating conda environment for simea .."
 	conda activate dtfd && \
 	python train_dtfd.py --config configs_simea/dtfd_camelyon16.yaml --num_epochs 200 --k_start 1 --k_end 5
+
+train_dtfd_tcga_renal_1fold:
+	@echo "Activating conda environment for simea .."
+	conda activate dtfd && \
+	python train_dtfd_tcga.py --config configs_simea/dtfd_tcga.yaml --num_epochs 200 --k_start 1 --k_end 1
+train_dtfd_tcga_renal_5fold:
+	@echo "Activating conda environment for simea .."
+	conda activate dtfd && \
+	python train_dtfd_tcga.py --config configs_simea/dtfd_tcga.yaml --num_epochs 200 --k_start 1 --k_end 5
+
 
 # ========= metric ========= 
 metric_clam_camelyon16:

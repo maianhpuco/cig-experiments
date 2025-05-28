@@ -1,0 +1,59 @@
+# Training Configuration File
+
+# Basic Settings
+name: "abc"
+EPOCH: 200
+epoch_step: "[100]"
+device: "cuda"
+isPar: false
+
+# Logging
+log_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_results"
+train_show_freq: 40
+
+# Model Parameters
+droprate: 0.0
+droprate_2: 0.0
+lr: 0.0001
+weight_decay: 0.0001
+lr_decay_ratio: 0.2
+
+# Training Parameters
+batch_size: 1
+batch_size_v: 1
+num_workers: 4
+num_cls: 2
+
+# Group Settings
+numGroup: 4
+total_instance: 4
+numGroup_test: 4
+total_instance_test: 4
+
+# Model Architecture
+mDim: 512
+numLayer_Res: 0
+
+# Training Control
+grad_clipping: 5.0
+isSaveModel: true
+temperature: 1.0
+num_MeanInference: 1
+
+# Distillation Settings
+distill_type: "AFS"  # Options: MaxMinS, MaxS, AFS
+
+# Cross-validation
+k_start: 1
+k_end: 5
+
+# Paths
+split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
+save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_results"
+config_path: "./configs_simea/dtfd_tcga.yaml"
+
+# Data Directory Mapping
+data_dir_map:
+  KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
+  KIRC: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
+  KIRP: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
