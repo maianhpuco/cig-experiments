@@ -236,7 +236,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
 
             tidx_slide = tIDX[idx * args.batch_size_v : (idx + 1) * args.batch_size_v]
 
-            tslide_name = [slides_list[sst] for sst in tidx_slide]
+            tslide_name = [SlideNames_list[sst] for sst in tidx_slide]
             tlabel = [label_dict[labels_list[sst]] for sst in tidx_slide]
             label_tensor = torch.LongTensor(tlabel).to(args.device)
 
@@ -245,7 +245,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
 
                 full_path = os.path.join(data_dir_map[labels_list[slide_idx]], 'pt_files', f"{slides_list[slide_idx]}.pt")
                 features = torch.load(full_path, weights_only=True, map_location='cuda:0')
-                
+
                 tfeat = features
                 tfeat = tfeat.to(args.device)
                 midFeat = dimReduction(tfeat)
