@@ -238,7 +238,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
                 idx * args.batch_size_v : (idx + 1) * args.batch_size_v
             ]
             slide_names = [SlideNames[sst] for sst in tidx_slide]
-            tlabel = [Label[sst] for sst in tidx_slide]
+            tlabel = [label_dict[Label[sst]] for sst in tidx_slide]
             label_tensor = torch.LongTensor(tlabel).to(args.device)
             batch_feat = [FeatLists[sst].to(args.device) for sst in tidx_slide]
 
