@@ -22,7 +22,7 @@ lr_decay_ratio: 0.2
 batch_size: 1
 batch_size_v: 1
 num_workers: 4
-num_cls: 2
+num_cls: 3
 
 # Group Settings
 numGroup: 4
