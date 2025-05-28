@@ -338,8 +338,8 @@ def test_attention_DTFD_preFeat_MultipleMean(
     gPred_0 = gPred_0[:, -1]
     gPred_1 = gPred_1[:, -1]
 
-    print("gt_0, gt_0.shape", gt_0, gt_0.shape)
-    print("gt_1, gt_1.shape", gt_1, gt_1.shape)
+    print("gt_0.shape, gPred_0.shape", gt_0.shape, gPred_0.shape)
+    print("gt_1.shape, gPred_1.shape", gt_1.shape, gPred_1.shape)
 
     macc_0, mprec_0, mrecal_0, mspec_0, mF1_0, auc_0 = eval_metric(gPred_0, gt_0)
     macc_1, mprec_1, mrecal_1, mspec_1, mF1_1, auc_1 = eval_metric(gPred_1, gt_1)
