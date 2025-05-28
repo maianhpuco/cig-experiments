@@ -572,7 +572,7 @@ if __name__ == "__main__":
     parser.add_argument("--split_folder", default="", type=str)
     parser.add_argument("--data_dir_map", default={}, type=str)
     parser.add_argument("--save_path", default="", type=str)
-    parser.add_argument("--config_path", default="", type=str)
+    parser.add_argument("--config", default="", type=str)
 
     args = parser.parse_args()
 
