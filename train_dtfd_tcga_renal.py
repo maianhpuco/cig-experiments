@@ -122,23 +122,23 @@ def main(args):
                 curLR = param_group["lr"]
                 print_log(f" current learn rate {curLR}", log_file)
 
-            train_attention_preFeature_DTFD(
-                classifier=classifier,
-                dimReduction=dimReduction,
-                attention=attention,
-                UClassifier=attCls,
-                mDATA_list=(SlideNames_train, slides_train, labels_train),
-                ce_cri=ce_cri,
-                optimizer0=optimizer_adam0,
-                optimizer1=optimizer_adam1,
-                epoch=ii,
-                args=args,
-                f_log=log_file,
-                writer=writer,
-                numGroup=args.numGroup,
-                total_instance=args.total_instance,
-                distill=args.distill_type,
-            )
+            # train_attention_preFeature_DTFD(
+            #     classifier=classifier,
+            #     dimReduction=dimReduction,
+            #     attention=attention,
+            #     UClassifier=attCls,
+            #     mDATA_list=(SlideNames_train, slides_train, labels_train),
+            #     ce_cri=ce_cri,
+            #     optimizer0=optimizer_adam0,
+            #     optimizer1=optimizer_adam1,
+            #     epoch=ii,
+            #     args=args,
+            #     f_log=log_file,
+            #     writer=writer,
+            #     numGroup=args.numGroup,
+            #     total_instance=args.total_instance,
+            #     distill=args.distill_type,
+            # )
             print_log(f">>>>>>>>>>> Validation Epoch: {ii}", log_file)
             auc_val = test_attention_DTFD_preFeat_MultipleMean(
                 classifier=classifier,
