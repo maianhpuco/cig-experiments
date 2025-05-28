@@ -222,9 +222,9 @@ def test_attention_DTFD_preFeat_MultipleMean(
     test_loss1 = AverageMeter()
 
     gPred_0 = torch.FloatTensor().to(args.device)
-    gt_0 = torch.LongTensor().to(args.device)
+    gt_0 = torch.LongTensor(0).to(args.device)
     gPred_1 = torch.FloatTensor().to(args.device)
-    gt_1 = torch.LongTensor().to(args.device)
+    gt_1 = torch.LongTensor(1).to(args.device)
 
     with torch.no_grad():
 
