@@ -95,21 +95,21 @@ def main(args):
         test_path = os.path.join(args.split_folder, f'fold_{iteration}/test.csv')
 
 
-        df = pd.read_csv(train_path)
-        SlideNames_train = df["patient_id"].dropna().tolist()
-        slides_train = df["slide"].dropna().tolist()
-        labels_train = df["label"].dropna().tolist()
+        df_train = pd.read_csv(train_path)
+        SlideNames_train = df_train["patient_id"].dropna().tolist()
+        slides_train = df_train["slide"].dropna().tolist()
+        labels_train = df_train["label"].dropna().tolist()
 
 
-        df = pd.read_csv(val_path)
-        SlideNames_val = df["patient_id"].dropna().tolist()
-        slides_val = df["slide"].dropna().tolist()
-        labels_val = df["label"].dropna().tolist()
+        df_val = pd.read_csv(val_path)
+        SlideNames_val = df_val["patient_id"].dropna().tolist()
+        slides_val = df_val["slide"].dropna().tolist()
+        labels_val = df_val["label"].dropna().tolist()
 
-        df = pd.read_csv(test_path)
-        SlideNames_test = df["patient_id"].dropna().tolist()
-        slides_test = df["slide"].dropna().tolist()
-        labels_test = df["label"].dropna().tolist()
+        df_test = pd.read_csv(test_path)
+        SlideNames_test = df_test["patient_id"].dropna().tolist()
+        slides_test = df_test["slide"].dropna().tolist()
+        labels_test = df_test["label"].dropna().tolist()
 
         print_log(
             f"training slides: {len(SlideNames_train)}, validation slides: {len(SlideNames_val)}, test slides: {len(SlideNames_test)}",
