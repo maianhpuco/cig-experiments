@@ -82,21 +82,20 @@ def main(args):
         fold_start_time = time.time() 
         print("=======Start fold number:", i, "=========") 
         seed_torch(args.seed)
-        if dataset_name == 'tcga_renal': 
-            train_csv_path = os.path.join(split_folder, f'fold_{i}/train.csv')
-            val_csv_path = os.path.join(split_folder, f'fold_{i}/val.csv')
-            test_csv_path = os.path.join(split_folder, f'fold_{i}/test.csv')
+        train_csv_path = os.path.join(split_folder, f'fold_{i}/train.csv')
+        val_csv_path = os.path.join(split_folder, f'fold_{i}/val.csv')
+        test_csv_path = os.path.join(split_folder, f'fold_{i}/test.csv')
 
 
-            train_dataset, val_dataset, test_dataset = return_splits_custom(
-                train_csv_path,
-                val_csv_path,
-                test_csv_path,
-                data_dir_map=data_dir_map,
-                label_dict= label_dict,  # This won't affect direct labels
-                seed=42,
-                print_info=False
-            )
+        train_dataset, val_dataset, test_dataset = return_splits_custom(
+            train_csv_path,
+            val_csv_path,
+            test_csv_path,
+            data_dir_map=data_dir_map,
+            label_dict= label_dict,  # This won't affect direct labels
+            seed=42,
+            print_info=False
+        )
         print(f"FOLD {i} Train len: {len(train_dataset)} | Val len: {len(val_dataset)} | Test len: {len(test_dataset)}")
           
         datasets = (train_dataset, val_dataset, test_dataset)
