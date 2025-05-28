@@ -8,7 +8,7 @@ device: "cuda"
 isPar: false
 
 # Logging
-log_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_renal_results"
+log_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results"
 train_show_freq: 40
 
 # Model Parameters
@@ -22,7 +22,7 @@ lr_decay_ratio: 0.2
 batch_size: 1
 batch_size_v: 1
 num_workers: 4
-num_cls: 3
+num_cls: 2
 
 # Group Settings
 numGroup: 4
@@ -48,12 +48,11 @@ k_start: 1
 k_end: 5
 
 # Paths
-split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_renal"
-save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_renal_results"
-config_path: "./configs_simea/dtfd_tcga_renal.yaml"
+split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
+save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results"
+config_path: "./configs_simea/dtfd_tcga_lung.yaml"
 
 # Data Directory Mapping
 data_dir_map:
-  KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
-  KIRC: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
-  KIRP: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+  LUAD: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
+  LUSC: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"

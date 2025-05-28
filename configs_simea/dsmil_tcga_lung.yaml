@@ -2,7 +2,7 @@
 # Train DSMIL on 20x patch features learned by SimCLR
 
 # Model Configuration
-num_classes: 3  # Number of output classes (KICH, KIRC, KIRP)
+num_classes: 2  # Number of output classes (LUAD, LUSC)
 feats_size: 1024  # Dimension of the feature size
 model: "dsmil"  # MIL model
 
@@ -16,7 +16,7 @@ weight_decay: 0.001  # Weight decay
 gpu_index: [0]  # GPU ID(s)
 
 # Dataset Configuration
-dataset: "TCGA-renal-default"  # Dataset folder name
+dataset: "TCGA-lung-default"  # Dataset folder name
 split: 0.2  # Training/Validation split
 
 # Model Architecture
@@ -31,12 +31,11 @@ k_start: 1  # Start fold number
 k_end: 1  # End fold number
 
 # Paths Configuration
-config: "./configs_simea/dsmil_tcga_renal.yaml"
-split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_renal"
-save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_renal_results"
+config: "./configs_simea/dsmil_tcga_lung.yaml"
+split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
+save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results"
 
 # Data Directory Mapping
 data_dir_map:
-  KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
-  KIRC: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
-  KIRP: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+  LUAD: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
+  LUSC: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"
