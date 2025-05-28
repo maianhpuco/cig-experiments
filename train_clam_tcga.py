@@ -28,12 +28,10 @@ from src.datasets.classification.tcga import return_splits_custom
 from datetime import datetime
 
 
-
 def get_timestamp_str():
     return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  
 
 def main(args):
-
     # Load YAML configuration
     with open(args.config, 'r') as f:
         cfg = yaml.safe_load(f)

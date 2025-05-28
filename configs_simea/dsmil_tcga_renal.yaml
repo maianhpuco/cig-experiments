@@ -32,7 +32,7 @@ k_end: 1  # End fold number
 
 # Paths Configuration
 config: "./configs_simea/dsmil_tcga.yaml"
-split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
+split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_renal"
 save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_results"
 
 # Data Directory Mapping
