@@ -581,7 +581,6 @@ if __name__ == "__main__":
     parser.add_argument("--data_dir_map", default={}, type=str)
     parser.add_argument("--save_path", default="", type=str)
     parser.add_argument("--config", default="", type=str)
-
     args = parser.parse_args()
 
     config_path = args.config
@@ -600,5 +599,7 @@ if __name__ == "__main__":
         }
     else:
         data_dir_map = args.data_dir_map
+
+    print("num_cls", args.num_cls)
 
     main(args)
