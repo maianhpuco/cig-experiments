@@ -245,7 +245,6 @@ def test_attention_DTFD_preFeat_MultipleMean(
                 tslideLabel = label_tensor[tidx].unsqueeze(0)
                 
                 full_path = os.path.join(data_dir_map[labels_list[slide_idx]], 'pt_files', f"{slides_list[slide_idx]}.pt")
-                print("full_path", full_path)
                 features = torch.load(full_path, weights_only=True, map_location='cuda:0')
                 
                 tfeat = features
