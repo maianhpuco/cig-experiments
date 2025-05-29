@@ -600,6 +600,4 @@ if __name__ == "__main__":
     else:
         data_dir_map = args.data_dir_map
 
-    print("num_cls", args.num_cls)
-
     main(args)

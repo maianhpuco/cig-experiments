@@ -215,7 +215,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
     dimReduction.eval()
     UClassifier.eval()
 
-    Patients, SlideNames, Label = mDATA_list
+    SlideNames_list, slides_list, labels_list = mDATA_list
     instance_per_group = total_instance // numGroup
 
     test_loss0 = AverageMeter()
@@ -228,7 +228,7 @@ def test_attention_DTFD_preFeat_MultipleMean(
 
     with torch.no_grad():
 
-        numSlides = len(Patients)
+        numSlides = len(SlideNames_list)
         numIter = numSlides // args.batch_size_v
         tIDX = list(range(numSlides))
 
@@ -237,17 +237,17 @@ def test_attention_DTFD_preFeat_MultipleMean(
             tidx_slide = tIDX[
                 idx * args.batch_size_v : (idx + 1) * args.batch_size_v
             ]
-            Patient_names = [Patients[sst] for sst in tidx_slide]
-            tlabel = [label_dict[Label[sst]] for sst in tidx_slide]
+            tslide_name = [SlideNames_list[sst] for sst in tidx_slide]
+            tlabel = [label_dict[labels_list[sst]] for sst in tidx_slide]
             label_tensor = torch.LongTensor(tlabel).to(args.device)
-            batchSlideNames = [SlideNames[sst] for sst in tidx_slide]
 
-            for tidx, batchSlideName in enumerate(batchSlideNames):
-                tsPatientName = Patient_names[tidx]
+            for tidx, tslide_name in enumerate(tslide_name):
                 tslideLabel = label_tensor[tidx].unsqueeze(0)
-                full_path = os.path.join(data_dir_map[Label[tidx]], 'pt_files', f"{batchSlideName}.pt")
+                
+                full_path = os.path.join(data_dir_map[labels_list[tidx]], 'pt_files', f"{tslide_name}.pt")
                 print("full_path", full_path)
                 features = torch.load(full_path, weights_only=True, map_location='cuda:0')
+                
                 tfeat = features
                 tfeat = tfeat.to(args.device)
                 midFeat = dimReduction(tfeat)
