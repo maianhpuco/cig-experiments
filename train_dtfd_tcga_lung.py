@@ -588,7 +588,7 @@ if __name__ == "__main__":
     for key, value in config.items():
         setattr(args, key, value)
 
-    if args.data_dir_map:
+    if args.data_dir_map is None:
         data_dir_map = {
             'LUAD': "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp",
             'LUSC': "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"
