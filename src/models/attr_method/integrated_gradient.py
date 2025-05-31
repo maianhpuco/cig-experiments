@@ -40,49 +40,43 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     return {INPUT_OUTPUT_GRADIENTS: gradients}
 
 class IntegratedGradients(CoreSaliency):
-    """Implements Integrated Gradients for feature inputs with CLAM model."""
+    """Efficient Integrated Gradients with Counterfactual Attribution"""
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
-
+    
     def GetMask(self, **kwargs):
-        """Returns an integrated gradients mask for feature inputs.
-
-        Expected keys in kwargs:
-            - x_value: Input features [N, D]
-            - call_model_function: Function to get logits and gradients
-            - model: CLAM model instance
-            - call_model_args: dict with 'target_class_idx'
-            - baseline_features: Baseline tensor [N, D] (optional)
-            - x_steps: Number of integration steps
-            - batch_size: Batch size for interpolation steps
-            - device: Computation device
-        """
-        x_value = kwargs["x_value"]
-        call_model_function = kwargs["call_model_function"]
-        model = kwargs["model"]
+        x_value = kwargs.get("x_value")  # torch.Tensor, shape [N, D]
+        call_model_function = kwargs.get("call_model_function")
+        model = kwargs.get("model")
         call_model_args = kwargs.get("call_model_args", None)
-        device = kwargs.get("device", "cpu")
+        baseline_features = kwargs.get("baseline_features", None)  # torch.Tensor, shape [N, D]
         x_steps = kwargs.get("x_steps", 25)
-        batch_size = kwargs.get("batch_size", 1)
+        batch_size = kwargs.get("batch_size", 1)  # Add batch_size parameter for efficiency
+        device = kwargs.get("device", "cpu")
 
-        # Allow use of 'baseline_features' as alias for 'x_baseline'
-        x_baseline = kwargs.get("baseline_features", None)
-        if x_baseline is None:
-            x_baseline = torch.zeros_like(x_value, dtype=torch.float32, device=device)
+        # Default to zeros baseline if none provided
+        if baseline_features is None:
+            baseline_features = torch.zeros_like(x_value, dtype=torch.float32, device=device)
+        
+        # Ensure baseline is on the correct device and has the same shape as x_value
+        baseline_features = baseline_features.to(device)
+        assert baseline_features.shape == x_value.shape, \
+            f"Baseline shape {baseline_features.shape} must match input shape {x_value.shape}"
 
-        assert x_baseline.shape == x_value.shape, "Baseline and input shapes must match"
-
-        x_diff = x_value - x_baseline  # Difference between input and baseline
-        total_gradients = torch.zeros_like(x_value, dtype=torch.float32, device=device)
+        # Allocate result tensor
+        attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
+        x_diff = x_value - baseline_features  # Shape [N, D]
 
         # Generate interpolation steps
+        alphas = np.linspace(0, 1, x_steps)
         x_step_batched = []
-        for idx, alpha in enumerate(tqdm(np.linspace(0, 1, x_steps), desc="Integrated Gradients")):
-            x_step = x_baseline + alpha * x_diff
+        for alpha in tqdm(alphas, desc="Computing Integrated Gradients:", ncols=100):
+            x_step = baseline_features + alpha * x_diff  # Shape [N, D]
             x_step_batched.append(x_step)
-            if len(x_step_batched) == batch_size or alpha == 1:
-                x_step_batched = torch.stack(x_step_batched).to(device)  # Shape: [batch_size, N, D]
-                flat_batch = x_step_batched.reshape(-1, x_step_batched.shape[-1])
-                
+            if len(x_step_batched) == batch_size or alpha == alphas[-1]:
+                x_step_batched = torch.stack(x_step_batched).to(device)  # Shape [batch_size, N, D]
+                flat_batch = x_step_batched.reshape(-1, x_value.shape[-1])  # Shape [batch_size * N, D]
+                flat_batch.requires_grad_(True)
+
                 call_model_output = call_model_function(
                     flat_batch,
                     model,
@@ -91,19 +85,15 @@ class IntegratedGradients(CoreSaliency):
                 )
 
                 self.format_and_check_call_model_output(
-                    call_model_output,
-                    flat_batch.shape,
-                    self.expected_keys
+                    call_model_output, flat_batch.shape, self.expected_keys
                 )
 
-                # Reshape gradients to match input and sum
                 gradients = torch.tensor(
-                    call_model_output[INPUT_OUTPUT_GRADIENTS],
-                    device=device
-                ).reshape(len(x_step_batched), x_value.shape[0], x_value.shape[-1])
-                total_gradients += gradients.sum(dim=0)  # Sum across batch
+                    call_model_output[INPUT_OUTPUT_GRADIENTS], device=device
+                ).reshape(len(x_step_batched), x_value.shape[0], x_value.shape[-1])  # Shape [batch_size, N, D]
+                attribution_values += gradients.sum(dim=0)  # Sum over batch, shape [N, D]
                 x_step_batched = []
 
         # Compute final attribution
-        attribution = total_gradients * x_diff / x_steps
-        return attribution.cpu().numpy()
+        attribution_values = attribution_values * x_diff / x_steps
+        return attribution_values.cpu().numpy()
