@@ -85,13 +85,18 @@ def main(args):
     print(f"  - Logits         : {logits}")
     print(f"  - Probabilities  : {probs}")
     print(f"  - Predicted class: {pred_class}")
-
-    # === IG Attribution ===
+    # === Temporal baseline === 
+    mean_vector = features.mean(dim=0, keepdim=True)  
+    baseline = mean_vector.expand_as(features) 
+    print(baseline.shape, features.shape)
+    # === IG Attribution using average baseline ===
     print(f"\n> Running Integrated Gradients for class {pred_class}")
+    
     ig = AttrMethod()
 
-    # Baseline: zero vector (shape [N, D])
-    baseline = torch.zeros_like(features).to(args.device)
+    # New baseline: average of the current WSI's features
+    mean_vector = features.mean(dim=0, keepdim=True)   # [1, D]
+    baseline = mean_vector.expand_as(features)         # [N, D]
 
     attribution_values = ig.GetMask(
         x_value=features,
@@ -106,9 +111,7 @@ def main(args):
     scores = attribution_values.mean(1)
     print(f"  - Attribution shape: {attribution_values.shape}")
     print(f"  - Mean score shape : {scores.shape}")
-    print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}")
-
-    print("\n> Done.")
+    print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}") 
 
 
 if __name__ == "__main__":
