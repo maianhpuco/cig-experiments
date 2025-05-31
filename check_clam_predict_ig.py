@@ -52,12 +52,13 @@ def main(args):
     # Run prediction
     with torch.no_grad():
         output = model(features, [features.shape[0]])
-        logits, Y_prob, Y_hat = output
+        logits, probs, predicted_class, instance_scores, instance_dict = output 
+
 
     print(f"\n> Prediction Complete")
     print(f"  - Logits         : {logits}")
-    print(f"  - Probabilities  : {Y_prob}")
-    print(f"  - Predicted class: {Y_hat.item()}")
+    print(f"  - Probabilities  : {probs}")
+    print(f"  - Predicted class: {predicted_class.item()}")
 
 
 if __name__ == "__main__":
