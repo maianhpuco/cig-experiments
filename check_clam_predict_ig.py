@@ -1,36 +1,69 @@
-import torch
 import os
-import sys 
+import sys
+import argparse
+import torch
+import yaml
+
+# CLAM model path
+sys.path.append(os.path.join("src/models"))
+sys.path.append(os.path.join("src/models/classifiers"))
+
+from clam import load_clam_model
+
+def get_dummy_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--drop_out', type=float, default=0.25)
+    parser.add_argument('--n_classes', type=int, default=2)
+    parser.add_argument('--embed_dim', type=int, default=1024)
+    parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
+    parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
+    return parser.parse_args(args=[])
+
+def main(args):
+    # Set fixed feature/checkpoint paths
+    feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"
+    checkpoint_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/checkpoints_simea/clam/camelyon16/s_1_checkpoint.pt"
+
+    # Create dummy args for model
+    args_clam = get_dummy_args()
+    args_clam.drop_out = args.drop_out
+    args_clam.n_classes = args.n_classes
+    args_clam.embed_dim = args.embed_dim
+    args_clam.model_type = args.model_type
+    args_clam.model_size = args.model_size
+
+    # Load model
+    print(f"\n> Loading CLAM model from: {checkpoint_path}")
+    model = load_clam_model(args_clam, checkpoint_path, device=args.device)
+
+    # Load .pt features
+    print(f"\n> Loading feature from: {feature_path}")
+    data = torch.load(feature_path)
+    features = data['features'] if isinstance(data, dict) else data
+    features = features.to(args.device, dtype=torch.float32)
+
+    if features.dim() == 3:  # [1, N, D]
+        features = features.squeeze(0)
+
+    print(f"> Feature shape: {features.shape}")
+
+    # Predict
+    with torch.no_grad():
+        output = model(features, [features.shape[0]])
+        logits, Y_prob, Y_hat = output
+
+    print(f"\n> Prediction Complete")
+    print(f"  - Logits        : {logits}")
+    print(f"  - Probabilities : {Y_prob}")
+    print(f"  - Predicted class : {Y_hat.item()}")
 
 
-ig_path = os.path.abspath(os.path.join("src/models"))
-clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
-sys.path.append(ig_path)   
-sys.path.append(clf_path)  
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, required=True)
+    parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'])
+    args = parser.parse_args()
 
-from clam import load_clam_model   
-
-
-# === Required paths ===
-
-# feature_path = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files/normal_1.pt"  # your .pt file
-# checkpoint_path = "/home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt"
-feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"  # your .pt file
-checkpoint_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/checkpoints_simea/clam/camelyon16/s_1_checkpoint.pt"
-# === Load model ===
-model_dict = load_clam_model(checkpoint_path)
-model = model_dict['model']
-model.eval()
-model.cuda()  # or .to(device)
-
-# === Load features ===
-features = torch.load(feature_path, map_location='cuda')  # shape: [N, D]
-features = features.unsqueeze(0)  # shape: [1, N, D]
-
-# === Forward pass ===
-with torch.no_grad():
-    logits, Y_prob, Y_hat, _, _ = model(features)
-
-print(f"Logits: {logits}")
-print(f"Probability: {Y_prob}")
-print(f"Prediction: {Y_hat}")
+    # Load YAML config
+    with open(args.config, 'r') as f:
+        config = yaml.safe_load(f)
