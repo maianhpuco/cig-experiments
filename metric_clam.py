@@ -91,7 +91,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default='config_simea/clam_camelyon16.yaml')
+    parser.add_argument('--config', default='configs_simea/clam_camelyon16.yaml')
     parser.add_argument('--fold_start', type=int, default=1)
     parser.add_argument('--fold_end', type=int, default=1)
     parser.add_argument('--device', default=None, choices=['cuda', 'cpu'])
