@@ -356,5 +356,5 @@ check_score:
 # ==============MAUI================
 # SANITY CHECK FOR MAUI 
 maui_check_clam_ig:
-	python check_clam_predict_id.py --config configs_simea/clam_camelyon16.yaml 
-	
+	python check_clam_predict_ig.py --config configs_simea/clam_camelyon16.yaml 
+
