@@ -13,4 +13,6 @@
 [submodule "src/externals/dsmil-wsi-forked"]
     path = src/externals/dsmil-wsi-forked
     url = https://github.com/maianhpuco/dsmil-wsi-forked.git
-
+[submodule "src/externals/camil-iclr-clone"]
+    path = src/externals/camil-iclr-clone
+    url = https://github.com/kuro2907/camil-iclr-clone.git

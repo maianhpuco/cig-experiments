@@ -1,22 +1,21 @@
-dataset_name: 'tcga_renal'
+dataset_name: 'tcga_lung'
 paths:
   data_dir:
-    kich: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
-    kirc: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
-    kirp: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
-  save_dir: "/home/mvu9/processing_datasets/processing_tcga_256/clam_result"
-  result_dir: "/home/mvu9/processing_datasets/processing_tcga_256/results" # where we save all the check point
-  split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv"
+    lusc: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"
+    luad: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
+  save_dir: "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result"
+  result_dir: "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_results" # where we save all the check point
+  split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
   # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-19_15-16-56/s_1_checkpoint.pt"
   for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-20_03-31-00_ep200/s_1_checkpoint.pt"
-  attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/tgca_renal"
-  ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/tcga_renal"   
-  memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_tcga_renal"
+  attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/tcga_lung"
+  ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/tcga_lung"   
+  memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_tcga_lung"
   slide_dir: '/home/mvu9/datasets/TCGA-datasets'
 patterns: 
   h5_files: "/home/mvu9/processing_datasets/processing_tcga_256/*/features_fp/h5_files" 
 
-label_dict: {'LUAD': 0, 'LUSC': 1} 
+label_dict: {'LUAD': 0, 'LUSC': 1}
 embed_dim: 1024
 lr: 0.0001
 label_frac: 1.0
@@ -37,4 +36,4 @@ inst_loss: null
 subtyping: false
 bag_weight: 0.7
 B: 8
-n_classes: 3
+n_classes: 2
