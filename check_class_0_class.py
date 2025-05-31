@@ -78,7 +78,7 @@ def main(args):
             
             count = 0 
             for idx, (features, label, coords) in enumerate(test_dataset):
-                if count >= 0:
+                if count >= 10:
                     break 
                 count += 1 
                 
