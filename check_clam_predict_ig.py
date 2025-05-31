@@ -2,11 +2,17 @@ import torch
 import os
 import sys 
 
-sys.path.append(os.path.join("src/externals/CLAM"))  
-from src.externals.CLAM.utils.utils import load_pkl
-from src.externals.CLAM.utils.core_utils import load_clam_model
+
+ig_path = os.path.abspath(os.path.join("src/models"))
+clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
+sys.path.append(ig_path)   
+sys.path.append(clf_path)  
+
+from clam import load_clam_model   
+
 
 # === Required paths ===
+
 # feature_path = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files/normal_1.pt"  # your .pt file
 # checkpoint_path = "/home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt"
 feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"  # your .pt file
