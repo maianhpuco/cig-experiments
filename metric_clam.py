@@ -43,20 +43,14 @@ def call_model_function(model, input_tensor, target_class_idx=None):
         raise RuntimeError("Unexpected model output structure")
 
 def main(args):
-    methods = [
-        'contrastive_gradient', 'integrated_gradient', 'vanilla_gradient',
-        'expected_gradient', 'integrated_decision_gradient', 'square_integrated_gradient'
-    ]
-
     all_results = []
-
     for fold_id in tqdm(range(args.fold_start, args.fold_end + 1), desc="Processing folds"):
         print(f"Processing Fold {fold_id}")
         split_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
         _, _, test_dataset = return_splits_camelyon(
             csv_path=split_path,
             data_dir=args.paths['pt_files'],
-            label_dict={'normal': 0, 'tumor': 1},
+            label_dict=args.label_dict,
             seed=args.seed,
             print_info=False,
             use_h5=True
@@ -65,97 +59,35 @@ def main(args):
         model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device=args.device)
         model.eval()
 
-        for idx, (features, label, coords) in enumerate(tqdm(test_dataset, desc=f"Slides Fold {fold_id}")):
-            basename = test_dataset.slide_data['slide_id'].iloc[idx]
+        for method in args.methods:
+            print(f"\n==> Method: {method}")
+            for cls in range(args.n_classes):
+                print(f"Class {cls}")
+                class_score_folder = os.path.join(
+                    args.paths['attribution_scores_folder'], method,
+                    f'fold_{fold_id}', f'class_{cls}'
+                )
+                if not os.path.exists(class_score_folder):
+                    print(f"Score folder not found: {class_score_folder}")
+                    continue
 
-            features = features.to(args.device).squeeze()
-            if features.dim() != 2 or features.size(1) != args.embed_dim:
-                print(f"Skipping {basename}: invalid feature shape {features.shape}")
-                continue
-            if features.size(0) > 32:
-                features = features[torch.randperm(features.size(0))[:32]]
-            features = (features - features.mean()) / (features.std() + 1e-8)
+                for idx, (features, label, coords) in enumerate(test_dataset):
+                    slide_id = test_dataset.slide_data['slide_id'].iloc[idx]
+                    score_path = os.path.join(class_score_folder, f"{slide_id}.npy")
 
-            baseline = sample_random_features(test_dataset, args.embed_dim).to(args.device)
-            baseline = (baseline - baseline.mean()) / (baseline.std() + 1e-8)
-
-            if torch.isnan(features).any() or torch.isinf(features).any():
-                print(f"Skipping {basename}: NaN or Inf in features")
-                continue
-            if torch.isnan(baseline).any() or torch.isinf(baseline).any():
-                print(f"Skipping {basename}: NaN or Inf in baseline")
-                continue
-            if baseline.size(0) != features.size(0):
-                print(f"Skipping {basename}: Patch count mismatch")
-                continue
-
-            try:
-                features_logits = call_model_function(model, features)
-                baseline_logits = call_model_function(model, baseline)
-            except Exception as e:
-                print(f"Model forward failed for slide {basename}: {e}")
-                continue
-
-            results = []
-            for method in methods:
-                metrics = []
-                for cls in range(args.n_classes):
-                    score_path = os.path.join(
-                        args.paths['attribution_scores_folder'], method,
-                        f'fold_{fold_id}', f'class_{cls}', f'{basename}.npy'
-                    )
                     if not os.path.exists(score_path):
-                        print(f"Missing score: {score_path}")
+                        print(f" --> Missing score: {score_path}")
                         continue
-                    scores = torch.from_numpy(np.load(score_path)).to(args.device)
-                    if scores.shape[0] != features.shape[0]:
-                        print(f"Score shape mismatch for {basename}: {scores.shape[0]} vs {features.shape[0]}")
-                        continue
-                    try:
-                        aic, sic = compute_aic_and_sic(model, features, baseline, scores, cls,
-                            lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
-                            steps=50)
-                        ins = compute_insertion_auc(model, features, baseline, scores, cls,
-                            lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
-                            steps=50)
-                        dele = compute_deletion_auc(model, features, baseline, scores, cls,
-                            lambda m, x, target_class_idx=None: features_logits if torch.equal(x, features) else baseline_logits,
-                            steps=50)
-                        metrics.append((cls, aic, sic, ins, dele))
-                    except Exception as e:
-                        print(f"Error computing metrics for class {cls} on {basename}: {e}")
 
-                if metrics:
-                    avg_metrics = tuple(np.mean([m[i] for m in metrics]) for i in range(1, 5))
-                    results.append((method, *avg_metrics))
+                    scores = np.load(score_path)
+                    features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
+                    features = features.squeeze() if features.dim() > 2 else features
 
-            if results:
-                ranked = rank_methods(results)
-                out_dir = args.paths['metrics_dir']
-                os.makedirs(out_dir, exist_ok=True)
-                result_file = os.path.join(out_dir, f"clam_fold{fold_id}_{basename}.npy")
-                np.save(result_file, np.array(ranked, dtype=object))
-                print(f"Saved: {result_file}")
+                    print(f" Slide: {slide_id}")
+                    print(f"    - Score shape   : {scores.shape}")
+                    print(f"    - Feature shape : {features.shape}")
 
-                for method, aic, sic, ins, dele in ranked:
-                    all_results.append({
-                        "Fold": fold_id,
-                        "Slide": basename,
-                        "Method": method,
-                        "AIC": aic,
-                        "SIC": sic,
-                        "Insertion AUC": ins,
-                        "Deletion AUC": dele
-                    })
 
-    if all_results:
-        df = pd.DataFrame(all_results)
-        csv_path = os.path.join(os.getcwd(), f"clam_metrics_folds_{args.fold_start}_to_{args.fold_end}.csv")
-        df.to_csv(csv_path, index=False)
-        print(f"\n✅ Metrics saved to: {csv_path}")
-        print(df.groupby("Method")[["AIC", "SIC", "Insertion AUC", "Deletion AUC"]].mean().round(4))
-    else:
-        print("⚠️ No metrics computed. Check score files or feature shapes.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -169,6 +101,9 @@ if __name__ == "__main__":
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
+    args.label_dict = {int(k): v for k, v in config['label_dict'].items()}
+ 
+    # model configs 
     args.dataset_name = config['dataset_name']
     args.paths = config['paths']
     args.n_classes = config.get('n_classes', 2)
@@ -183,5 +118,10 @@ if __name__ == "__main__":
     args.bag_weight = config.get('bag_weight', 0.7)
     args.B = config.get('B', 1)
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-
+    
+    # ig configs
+    args.methods = [
+        'contrastive_gradient', 'integrated_gradient', 'vanilla_gradient',
+        'expected_gradient', 'integrated_decision_gradient', 'square_integrated_gradient'
+    ] 
     main(args)

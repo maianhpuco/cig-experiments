@@ -35,7 +35,9 @@ paths:
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
 
 fold_number: 5 
-
+label_dict:
+  0: "normal"
+  1: "tumor"
 processing:
   patch_size: 256
   step_size: 256
