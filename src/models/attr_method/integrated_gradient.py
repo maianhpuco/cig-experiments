@@ -5,39 +5,78 @@ from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from tqdm import tqdm
 
 EPSILON = 1e-9
+def PreprocessInputs(inputs):
+    """
+    Convert inputs to a PyTorch tensor with gradient tracking.
+    This avoids unnecessary use of `torch.tensor()` on a tensor and ensures safe usage.
+    """
+    if isinstance(inputs, torch.Tensor):
+        return inputs.clone().detach().requires_grad_(True)
+    else:
+        return torch.tensor(inputs, dtype=torch.float32, requires_grad=True)
+   
+def call_model_function(images, model, call_model_args=None, expected_keys=None):
+    """Compute model logits and gradients for saliency"""
+    device = next(model.parameters()).device  # Get model's device (e.g., cuda:0)
 
-def call_model_function(features, model, call_model_args=None, expected_keys=None):
-    """Compute model logits and gradients for saliency with CLAM model."""
-    device = next(model.parameters()).device  # Get model's device
-    features = features.to(device)  # Ensure features are on the same device
-    features.requires_grad_(True)  # Enable gradient computation
+    images = PreprocessInputs(images).to(device)  # Ensure images on same device
     model.eval()
 
-    # CLAM model expects features and batch size
-    model_output = model(features, [features.shape[0]])
+    model_output = model(images, [images.shape[0]])
 
-    # Handle CLAM's tuple output (logits, probs, pred, etc.)
+    # CLAM returns tuple: logits, probs, pred, etc.
     if isinstance(model_output, tuple):
-        logits = model_output[0]  # Assume first element is logits
+        logits = model_output[0]
     else:
         logits = model_output
 
-    # Get target class index from call_model_args
-    class_idx_str = 'class_idx_str'
-    target_class_idx = call_model_args[class_idx_str] 
-    target_logit = logits[:, target_class_idx].sum()  # Sum logits for the target class
+    # Choose class index (here: class 1)
+    target_logit = logits[:, 1].sum()
 
-    # Compute gradients
     grads = torch.autograd.grad(
         outputs=target_logit,
-        inputs=features,
+        inputs=images,
         grad_outputs=torch.ones_like(target_logit),
-        create_graph=False,
+        create_graph=False, 
         retain_graph=False
     )[0]
 
-    gradients = grads.detach().cpu().numpy()  # Convert to numpy for saliency
+    gradients = grads.detach().cpu().numpy()
     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
+
+ 
+# def call_model_function(features, model, call_model_args=None, expected_keys=None):
+#     """Compute model logits and gradients for saliency with CLAM model."""
+#     device = next(model.parameters()).device  # Get model's device
+#     features = features.to(device)  # Ensure features are on the same device
+#     features.requires_grad_(True)  # Enable gradient computation
+#     model.eval()
+
+#     # CLAM model expects features and batch size
+#     model_output = model(features, [features.shape[0]])
+
+#     # Handle CLAM's tuple output (logits, probs, pred, etc.)
+#     if isinstance(model_output, tuple):
+#         logits = model_output[0]  # Assume first element is logits
+#     else:
+#         logits = model_output
+
+#     # Get target class index from call_model_args
+#     class_idx_str = 'class_idx_str'
+#     target_class_idx = call_model_args[class_idx_str] 
+#     target_logit = logits[:, target_class_idx].sum()  # Sum logits for the target class
+
+#     # Compute gradients
+#     grads = torch.autograd.grad(
+#         outputs=target_logit,
+#         inputs=features,
+#         grad_outputs=torch.ones_like(target_logit),
+#         create_graph=False,
+#         retain_graph=False
+#     )[0]
+
+#     gradients = grads.detach().cpu().numpy()  # Convert to numpy for saliency
+#     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
 
 class IntegratedGradients(CoreSaliency):
