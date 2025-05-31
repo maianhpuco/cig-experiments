@@ -99,50 +99,55 @@ def main(args):
             for idx, (features, label, coords) in enumerate(test_dataset):
                 basename = test_dataset.slide_data['slide_id'].iloc[idx]
                 print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
-
+                                # Predict the target class
+                with torch.no_grad():
+                    output = model(features, [features.shape[0]])
+                    logits, _, _ = output  # Unpack CLAM output tuple
+                    prediction_class = torch.argmax(logits, dim=1)[0].item()  # Get predicted class
+                print(f"Predicted class: {prediction_class}") 
+                
                 features = features.to(args.device, dtype=torch.float32)
                 stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
 
-                for class_idx in range(args.n_classes):
-                    print(f"==> Attribution for class {class_idx}")
-                    kwargs = {
-                        "x_value": features,
-                        "call_model_function": call_model_function,
-                        "model": model,
-                        "baseline_features": stacked_features_baseline,
-                        "memmap_path": memmap_path,
-                        "x_steps": 50,
-                        "device": args.device,
-                        "call_model_args": {"target_class_idx": class_idx}
-                    }
+                print(f"==> Attribution for class {class_idx}")
+                kwargs = {
+                    "x_value": features,
+                    "call_model_function": call_model_function,
+                    "model": model,
+                    "baseline_features": stacked_features_baseline,
+                    "memmap_path": memmap_path,
+                    "x_steps": 50,
+                    "device": args.device,
+                    "call_model_args": {"target_class_idx": class_idx}
+                }
 
-                    attribution_values = attribution_method.GetMask(**kwargs)
-                    scores = attribution_values.mean(1)
-                    print(f"- Score shape: {scores.shape}")
-                    
- 
-                    score_save_path = os.path.join(
-                        args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{fold_id}', f'class_{class_idx}'
-                    )
-                    os.makedirs(score_save_path, exist_ok=True)
-                    save_path = os.path.join(score_save_path, f'{basename}.npy')
+                attribution_values = attribution_method.GetMask(**kwargs)
+                scores = attribution_values.mean(1)
+                print(f"- Score shape: {scores.shape}")
+                
 
-                    if isinstance(scores, torch.Tensor):
-                        scores = scores.detach().cpu().numpy()
-                    np.save(save_path, scores)
+                score_save_path = os.path.join(
+                    args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{fold_id}', f'class_{class_idx}'
+                )
+                os.makedirs(score_save_path, exist_ok=True)
+                save_path = os.path.join(score_save_path, f'{basename}.npy')
+
+                if isinstance(scores, torch.Tensor):
+                    scores = scores.detach().cpu().numpy()
+                np.save(save_path, scores)
+                
+                from utils_plot import min_max_scale  # if not already imported
+                normalized_scores = min_max_scale(scores.copy())
+                
+                print("=====Sanity Check the result======= ")
+                print(f"  >  Shape          : {normalized_scores.shape}")
+                print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
+                print(f"  >  Sum            : {np.sum(normalized_scores):.6f}")
+                print(f"  >  Min value      : {np.min(normalized_scores):.6f}")
+                print(f"  >  Max value      : {np.max(normalized_scores):.6f}")
+                print(f"  >  Non-zero count : {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}")
                     
-                    from utils_plot import min_max_scale  # if not already imported
-                    normalized_scores = min_max_scale(scores.copy())
-                    
-                    print("=====Sanity Check the result======= ")
-                    print(f"  >  Shape          : {normalized_scores.shape}")
-                    print(f"  >  First 3 values : {[float(f'{s:.6f}') for s in normalized_scores[:3]]}")
-                    print(f"  >  Sum            : {np.sum(normalized_scores):.6f}")
-                    print(f"  >  Min value      : {np.min(normalized_scores):.6f}")
-                    print(f"  >  Max value      : {np.max(normalized_scores):.6f}")
-                    print(f"  >  Non-zero count : {np.count_nonzero(normalized_scores)} / {len(normalized_scores)}")
-                     
-                    print(f"==> Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
+                print(f"==> Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
                 
 

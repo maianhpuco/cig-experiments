@@ -116,7 +116,9 @@ train_dtfd_tcga_lung_5fold:
 	conda activate dtfd && \
 	python train_dtfd_tcga_lung.py --config configs_simea/dtfd_tcga_lung.yaml --EPOCH 200 --k_start 1 --k_end 5
 	
-
+# ========= predict ========= 
+predict_clam_camelyon16:
+	python predict_clam.py --config configs_simea/clam_camelyon16.yaml --fold_start 1 --fold_end 1
 
 # ========= metric ========= 
 metric_clam_camelyon16:

@@ -1,137 +1,162 @@
-import os
 import numpy as np
 import torch
-from tqdm import tqdm
 import saliency.core as saliency
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
-from attr_method._common import PreprocessInputs
+from tqdm import tqdm
+
+EPSILON = 1e-9
 
 
-def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor)
-              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
+def getGradientsParallel(inputs, model, target_class):
+    """Compute gradients and logits for a batch of feature inputs."""
+    inputs = inputs.to(next(model.parameters()).device)  # Ensure inputs are on model device
+    inputs.requires_grad_(True)
+    model.eval()
 
-    logits = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
+    # CLAM model returns (logits, probs, pred)
+    output = model(inputs, [inputs.shape[0]])
+    logits, _, _ = output  # Unpack logits, ignore probs and pred
 
-    if INPUT_OUTPUT_GRADIENTS in expected_keys:
-        target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
-        logits_tensor = logits[0] if isinstance(logits, tuple) else logits
-        if logits_tensor.dim() == 2:
-            target_output = logits_tensor[:, target_class_idx].sum()
-        else:
-            target_output = logits_tensor[target_class_idx].sum()
-        gradients = torch.autograd.grad(target_output, inputs)[0]
-        return {INPUT_OUTPUT_GRADIENTS: gradients}
+    scores = logits[:, target_class].sum()  # Sum logits for the target class
+    gradients = torch.autograd.grad(
+        outputs=scores,
+        inputs=inputs,
+        grad_outputs=torch.ones_like(scores),
+        create_graph=False,
+        retain_graph=False
+    )[0]
 
-    return logits
+    return gradients.detach(), scores.detach()
+ 
 
+def getPredictionParallel(inputs, model, target_class):
+    """Compute logit scores for a batch of feature inputs."""
+    inputs = inputs.to(next(model.parameters()).device)
+    model.eval()
 
-class IntegratedDecisionGradients(CoreSaliency):
-    """Integrated Decision Gradients with slope-weighted redistribution"""
+    # CLAM model returns (logits, probs, pred)
+    output = model(inputs, [inputs.shape[0]])
+    logits, _, _ = output  # Unpack logits, ignore probs and pred
 
-    expected_keys = [INPUT_OUTPUT_GRADIENTS]
+    scores = logits[:, target_class]
+    return scores.detach() 
+    
+def getSlopes(baseline, baseline_diff, model, steps, batch_size, device, target_class):
+    """Compute logit slopes for IDG."""
+    if steps % batch_size != 0:
+        print(f"Steps ({steps}) must be evenly divisible by batch size ({batch_size})!")
+        return 0, 0
 
-    @staticmethod
-    def getSlopes(x_baseline_batch, x_value, model, x_steps, device, target_class_idx=0):
-        alphas = torch.linspace(0, 1, x_steps, device=device)
-        logits = torch.zeros(x_steps, device=device)
-        slopes = torch.zeros(x_steps, device=device)
-        x_diff = x_value - x_baseline_batch
+    loops = int(steps / batch_size)
 
-        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing Slopes", ncols=100)):
-            with torch.no_grad():
-                x_step_batch = (x_baseline_batch + alpha * x_diff).to(device)
-                model_output = model(x_step_batch)
-                logits_tensor = model_output[0] if isinstance(model_output, tuple) else model_output
-                logit = logits_tensor[0, target_class_idx] if logits_tensor.dim() == 2 else logits_tensor[target_class_idx]
-                logits[step_idx] = logit
+    # Generate alpha values
+    alphas = torch.linspace(0, 1, steps).to(device)  # Shape: [steps]
+    logits = torch.zeros(steps).to(device)  # Store logits
 
-        delta_alpha = float(alphas[1] - alphas[0])
-        slopes[1:] = (logits[1:] - logits[:-1]) / (delta_alpha + 1e-9)
-        slopes[0] = 0.0
-        return slopes, delta_alpha, logits
+    # Run batched input
+    for i in range(loops):
+        start = i * batch_size
+        end = (i + 1) * batch_size
 
-    @staticmethod
-    def getAlphaParameters(slopes, steps, step_size):
-        normed = (slopes - torch.min(slopes)) / (torch.max(slopes) - torch.min(slopes) + 1e-8)
-        normed[0] = 0
-        weights = normed / (torch.sum(normed) + 1e-8)
+        interp_features = baseline + alphas[start:end].reshape(-1, 1, 1) * baseline_diff
+        interp_features = interp_features.reshape(-1, baseline_diff.shape[-1])  # Flatten for model
 
-        placements_float = weights * steps
-        placements_int = placements_float.floor().int()
-        remaining = steps - torch.sum(placements_int)
+        logits[start:end] = getPredictionParallel(interp_features, model, target_class)
 
-        float_copy = placements_float.clone()
-        float_copy[torch.where(placements_int != 0)] = -1
-        top_idx = torch.flip(torch.sort(float_copy)[1], dims=[0])
-        placements_int[top_idx[:remaining]] += 1
+    # Calculate slopes
+    slopes = torch.zeros(steps).to(device)
+    x_diff = float(alphas[1] - alphas[0])  # Step size
 
-        alphas = torch.zeros(steps, device=slopes.device)
-        alpha_steps = torch.zeros(steps, device=slopes.device)
-        start_idx = 0
-        start_val = 0
+    slopes[0] = 0
+    for i in range(steps - 1):
+        y_diff = logits[i + 1] - logits[i]
+        slopes[i + 1] = y_diff / x_diff
 
-        for count in placements_int:
-            if count == 0:
-                continue
-            count = int(count.item())
-            new_alphas = torch.linspace(start_val, start_val + step_size, count + 1, device=slopes.device)[:count]
-            alphas[start_idx:start_idx + count] = new_alphas
-            alpha_steps[start_idx:start_idx + count] = (step_size / count)
-            start_idx += count
-            start_val += step_size
+    return slopes, x_diff
 
-        return alphas, alpha_steps
+def getAlphaParameters(slopes, steps, step_size):
+    """Compute non-uniform alpha values based on slopes."""
+    # Normalize slopes to [0, 1]
+    slopes_0_1_norm = (slopes - torch.min(slopes)) / (torch.max(slopes) - torch.min(slopes) + EPSILON)
+    slopes_0_1_norm[0] = 0  # Reset first slope to zero
+    slopes_sum_1_norm = slopes_0_1_norm / (torch.sum(slopes_0_1_norm) + EPSILON)  # Normalize to sum to 1
 
-    def GetMask(self, **kwargs):
-        x_value = kwargs.get("x_value")  # (N, D)
-        call_model_function = kwargs.get("call_model_function")
-        model = kwargs.get("model")
-        call_model_args = kwargs.get("call_model_args", None)
-        baseline_features = kwargs.get("baseline_features")  # (M, D)
-        x_steps = kwargs.get("x_steps", 25)
-        device = kwargs.get("device", "cpu")
-        target_class_idx = call_model_args.get("target_class_idx", 0) if call_model_args else 0
+    # Distribute steps based on slopes
+    sample_placements_float = slopes_sum_1_norm * steps
+    sample_placements_int = sample_placements_float.type(torch.int)
+    remaining_to_fill = steps - torch.sum(sample_placements_int)
 
-        # Device and format checks
-        x_value = x_value.to(device, dtype=torch.float32)
-        baseline_features = baseline_features.to(device, dtype=torch.float32)
+    # Handle remaining steps
+    sample_placements_float[torch.where(sample_placements_int != 0)[0]] = -1
+    remaining_hi_lo = torch.flip(torch.sort(sample_placements_float)[1], dims=[0])
+    sample_placements_int[remaining_hi_lo[:remaining_to_fill]] = 1
 
-        # Sample baseline with shape (N, D)
-        sample_idx = torch.randint(0, baseline_features.size(0), (x_value.size(0),), device=device)
-        x_baseline_batch = baseline_features[sample_idx]
-        x_diff = x_value - x_baseline_batch
+    # Generate new alpha values
+    alphas = torch.zeros(steps)
+    alpha_substep_size = torch.zeros(steps)
 
-        slopes, _, _ = self.getSlopes(x_baseline_batch, x_value, model, x_steps, device, target_class_idx)
-        alphas, alpha_sizes = self.getAlphaParameters(slopes, x_steps, 1.0 / x_steps)
+    alpha_start_index = 0
+    alpha_start_value = 0
 
-        integrated = torch.zeros_like(x_value, dtype=torch.float32, device=device)
-        prev_logit = None
-        slope_cache = torch.zeros(x_steps, device=device)
+    for num_samples in sample_placements_int:
+        if num_samples == 0:
+            continue
+        alphas[alpha_start_index:alpha_start_index + num_samples] = torch.linspace(
+            alpha_start_value, alpha_start_value + step_size, num_samples + 1
+        )[:num_samples]
+        alpha_substep_size[alpha_start_index:alpha_start_index + num_samples] = step_size / num_samples
+        alpha_start_index += num_samples
+        alpha_start_value += step_size
 
-        for step_idx, (alpha, step_size) in enumerate(tqdm(zip(alphas, alpha_sizes), total=x_steps, desc="Computing IG²", ncols=100)):
-            x_step = (x_baseline_batch + alpha * x_diff).detach().requires_grad_(True)
+    return alphas, alpha_substep_size 
 
-            call_output = call_model_function(
-                x_step, model, call_model_args=call_model_args, expected_keys=self.expected_keys
-            )
+def IDG(input, model, steps, batch_size, baseline, device, target_class):
+    """Compute Integrated Decision Gradient for feature inputs with CLAM model."""
+    if steps % batch_size != 0:
+        print(f"Steps ({steps}) must be evenly divisible by batch size ({batch_size})!")
+        return 0
 
-            model_output = model(x_step)
-            logits_tensor = model_output[0] if isinstance(model_output, tuple) else model_output
-            logit = logits_tensor[0, target_class_idx] if logits_tensor.dim() == 2 else logits_tensor[target_class_idx]
+    loops = int(steps / batch_size)
 
-            grads = call_output[INPUT_OUTPUT_GRADIENTS]
-            grads_avg = torch.tensor(grads, dtype=torch.float32, device=device)
+    # Handle baseline
+    if not torch.is_tensor(baseline):
+        baseline = torch.full_like(input, baseline, dtype=torch.float32)
+    baseline = baseline.to(device)
+    input = input.to(device)
+    baseline_diff = input - baseline
 
-            if prev_logit is not None:
-                alpha_diff = alpha - alphas[step_idx - 1]
-                slope_cache[step_idx] = (logit - prev_logit) / (alpha_diff + 1e-9)
-            prev_logit = logit
+    # Compute slopes
+    slopes, step_size = getSlopes(baseline, baseline_diff, model, steps, batch_size, device, target_class)
+    alphas, alpha_substep_size = getAlphaParameters(slopes, steps, step_size)
 
-            integrated += grads_avg * slope_cache[step_idx] * step_size
+    alphas = alphas.to(device).reshape(steps, 1, 1)
+    alpha_substep_size = alpha_substep_size.to(device).reshape(steps, 1, 1)
 
-            del x_step, grads_avg, call_output, model_output, logits_tensor
-            torch.cuda.empty_cache()
+    # Arrays to store gradients and logits
+    gradients = torch.zeros((steps, input.shape[1])).to(device)
+    logits = torch.zeros(steps).to(device)
 
-        attribution = integrated * x_diff
-        return attribution.detach().cpu().numpy()
+    # Run batched input
+    for i in tqdm(range(loops), desc="Computing gradients"):
+        start = i * batch_size
+        end = (i + 1) * batch_size
+
+        interp_features = baseline + alphas[start:end] * baseline_diff
+        interp_features = interp_features.reshape(-1, input.shape[-1])
+
+        gradients[start:end], logits[start:end] = getGradientsParallel(interp_features, model, target_class)
+
+    # Calculate slopes
+    slopes = torch.zeros(steps).to(device)
+    slopes[0] = 0
+    for i in range(steps - 1):
+        slopes[i + 1] = (logits[i + 1] - logits[i]) / (alphas[i + 1] - alphas[i])
+
+    # Weight gradients by slopes and alpha substep sizes
+    gradients = gradients * slopes.reshape(steps, 1) * alpha_substep_size.reshape(steps, 1)
+
+    # Compute integral approximation
+    grads = gradients.mean(dim=0)
+    grads = grads * baseline_diff[0]
+
+    return grads 
