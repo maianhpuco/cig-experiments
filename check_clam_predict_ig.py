@@ -1,5 +1,8 @@
 import torch
 import os
+import sys 
+
+sys.path.append(os.path.join("src/externals/CLAM"))  
 from src.externals.CLAM.utils.utils import load_pkl
 from src.externals.CLAM.utils.core_utils import load_clam_model
 
