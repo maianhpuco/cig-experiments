@@ -139,4 +139,5 @@ if __name__ == "__main__":
         'contrastive_gradient', 'integrated_gradient', 'vanilla_gradient',
         'expected_gradient', 'integrated_decision_gradient', 'square_integrated_gradient'
     ] 
+    args.methods = ['integrated_gradient']
     main(args)
