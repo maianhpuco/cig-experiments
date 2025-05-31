@@ -43,24 +43,29 @@ class IntegratedGradients(CoreSaliency):
     """Implements Integrated Gradients for feature inputs with CLAM model."""
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
-    def GetMask(self, x_value, call_model_function, model, call_model_args=None,
-                x_baseline=None, x_steps=25, batch_size=1, device="cpu"):
+    def GetMask(self, **kwargs):
         """Returns an integrated gradients mask for feature inputs.
 
-        Args:
-            x_value: Input tensor of features (torch.Tensor, shape: [N, D]).
-            call_model_function: Function to interface with the CLAM model.
-            model: CLAM model instance.
-            call_model_args: Arguments for the model call (e.g., target class index).
-            x_baseline: Baseline features (torch.Tensor, shape: [N, D]). Defaults to zeros.
-            x_steps: Number of integration steps between baseline and input.
-            batch_size: Number of steps to process in a batch.
-            device: Device to perform computations on (e.g., 'cuda' or 'cpu').
-
-        Returns:
-            Integrated gradients mask (numpy array, shape: [N, D]).
+        Expected keys in kwargs:
+            - x_value: Input features [N, D]
+            - call_model_function: Function to get logits and gradients
+            - model: CLAM model instance
+            - call_model_args: dict with 'target_class_idx'
+            - baseline_features: Baseline tensor [N, D] (optional)
+            - x_steps: Number of integration steps
+            - batch_size: Batch size for interpolation steps
+            - device: Computation device
         """
-        # Set baseline to zeros if not provided
+        x_value = kwargs["x_value"]
+        call_model_function = kwargs["call_model_function"]
+        model = kwargs["model"]
+        call_model_args = kwargs.get("call_model_args", None)
+        device = kwargs.get("device", "cpu")
+        x_steps = kwargs.get("x_steps", 25)
+        batch_size = kwargs.get("batch_size", 1)
+
+        # Allow use of 'baseline_features' as alias for 'x_baseline'
+        x_baseline = kwargs.get("baseline_features", None)
         if x_baseline is None:
             x_baseline = torch.zeros_like(x_value, dtype=torch.float32, device=device)
 
@@ -76,8 +81,10 @@ class IntegratedGradients(CoreSaliency):
             x_step_batched.append(x_step)
             if len(x_step_batched) == batch_size or alpha == 1:
                 x_step_batched = torch.stack(x_step_batched).to(device)  # Shape: [batch_size, N, D]
+                flat_batch = x_step_batched.reshape(-1, x_step_batched.shape[-1])
+                
                 call_model_output = call_model_function(
-                    x_step_batched.reshape(-1, x_step_batched.shape[-1]),  # Flatten for model
+                    flat_batch,
                     model,
                     call_model_args=call_model_args,
                     expected_keys=self.expected_keys
@@ -85,7 +92,7 @@ class IntegratedGradients(CoreSaliency):
 
                 self.format_and_check_call_model_output(
                     call_model_output,
-                    x_step_batched.reshape(-1, x_step_batched.shape[-1]).shape,
+                    flat_batch.shape,
                     self.expected_keys
                 )
 
