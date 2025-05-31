@@ -34,6 +34,22 @@ def call_model_function(x, model, call_model_args=None, expected_keys=None):
 
 
 def main(args):
+    
+    if args.ig_name == 'integrated_gradient':
+        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
+    elif args.ig_name == 'vanilla_gradient':
+        from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
+    elif args.ig_name == 'contrastive_gradient':
+        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
+    elif args.ig_name == 'expected_gradient':
+        from attr_method.expected_gradient import ExpectedGradients as AttrMethod
+    elif args.ig_name == 'integrated_decision_gradient':
+        from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
+    elif args.ig_name == 'optim_square_integrated_gradient':
+        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
+    elif args.ig_name == 'square_integrated_gradient':
+        from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
+ 
     # === Fixed paths ===
     feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"
     checkpoint_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/checkpoints_simea/clam/camelyon16/s_1_checkpoint.pt"
@@ -73,7 +89,7 @@ def main(args):
 
     # === IG Attribution ===
     print(f"\n> Running Integrated Gradients for class {pred_class}")
-    ig = IntegratedGradients()
+    ig = AttrMethod()
 
     # Baseline: zero vector (shape [N, D])
     baseline = torch.zeros_like(features).to(args.device)
@@ -120,5 +136,6 @@ if __name__ == "__main__":
     print(f"> Embed dim    : {args.embed_dim}")
     print(f"> Model type   : {args.model_type}")
     print(f"> Device       : {args.device}")
-
+   
+    args.ig_name = 'integrated_gradient'
     main(args)
