@@ -11,7 +11,7 @@ sys.path.append(os.path.join("src/models/classifiers"))
 sys.path.append(os.path.join("attr_method"))
 
 from clam import load_clam_model
-from attr_method.integrated_gradient import IntegratedGradients  # Only using IG here
+from attr_method_old.integrated_gradient import IntegratedGradients  # Only using IG here
 
 
 def get_dummy_args():
