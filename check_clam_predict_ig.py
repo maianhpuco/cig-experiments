@@ -89,6 +89,7 @@ def main(args):
     mean_vector = features.mean(dim=0, keepdim=True)  
     baseline = mean_vector.expand_as(features) 
     print(baseline.shape, features.shape)
+    
     # === IG Attribution using average baseline ===
     print(f"\n> Running Integrated Gradients for class {pred_class}")
     
@@ -98,17 +99,22 @@ def main(args):
     mean_vector = features.mean(dim=0, keepdim=True)   # [1, D]
     baseline = mean_vector.expand_as(features)         # [N, D]
 
-    attribution_values = ig.GetMask(
-        x_value=features,
-        baseline_features=baseline,
-        call_model_function=call_model_function,
-        model=model,
-        call_model_args={"target_class_idx": pred_class},
-        device=args.device,
-        x_steps=50
-    )
-
-    scores = attribution_values.mean(1)
+    kwargs = {
+        "x_value": features,
+        "call_model_function": call_model_function,
+        "model": model,
+        "baseline_features": baseline,
+        "memmap_path": '/project/hnguyen2/mvu9/processing_datasets/cig_data/memmap_path',
+        "x_steps": 50,
+        "device": args.device,
+        "call_model_args": {"target_class_idx": pred_class}
+    } 
+    print(f"Running for {args.ig_name} Attribution method")
+    attribution_method = AttrMethod()
+    
+    attribution_values = attribution_method.GetMask(**kwargs)
+    scores = attribution_values.mean(1) 
+    print(f"  - Attribution shape: {scores.shape}")
     print(f"  - Attribution shape: {attribution_values.shape}")
     print(f"  - Mean score shape : {scores.shape}")
     print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}") 
