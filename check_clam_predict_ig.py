@@ -3,13 +3,15 @@ import sys
 import argparse
 import torch
 import yaml
+import numpy as np
 
-# Add CLAM model path
+# Add CLAM and attribution paths
 sys.path.append(os.path.join("src/models"))
 sys.path.append(os.path.join("src/models/classifiers"))
-sys.path.append(os.path.join("attr_method"))  # IG module location
+sys.path.append(os.path.join("attr_method"))
 
 from clam import load_clam_model
+from attr_method.integrated_gradient import IntegratedGradients  # Only using IG here
 
 
 def get_dummy_args():
@@ -28,32 +30,18 @@ def call_model_function(x, model, call_model_args=None, expected_keys=None):
     with torch.set_grad_enabled(True):
         x.requires_grad_(True)
         output = model(x, [x.shape[0]])
-        logits = output[0]  # output = (logits, probs, predicted_class, ...)
+        logits = output[0]  # tuple: (logits, probs, pred_class, ...)
         return logits[:, call_model_args['target_class_idx']]
 
 
 def main(args):
-    
-    if args.ig_name == 'integrated_gradient':
-        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
-    elif args.ig_name == 'vanilla_gradient':
-        from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
-    elif args.ig_name == 'contrastive_gradient':
-        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
-    elif args.ig_name == 'expected_gradient':
-        from attr_method.expected_gradient import ExpectedGradients as AttrMethod
-    elif args.ig_name == 'integrated_decision_gradient':
-        from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
-    elif args.ig_name == 'optim_square_integrated_gradient':
-        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
-    elif args.ig_name == 'square_integrated_gradient':
-        from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
- 
-    # === Fixed paths ===
+    # === Setup fixed paths ===
     feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"
     checkpoint_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/checkpoints_simea/clam/camelyon16/s_1_checkpoint.pt"
+    memmap_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/memmap_path"
+    os.makedirs(memmap_path, exist_ok=True)
 
-    # === Create dummy args and override ===
+    # === Create dummy args and override from config ===
     args_clam = get_dummy_args()
     args_clam.drop_out = args.drop_out
     args_clam.n_classes = args.n_classes
@@ -61,11 +49,11 @@ def main(args):
     args_clam.model_type = args.model_type
     args_clam.model_size = args.model_size
 
-    # === Load model ===
+    # === Load CLAM model ===
     print(f"\n> Loading CLAM model from: {checkpoint_path}")
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
 
-    # === Load features ===
+    # === Load feature file ===
     print(f"\n> Loading feature from: {feature_path}")
     data = torch.load(feature_path)
     features = data['features'] if isinstance(data, dict) else data
@@ -73,9 +61,10 @@ def main(args):
 
     if features.dim() == 3:
         features = features.squeeze(0)
+
     print(f"> Feature shape: {features.shape}")
 
-    # === Prediction ===
+    # === Predict class ===
     with torch.no_grad():
         output = model(features, [features.shape[0]])
         logits, probs, predicted_class, *_ = output
@@ -85,40 +74,35 @@ def main(args):
     print(f"  - Logits         : {logits}")
     print(f"  - Probabilities  : {probs}")
     print(f"  - Predicted class: {pred_class}")
-    # === Temporal baseline === 
-    mean_vector = features.mean(dim=0, keepdim=True)  
-    baseline = mean_vector.expand_as(features) 
-    print(baseline.shape, features.shape)
-    
-    # === IG Attribution using average baseline ===
-    print(f"\n> Running Integrated Gradients for class {pred_class}")
-    
-    ig = AttrMethod()
 
-    # New baseline: average of the current WSI's features
-    mean_vector = features.mean(dim=0, keepdim=True)   # [1, D]
-    baseline = mean_vector.expand_as(features)         # [N, D]
+    # === Generate average baseline ===
+    mean_vector = features.mean(dim=0, keepdim=True)     # shape: [1, D]
+    baseline = mean_vector.expand_as(features)           # shape: [N, D]
+    print(f"> Baseline shape   : {baseline.shape}")
+
+    # === Run Integrated Gradients ===
+    ig = IntegratedGradients()
+    print(f"\n> Running Integrated Gradients for class {pred_class}")
 
     kwargs = {
         "x_value": features,
         "call_model_function": call_model_function,
         "model": model,
         "baseline_features": baseline,
-        "memmap_path": '/project/hnguyen2/mvu9/processing_datasets/cig_data/memmap_path',
+        "memmap_path": memmap_path,
         "x_steps": 50,
         "device": args.device,
         "call_model_args": {"target_class_idx": pred_class}
-    } 
-    print(f"Running for {args.ig_name} Attribution method")
-    attribution_method = AttrMethod()
-    
-    attribution_values = attribution_method.GetMask(**kwargs)
-    scores = attribution_values.mean(1) 
-    print(f"  - Attribution shape: {scores.shape}")
+    }
+
+    attribution_values = ig.GetMask(**kwargs)
+    scores = attribution_values.mean(1)
+
     print(f"  - Attribution shape: {attribution_values.shape}")
     print(f"  - Mean score shape : {scores.shape}")
-    print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}") 
+    print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}")
 
+    # === Save results ===
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -138,12 +122,11 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    args.ig_name = 'integrated_gradient'
 
     print("=== Configuration Loaded ===")
+    print(f"> Device       : {args.device}")
     print(f"> Dropout      : {args.drop_out}")
     print(f"> Embed dim    : {args.embed_dim}")
     print(f"> Model type   : {args.model_type}")
-    print(f"> Device       : {args.device}")
-   
-    args.ig_name = 'integrated_gradient'
     main(args)
