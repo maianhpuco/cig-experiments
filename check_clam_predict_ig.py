@@ -7,8 +7,10 @@ import yaml
 # Add CLAM model path
 sys.path.append(os.path.join("src/models"))
 sys.path.append(os.path.join("src/models/classifiers"))
+sys.path.append(os.path.join("attr_method"))  # IG module location
 
 from clam import load_clam_model
+from integrated_gradient import IntegratedGradients
 
 
 def get_dummy_args():
@@ -21,12 +23,22 @@ def get_dummy_args():
     return parser.parse_args(args=[])
 
 
+def call_model_function(x, model, call_model_args=None, expected_keys=None):
+    x = x.to(next(model.parameters()).device)
+    model.eval()
+    with torch.set_grad_enabled(True):
+        x.requires_grad_(True)
+        output = model(x, [x.shape[0]])
+        logits = output[0]  # output = (logits, probs, predicted_class, ...)
+        return logits[:, call_model_args['target_class_idx']]
+
+
 def main(args):
-    # Fixed paths for feature and checkpoint
+    # === Fixed paths ===
     feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"
     checkpoint_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/checkpoints_simea/clam/camelyon16/s_1_checkpoint.pt"
 
-    # Create dummy args and override with loaded config
+    # === Create dummy args and override ===
     args_clam = get_dummy_args()
     args_clam.drop_out = args.drop_out
     args_clam.n_classes = args.n_classes
@@ -34,31 +46,54 @@ def main(args):
     args_clam.model_type = args.model_type
     args_clam.model_size = args.model_size
 
-    # Load CLAM model
+    # === Load model ===
     print(f"\n> Loading CLAM model from: {checkpoint_path}")
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
 
-    # Load feature file
+    # === Load features ===
     print(f"\n> Loading feature from: {feature_path}")
     data = torch.load(feature_path)
     features = data['features'] if isinstance(data, dict) else data
     features = features.to(args.device, dtype=torch.float32)
 
-    if features.dim() == 3:  # [1, N, D]
+    if features.dim() == 3:
         features = features.squeeze(0)
-
     print(f"> Feature shape: {features.shape}")
 
-    # Run prediction
+    # === Prediction ===
     with torch.no_grad():
         output = model(features, [features.shape[0]])
-        logits, probs, predicted_class, instance_scores, instance_dict = output 
+        logits, probs, predicted_class, *_ = output
 
-
+    pred_class = predicted_class.item()
     print(f"\n> Prediction Complete")
     print(f"  - Logits         : {logits}")
     print(f"  - Probabilities  : {probs}")
-    print(f"  - Predicted class: {predicted_class.item()}")
+    print(f"  - Predicted class: {pred_class}")
+
+    # === IG Attribution ===
+    print(f"\n> Running Integrated Gradients for class {pred_class}")
+    ig = IntegratedGradients()
+
+    # Baseline: zero vector (shape [N, D])
+    baseline = torch.zeros_like(features).to(args.device)
+
+    attribution_values = ig.GetMask(
+        x_value=features,
+        baseline_features=baseline,
+        call_model_function=call_model_function,
+        model=model,
+        call_model_args={"target_class_idx": pred_class},
+        device=args.device,
+        x_steps=50
+    )
+
+    scores = attribution_values.mean(1)
+    print(f"  - Attribution shape: {attribution_values.shape}")
+    print(f"  - Mean score shape : {scores.shape}")
+    print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}")
+
+    print("\n> Done.")
 
 
 if __name__ == "__main__":
@@ -68,11 +103,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Load YAML config
+    # === Load YAML config ===
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
-    # Apply config to args
     for key, val in config.items():
         if key == 'paths':
             args.paths = val
