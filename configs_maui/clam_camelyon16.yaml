@@ -1,0 +1,44 @@
+dataset_name: 'camelyon16'
+paths:
+  pt_files: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/features_fp"
+  save_dir: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/clam_result"
+  result_dir: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/results" # where we save all the check point
+  split_folder: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
+  # for_ig_checkpoint_path_fold_1: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/result_2025-05-18/result_2025-05-18_22-23-56/s_1_checkpoint.pt"
+  for_ig_checkpoint_path_fold_1: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt"
+  # attribution_scores_folder: "/project/hnguyen2/mvu9/cig_attributions/attr_scores/camelyon16"
+  attribution_scores_folder: "/project/hnguyen2/mvu9/cig_attributions/attr_scores_no_class/camelyon16" 
+  ig_clam_plot_folder: "/project/hnguyen2/mvu9/cig_attributions/attr_scores_clam_plot/camelyon16"  
+  memmap_path: "/project/hnguyen2/mvu9/cig_attributions/memmap_tmp_camelyon16"
+  slide_dir: "/project/hnguyen2/mvu9/datasets/camelyon16/raw_data/camelyon16/images"
+  h5_files: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files" 
+  metrics_dir: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/metrics"
+  predictions_dir: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/predictions/clam"
+
+
+fold_number: 5 
+label_dict:
+  0: "normal"
+  1: "tumor" 
+
+embed_dim: 1024
+lr: 0.0001
+label_frac: 1.0
+reg: 0.00001
+seed: 42
+log_data: false
+testing: false
+early_stopping: false
+opt: adam
+drop_out: 0.25
+bag_loss: ce
+model_type: clam_sb
+exp_code: clam_camelyon16
+weighted_sample: false
+model_size: small
+no_inst_cluster: false
+inst_loss: null
+subtyping: false
+bag_weight: 0.7
+B: 8
+n_classes: 2
