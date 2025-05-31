@@ -10,7 +10,6 @@ sys.path.append(os.path.join("src/models/classifiers"))
 sys.path.append(os.path.join("attr_method"))  # IG module location
 
 from clam import load_clam_model
-from integrated_gradient import IntegratedGradients
 
 
 def get_dummy_args():
