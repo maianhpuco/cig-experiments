@@ -37,7 +37,7 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     )[0]
 
     gradients = grads.detach().cpu().numpy()  # Convert to numpy for saliency
-    return {INPUT_OUTPUT_GRADIENTS: gradients}
+    return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
 
 class IntegratedGradients(CoreSaliency):
