@@ -64,7 +64,7 @@ def main(args):
         model.eval()
 
         for method in args.methods:
-            print(f"\n==> Method: {method}")
+            print(f"\n=========================> Method: {method}")
             # for cls in range(args.n_classes):
             #     print(f"Class {cls}")
             class_score_folder_class_0 = os.path.join(
@@ -76,8 +76,12 @@ def main(args):
                 f'fold_{fold_id}', f'class_1'
             )
             
-
+            count = 0 
             for idx, (features, label, coords) in enumerate(test_dataset):
+                if count >= 0:
+                    break 
+                count += 1 
+                
                 slide_id = test_dataset.slide_data['slide_id'].iloc[idx]
                 score_path_class_0 = os.path.join(class_score_folder_class_0, f"{slide_id}.npy")
                 score_path_class_1 = os.path.join(class_score_folder_class_1, f"{slide_id}.npy")
@@ -139,5 +143,5 @@ if __name__ == "__main__":
         'contrastive_gradient', 'integrated_gradient', 'vanilla_gradient',
         'expected_gradient', 'integrated_decision_gradient', 'square_integrated_gradient'
     ] 
-    args.methods = ['integrated_gradient']
+    # args.methods = ['integrated_gradient']
     main(args)
