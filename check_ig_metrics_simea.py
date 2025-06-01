@@ -148,9 +148,9 @@ def main(args, config):
     # no need - justtest the baseline pool 
     sampled_indices = np.random.choice(stacked_features_baseline.shape[0], (1, features.shape[0]), replace=True)
     print("indice shape: ", sampled_indices)
-    baseline = stacked_features_baseline[sampled_indices]  # shape: [N, D]
+    baseline = stacked_features_baseline[sampled_indices].squeeze(0)  # shape: [N, D]
     print(f"> Baseline shape: {baseline.shape}")
-    baseline_pred = model(baseline.squeeze(0))
+    baseline_pred = model(baseline)
     print(f"> Baseline prediction: {baseline_pred}")
 
     ig_methods = ['ig', 'cig', 'idg', 'eg']
