@@ -19,7 +19,7 @@ from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePi
 
 #  Offline Baseline Pool Creation:
 
-def sample_random_features(dataset, num_files=500):
+def sample_random_features(dataset, num_files=50):
     indices = np.random.choice(len(dataset), num_files, replace=False)
     feature_list = []
     for idx in indices:
