@@ -145,6 +145,7 @@ def main(args, config):
     num_patches = features.shape[1]
 
     stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
+    print("stacked_features_baseline", stacked_features_baseline.shape)
     # no need - justtest the baseline pool 
     sampled_indices = np.random.choice(stacked_features_baseline.shape[0], (1, features.shape[0]), replace=True)
     print("indice shape: ", sampled_indices)
