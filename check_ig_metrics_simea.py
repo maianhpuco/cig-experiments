@@ -137,7 +137,9 @@ def main(args, config):
     print(f"> Feature shape  : {features.shape}")
     print(f"> Baseline shape : {baseline.shape}")
     print(f"> Baseline stats : mean={baseline.mean().item():.6f}, std={baseline.std().item():.6f}")
-
+    
+    baseline_pred = model(baseline.squeeze(0))  # Ensure baseline is processed by model
+    print(f"> Baseline prediction: {baseline_pred}")
     # IG methods to evaluate
     ig_methods = ['ig', 'cig', 'idg', 'eg']
     saliency_thresholds = np.linspace(0.005, 0.75, 20)  # Finer thresholds
