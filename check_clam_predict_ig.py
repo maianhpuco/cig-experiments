@@ -14,11 +14,11 @@ from clam import load_clam_model
 
 def load_ig_module(args):
     from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS  
-    if args.ig_name == 'integrated_gradient':
-        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
-    elif args.ig_name == 'contrastive_gradient':
-       from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
-    elif args.ig_name == 'integrated_decision_gradient':
+    if args.ig_name == 'ig':
+        from attr_method.ig import IG as AttrMethod
+    elif args.ig_name == 'cig':
+       from attr_method.cig import CIG as AttrMethod
+    elif args.ig_name == 'idg':
         from attr_method.idg import IDG as AttrMethod 
     else:
         print("> Error: Unsupported attribution method name.")
@@ -168,9 +168,9 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    args.ig_name = 'integrated_gradient' 
-    args.ig_name = 'contrastive_gradient'
-    args.ig_name = 'integrated_decision_gradient' 
+    args.ig_name = 'ig' 
+    args.ig_name = 'cig'
+    args.ig_name = 'idg' 
     
     print("=== Configuration Loaded ===")
     print(f"> Device       : {args.device}")

@@ -6,7 +6,7 @@ from tqdm import tqdm
 # from attr_method_clam._common import call_model_function  
 EPSILON = 1e-9
 
-class IntegratedGradients(CoreSaliency):
+class IG(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
     
