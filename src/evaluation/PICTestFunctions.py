@@ -6,11 +6,11 @@ from typing import Callable, List, NamedTuple, Optional, Sequence, Tuple
 from scipy import interpolate
 
 '''
-- create_neutral_features: Replaces create_blurred_image. Uses a binary mask to keep certain patches unchanged and replaces others with the baseline (dataset mean feature vector).
+- create_neutral_features: Replaces create_blurred_image. Uses a binary mask to keep certain patches unchanged and replaces others with a sampled baseline (from dataset mean and variance).
 - generate_random_mask: Creates a 1D mask for patches instead of a 2D pixel mask.
 - estimate_feature_information: Uses the mean L2 norm of feature vectors instead of WebP compression-based entropy.
 - Input Handling: Takes feature tensors [N, D] (e.g., D=1024) and saliency scores [N,] instead of images and 2D saliency maps.
-- Baseline: Uses the dataset mean feature vector as the baseline for neutralization.
+- Baseline: Samples from a normal distribution using the dataset mean and variance for neutralization.
 '''
 
 class ModelWrapper:
@@ -167,7 +167,7 @@ def compute_dataset_mean(feature_dir: str, max_files: int = None) -> np.ndarray:
 
 def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_mask: np.ndarray, 
                       saliency_thresholds: Sequence[float], method: int, model, device: str,
-                      dataset_mean: np.ndarray, min_pred_value: float = 0.8, 
+                      dataset_mean: np.ndarray, dataset_std: np.ndarray, min_pred_value: float = 0.8, 
                       keep_monotonous: bool = True, num_data_points: int = 1000) -> PicMetricResultBasic:
     """
     Computes Performance Information Curve (SIC or AIC) for a single WSI feature set.
@@ -181,6 +181,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         model: CLAM model (wrapped in ModelWrapper internally).
         device: Device for computation.
         dataset_mean: Mean feature vector of the dataset, shape [D,].
+        dataset_std: Standard deviation of the dataset features, shape [D,].
         min_pred_value: Minimum prediction confidence for original features.
         keep_monotonous: Whether to enforce monotonicity in the curve.
         num_data_points: Number of data points for the interpolated curve.
@@ -193,8 +194,14 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     predictions = []
     entropy_pred_tuples = []
 
-    # Use dataset mean as baseline
-    baseline = dataset_mean  # Shape: [D,]
+    # Sample baseline from normal distribution
+    num_patches = features.shape[0]
+    mean_tensor = torch.from_numpy(dataset_mean).to(device, dtype=torch.float32)  # [D,]
+    std_tensor = torch.from_numpy(dataset_std).to(device, dtype=torch.float32)  # [D,]
+    dist = torch.distributions.Normal(mean_tensor, std_tensor + 1e-6)  # Add epsilon to avoid zero std
+    baseline = dist.sample((num_patches,)).cpu().numpy()  # [N, D]
+    print(f"> PIC baseline shape: {baseline.shape}")
+    print(f"> PIC baseline stats: mean={baseline.mean():.6f}, std={baseline.std():.6f}")
 
     # Estimate information content
     original_features_info = estimate_feature_information(features)
