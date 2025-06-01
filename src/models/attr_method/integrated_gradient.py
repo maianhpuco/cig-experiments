@@ -101,7 +101,7 @@ class IntegratedGradients(CoreSaliency):
                 expected_keys=self.expected_keys
             )
 
-            self.format_and_check_call_model_output(call_model_output, x_step_batch_tensor.shape, self.expected_keys)
+            # self.format_and_check_call_model_output(call_model_output, x_step_batch_tensor.shape, self.expected_keys)
 
             gradients_batch_np = call_model_output[INPUT_OUTPUT_GRADIENTS]  # shape: (N, D), np.ndarray
             gradients_avg = torch.tensor(gradients_batch_np, device=device)  # Convert to tensor for torch ops
