@@ -77,8 +77,11 @@ def main(args):
     print(f"> Baseline shape : {baseline.shape}")
     # === Run Integrated Gradients ===
     if args.ig_name != 'integrated_gradient':
-        from attr_method_clam.integrated_gradient import IntegratedGradients  as AttrMethod # Only using IG here  
-        
+        from attr_method_clam.integrated_gradient import IntegratedGradients as AttrMethod
+    else:
+        print("> Using Integrated Gradients from saliency.core")
+
+ 
     ig = AttrMethod()
     
     print(f"\n> Running Integrated Gradients for class {pred_class}")
