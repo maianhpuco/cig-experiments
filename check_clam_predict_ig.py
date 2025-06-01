@@ -19,7 +19,7 @@ def load_ig_module(args):
     elif args.ig_name == 'cig':
        from attr_method.cig import CIG as AttrMethod
     elif args.ig_name == 'idg':
-        from attr_method.idg import IDG as AttrMethod 
+        from attr_method.idg_w_batch import IDG as AttrMethod 
     else:
         print("> Error: Unsupported attribution method name.")
     # === CONFIG FOR CLAM MODEL === 
@@ -139,7 +139,7 @@ def main(args):
         "x_steps": 50,
         "device": args.device,
         "call_model_args": {"target_class_idx": pred_class}, 
-        # "batch_size": 100 # Optional, can be adjusted
+        "batch_size": 500 # Optional, can be adjusted
     }
 
     attribution_values = ig_module.GetMask(**kwargs)
