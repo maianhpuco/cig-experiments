@@ -81,10 +81,10 @@ def main(args, config):
     
     basename = "tumor_028"
     fold_idx = 1
-    
-    feature_path = os.path.join(config.paths['feature_files'], f"{basename}.pt")
-    checkpoint_path = os.path.join(config.paths[f'for_ig_checkpoint_path_fold_{fold_idx}'])
-    mammap_path = os.path.join(config.paths['memmap_path'])
+ 
+    feature_path = os.path.join(config['paths']['feature_files'], f"{basename}.pt")
+    checkpoint_path = os.path.join(config['paths'][f'for_ig_checkpoint_path_fold_{fold_idx}'])
+    mammap_path = os.path.join(config['paths']['memmap_path'])
     os.makedirs(mammap_path, exist_ok=True)
 
     
