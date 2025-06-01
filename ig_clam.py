@@ -237,16 +237,7 @@ if __name__ == "__main__":
     parser.add_argument('--dry_run', type=int, default=0)
     parser.add_argument('--config', default='clam_camelyon16.yaml')
     parser.add_argument('--ig_name',
-                        default='integrated_gradient',
-                        choices=[
-                            'integrated_gradient',
-                            'expected_gradient',
-                            'integrated_decision_gradient',
-                            'contrastive_gradient',
-                            'vanilla_gradient',
-                            'square_integrated_gradient',
-                            'optim_square_integrated_gradient'
-                        ])
+                        default='integrated_gradient')
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'], help='Device to run the model on')
 
     args = parser.parse_args()
