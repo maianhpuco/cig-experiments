@@ -1,14 +1,16 @@
 import numpy as np
 import torch
+import os
+import glob
 from typing import Callable, List, NamedTuple, Optional, Sequence, Tuple
 from scipy import interpolate
 
 '''
-- create_neutral_features: Replaces create_blurred_image. Uses a binary mask to keep certain patches unchanged and replaces others with the baseline (mean feature vector).
+- create_neutral_features: Replaces create_blurred_image. Uses a binary mask to keep certain patches unchanged and replaces others with the baseline (dataset mean feature vector).
 - generate_random_mask: Creates a 1D mask for patches instead of a 2D pixel mask.
 - estimate_feature_information: Uses the mean L2 norm of feature vectors instead of WebP compression-based entropy.
 - Input Handling: Takes feature tensors [N, D] (e.g., D=1024) and saliency scores [N,] instead of images and 2D saliency maps.
-- Baseline: Uses the mean feature vector as the baseline for neutralization.
+- Baseline: Uses the dataset mean feature vector as the baseline for neutralization.
 '''
 
 class ModelWrapper:
@@ -123,10 +125,50 @@ class PicMetricResultBasic(NamedTuple):
     curve_x: Sequence[float]
     curve_y: Sequence[float]
     auc: float
+
+def compute_dataset_mean(feature_dir: str, max_files: int = None) -> np.ndarray:
+    """
+    Computes the mean feature vector across all .pt files in the dataset.
+    
+    Args:
+        feature_dir: Directory containing .pt feature files.
+        max_files: Maximum number of files to process (None for all).
+    
+    Returns:
+        Mean feature vector of shape [D,].
+    """
+    feature_files = glob.glob(os.path.join(feature_dir, "*.pt"))
+    if not feature_files:
+        raise ValueError(f"No .pt files found in {feature_dir}")
+    
+    if max_files is not None:
+        feature_files = feature_files[:max_files]
+    
+    feature_sums = None
+    total_patches = 0
+    
+    for file_path in feature_files:
+        data = torch.load(file_path)
+        features = data['features'] if isinstance(data, dict) else data
+        features = features.cpu().numpy()  # Shape: [N, D]
+        
+        if feature_sums is None:
+            feature_sums = np.sum(features, axis=0)  # Shape: [D,]
+        else:
+            feature_sums += np.sum(features, axis=0)
+        
+        total_patches += features.shape[0]
+    
+    if total_patches == 0:
+        raise ValueError("No patches found in feature files")
+    
+    dataset_mean = feature_sums / total_patches  # Shape: [D,]
+    return dataset_mean
+
 def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_mask: np.ndarray, 
                       saliency_thresholds: Sequence[float], method: int, model, device: str,
-                      min_pred_value: float = 0.8, keep_monotonous: bool = True, 
-                      num_data_points: int = 1000) -> PicMetricResultBasic:
+                      dataset_mean: np.ndarray, min_pred_value: float = 0.8, 
+                      keep_monotonous: bool = True, num_data_points: int = 1000) -> PicMetricResultBasic:
     """
     Computes Performance Information Curve (SIC or AIC) for a single WSI feature set.
     
@@ -138,6 +180,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         method: 0 for SIC, 1 for AIC.
         model: CLAM model (wrapped in ModelWrapper internally).
         device: Device for computation.
+        dataset_mean: Mean feature vector of the dataset, shape [D,].
         min_pred_value: Minimum prediction confidence for original features.
         keep_monotonous: Whether to enforce monotonicity in the curve.
         num_data_points: Number of data points for the interpolated curve.
@@ -150,8 +193,8 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     predictions = []
     entropy_pred_tuples = []
 
-    # Compute baseline (mean feature vector)
-    baseline = np.mean(features, axis=0)  # Shape: [D,]
+    # Use dataset mean as baseline
+    baseline = dataset_mean  # Shape: [D,]
 
     # Estimate information content
     original_features_info = estimate_feature_information(features)
@@ -189,99 +232,6 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         
         # Print prediction for the current threshold
         print(f"{'SIC' if method == 0 else 'AIC'} - Threshold {threshold:.3f}: Prediction = {pred:.6f}")
-
-        normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
-        normalized_info = np.clip(normalized_info, 0.0, 1.0)
-        normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred)
-        normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
-        max_normalized_pred = max(max_normalized_pred, normalized_pred)
-
-        if keep_monotonous:
-            entropy_pred_tuples.append((normalized_info, max_normalized_pred))
-        else:
-            entropy_pred_tuples.append((normalized_info, normalized_pred))
-
-        neutral_features.append(neutral_features_current)
-        predictions.append(pred)
-
-    entropy_pred_tuples.append((0.0, 0.0))
-    entropy_pred_tuples.append((1.0, 1.0))
-
-    info_data, pred_data = zip(*entropy_pred_tuples)
-    interp_func = interpolate.interp1d(x=info_data, y=pred_data)
-
-    curve_x = np.linspace(start=0.0, stop=1.0, num=num_data_points, endpoint=False)
-    curve_y = np.asarray([interp_func(x) for x in curve_x])
-
-    curve_x = np.append(curve_x, 1.0)
-    curve_y = np.append(curve_y, 1.0)
-
-    auc = np.trapz(curve_y, curve_x)
-
-    return PicMetricResultBasic(curve_x=curve_x, curve_y=curve_y, auc=auc) 
-
-def compute_pic_metric_old(features: np.ndarray, saliency_map: np.ndarray, random_mask: np.ndarray, 
-                      saliency_thresholds: Sequence[float], method: int, model, device: str,
-                      min_pred_value: float = 0.8, keep_monotonous: bool = True, 
-                      num_data_points: int = 1000) -> PicMetricResultBasic:
-    """
-    Computes Performance Information Curve (SIC or AIC) for a single WSI feature set.
-    
-    Args:
-        features: Feature tensor of shape [N, D] (e.g., D=1024).
-        saliency_map: Saliency scores of shape [N,].
-        random_mask: Binary mask of shape [N,].
-        saliency_thresholds: Fractions of important patches to reveal.
-        method: 0 for SIC, 1 for AIC.
-        model: CLAM model (wrapped in ModelWrapper internally).
-        device: Device for computation.
-        min_pred_value: Minimum prediction confidence for original features.
-        keep_monotonous: Whether to enforce monotonicity in the curve.
-        num_data_points: Number of data points for the interpolated curve.
-    
-    Returns:
-        PicMetricResultBasic containing the curve and AUC.
-    """
-    
-    model_wrapper = ModelWrapper(model, model_type='clam')
-    neutral_features = []
-    predictions = []
-    entropy_pred_tuples = []
-
-    # Compute baseline (mean feature vector)
-    baseline = np.mean(features, axis=0)  # Shape: [D,]
-
-    # Estimate information content
-    original_features_info = estimate_feature_information(features)
-    fully_neutral_features = create_neutral_features(features, random_mask, baseline)
-    fully_neutral_info = estimate_feature_information(fully_neutral_features)
-
-    # Compute model prediction for original features
-    input_features = torch.from_numpy(features).unsqueeze(0)  # [1, N, D]
-    original_pred, correctClassIndex = getPrediction(input_features, model_wrapper, -1, method, device)
-
-    # Check minimum prediction value
-    if original_pred < min_pred_value:
-        raise ComputePicMetricError(f"Original prediction {original_pred} is below min_pred_value {min_pred_value}")
-
-    # Compute model prediction for fully neutral features
-    fully_neutral_pred_features = torch.from_numpy(fully_neutral_features).unsqueeze(0)  # [1, N, D]
-    fully_neutral_pred, _ = getPrediction(fully_neutral_pred_features, model_wrapper, correctClassIndex, 0, device)
-
-    neutral_features.append(fully_neutral_features)
-    predictions.append(fully_neutral_pred)
-
-    max_normalized_pred = 0.0
-
-    for threshold in saliency_thresholds:
-        quantile = np.quantile(saliency_map, 1 - threshold)
-        patch_mask = saliency_map >= quantile
-        patch_mask = np.logical_or(patch_mask, random_mask)
-        neutral_features_current = create_neutral_features(features, patch_mask, baseline)
-
-        info = estimate_feature_information(neutral_features_current)
-        pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0)  # [1, N, D]
-        pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
 
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
