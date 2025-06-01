@@ -10,6 +10,8 @@ sys.path.append(os.path.join("src/models"))
 sys.path.append(os.path.join("src/models/classifiers"))
 sys.path.append(os.path.join("attr_method"))
 
+
+
 from clam import load_clam_model
 
 def load_ig_module(args):
@@ -20,6 +22,8 @@ def load_ig_module(args):
        from attr_method.cig import CIG as AttrMethod
     elif args.ig_name == 'idg':
         from attr_method.idg_w_batch import IDG as AttrMethod 
+    elif args.ig_name == 'eg':
+        from attr_method.eg import EG as AttrMethod   
     else:
         print("> Error: Unsupported attribution method name.")
     # === CONFIG FOR CLAM MODEL === 
@@ -143,14 +147,67 @@ def main(args):
     }
 
     attribution_values = ig_module.GetMask(**kwargs)
-    scores = attribution_values.mean(1)
+    saliency_map = attribution_values.mean(1)
 
     print(f"  - Attribution shape: {attribution_values.shape}")
     print(f"  - Mean score shape : {scores.shape}")
     # print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}")
 
     # === Save results ===
+    
+    # === Compute Performance Information Curve (PIC) ===
+    sys.path.append(os.path.join("src/evaluation"))
+    from pic import compute_pic_metric, generate_random_mask, PicMetricResultBasic, ComputePicMetricError 
 
+    num_patches = features.shape[1]  # Number of patches N
+    random_mask = generate_random_mask(num_patches, fraction=0.01)
+    saliency_thresholds = [0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.07, 0.10, 0.13, 0.21, 0.34, 0.5, 0.75] 
+
+    
+    try:
+        sic_score = compute_pic_metric(
+            features=features.squeeze().cpu().numpy(),
+            saliency_map=saliency_map,
+            random_mask=random_mask,
+            saliency_thresholds=saliency_thresholds,
+            method=0,  # SIC
+            model=model,
+            device=args.device,
+            min_pred_value=0.8
+        )
+        aic_score = compute_pic_metric(
+            features=features.squeeze().cpu().numpy(),
+            saliency_map=saliency_map,
+            random_mask=random_mask,
+            saliency_thresholds=saliency_thresholds,
+            method=1,  # AIC
+            model=model,
+            device=args.device,
+            min_pred_value=0.8
+        )
+
+        print(f"\n> PIC Metrics Computed")
+        print(f"  - SIC AUC: {sic_score.auc:.3f}")
+        print(f"  - AIC AUC: {aic_score.auc:.3f}")
+
+        # === Save results ===
+        results = {
+            "wsi_file": os.path.basename(feature_path),
+            "predicted_class": pred_class,
+            "sic_auc": sic_score.auc,
+            "aic_auc": aic_score.auc
+        }
+        output_file = os.path.join(memmap_path, "pic_results.yaml")
+        with open(output_file, 'w') as f:
+            yaml.safe_dump(results, f)
+        print(f"> Results saved to: {output_file}")
+
+    except ComputePicMetricError as e:
+        print(f"> Failed to compute PIC metrics: {e}") 
+
+
+
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
@@ -173,6 +230,8 @@ if __name__ == "__main__":
     # args.ig_name = 'cig'
     args.ig_name = 'idg' 
     
+
+     
     print("=== Configuration Loaded ===")
     print(f"> Device       : {args.device}")
     print(f"> Dropout      : {args.drop_out}")

@@ -10,6 +10,7 @@ from scipy import interpolate
 Input Handling: Takes feature tensors [N, 512] and saliency scores [N,] instead of images and 2D saliency maps.
 Baseline: Uses the mean feature vector as the baseline for neutralization.
 '''
+
 def create_neutral_features(full_features: np.ndarray, patch_mask: np.ndarray, baseline: np.ndarray) -> np.ndarray:
     """
     Creates a neutralized feature set by replacing unmasked patches with a baseline.

@@ -4,7 +4,7 @@ import numpy as np
 import csv
 import argparse
 import os
-os.sys.path.append(os.path.dirname(os.path.abspath('..')))
+os.sys.path.append(os.path.dirname(os.path.abspath('../')))
 from util import model_utils
 from util.test_methods import PICTestFunctions as PIC
 from util.test_methods import RISETestFunctions as RISE
