@@ -88,10 +88,42 @@ def main(args):
     print(f"\n> Running Integrated Gradients for class {pred_class}")
 
     # === CONFIG FOR CLAM MODEL === 
+    
+    def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
+        from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS 
+        
+        device = next(model.parameters()).device
+        was_batched = inputs.dim() == 3
 
+        inputs = inputs.to(device).clone().detach().requires_grad_(True)
+        if was_batched:
+            inputs = inputs.squeeze(0)  # [1, N, D] -> [N, D]
+
+        model.eval()
+        outputs = model(inputs, [inputs.shape[0]])
+        logits = outputs[0] if isinstance(outputs, tuple) else outputs
+
+        if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
+            class_idx = call_model_args.get("target_class_idx", 0)
+            target = logits[:, class_idx]  # [N]
+            grads = torch.autograd.grad(
+                outputs=target,
+                inputs=inputs,
+                grad_outputs=torch.ones_like(target),
+                retain_graph=False,
+                create_graph=False
+            )[0]
+            grads_np = grads.detach().cpu().numpy()
+            if was_batched or grads_np.ndim == 2:
+                grads_np = np.expand_dims(grads_np, axis=0)  # Ensure [1, N, D]
+            return {INPUT_OUTPUT_GRADIENTS: grads_np}
+
+        return logits
+
+ 
     kwargs = {
         "x_value": features,
-        "call_model_function": None,
+        "call_model_function": call_model_function,
         "model": model,
         "baseline_features": baseline,
         "memmap_path": memmap_path,

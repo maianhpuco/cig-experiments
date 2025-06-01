@@ -3,7 +3,7 @@ import torch
 import saliency.core as saliency
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from tqdm import tqdm
-from attr_method_clam._common import call_model_function  
+# from attr_method_clam._common import call_model_function  
 EPSILON = 1e-9
 
 class IntegratedGradients(CoreSaliency):

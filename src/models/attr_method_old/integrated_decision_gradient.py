@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 import saliency.core as saliency
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
-from attr_method_clam._common import PreprocessInputs
+from attr_method._common import PreprocessInputs
 
 
 def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
