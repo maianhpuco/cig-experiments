@@ -87,8 +87,9 @@ def main(args):
         features.requires_grad_(True)
         model.eval()
 
-        # if features.dim() == 3:
-        #     features = features.squeeze(0)  # [1, N, D] -> [N, D] => for CLAM 
+        was_batched = features.dim() == 3
+        if was_batched:
+            features = features.squeeze(0)  # [1, N, D] -> [N, D]
             
         model_output = model(features, [features.shape[0]])
         logits = model_output[0] if isinstance(model_output, tuple) else model_output
@@ -105,6 +106,8 @@ def main(args):
         )[0]
 
         gradients = grads.detach().cpu().numpy()
+        if was_batched:
+            gradients = np.expand_dims(gradients, axis=0)  # shape: [1, N, D] 
         print(f">>>>>>> Gradients shape: {gradients.shape}")  # should be [N, D]
         return {INPUT_OUTPUT_GRADIENTS: gradients}
     
