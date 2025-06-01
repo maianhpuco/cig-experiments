@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 import saliency.core as saliency
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
-from torch.cuda.amp import autocast
+from torch.amp import autocast  # Updated import
 
 
 class IDG(CoreSaliency):
@@ -22,7 +22,7 @@ class IDG(CoreSaliency):
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing Slopes", ncols=100)):
             with torch.no_grad():
                 x_step_batch = (x_baseline_batch + alpha * x_diff).to(device)
-                with autocast():
+                with autocast('cuda'):  # Updated autocast
                     model_output = call_model_function(
                         x_step_batch,
                         model,
@@ -78,10 +78,10 @@ class IDG(CoreSaliency):
         model = kwargs.get("model")
         call_model_args = kwargs.get("call_model_args", None)
         baseline_features = kwargs.get("baseline_features")  # [1, N, D]
-        x_steps = kwargs.get("x_steps", 20)  # Reduced default
+        x_steps = kwargs.get("x_steps", 50)  # Match your current setting
         device = kwargs.get("device", "cpu")
         target_class_idx = call_model_args.get("target_class_idx", 0) if call_model_args else 0
-        batch_size = kwargs.get("batch_size", 200)  # Reduced batch size
+        batch_size = kwargs.get("batch_size", 500)  # Match your current setting
         memmap_path = kwargs.get("memmap_path", "./temp_idg")  # Path for temporary files
 
         # Create temporary directory for intermediate results
@@ -118,7 +118,7 @@ class IDG(CoreSaliency):
 
             for step_idx, (alpha, step_size) in enumerate(tqdm(zip(alphas, alpha_sizes), total=x_steps, desc=f"Computing IDG (batch {batch_start}-{batch_end})", ncols=100)):
                 x_step = (x_baseline_batch_batch + alpha * x_diff_batch).detach().requires_grad_(True)  # [1, batch_size, D]
-                with autocast():
+                with autocast('cuda'):  # Updated autocast
                     # Compute gradients
                     call_output = call_model_function(
                         x_step, model, call_model_args=call_model_args, expected_keys=self.expected_keys
@@ -145,17 +145,18 @@ class IDG(CoreSaliency):
 
             # Save integrated_batch to disk
             temp_file = os.path.join(memmap_path, f"integrated_batch_{batch_start}_{batch_end}.npy")
-            np.save(temp_file, integrated_batch.cpu().numpy())
+            np.save(temp_file, integrated_batch.detach().cpu().numpy())  # Added .detach()
             temp_files.append(temp_file)
             del x_value_batch, x_baseline_batch_batch, x_diff_batch, integrated_batch
             torch.cuda.empty_cache()
 
         # Read back and aggregate integrated results
         integrated = torch.zeros_like(x_value, dtype=torch.float32, device='cpu')  # [1, N, D]
-        for batch_start, temp_file in enumerate(temp_files):
-            batch_end = min(batch_start + batch_size, num_instances)
-            batch_start_idx = batch_start * batch_size
-            integrated[:, batch_start_idx:batch_end, :] = torch.from_numpy(np.load(temp_file))
+        for temp_file in temp_files:
+            batch_data = np.load(temp_file)
+            batch_start = int(temp_file.split('_')[-2])
+            batch_end = int(temp_file.split('_')[-1].replace('.npy', ''))
+            integrated[:, batch_start:batch_end, :] = torch.from_numpy(batch_data)
             os.remove(temp_file)  # Clean up temporary file
         temp_files.clear()
 
