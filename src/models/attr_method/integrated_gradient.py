@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 EPSILON = 1e-9
 
-def call_model_function(features, model, call_model_args=None, expected_keys=None):
+def call_model_function_old(features, model, call_model_args=None, expected_keys=None):
     """Compute model logits and gradients for saliency with CLAM model."""
     device = next(model.parameters()).device  # Get model's device
     features = features.to(device)  # Ensure features are on the same device
@@ -39,7 +39,33 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     gradients = grads.detach().cpu().numpy()  # Convert to numpy for saliency
     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
+def call_model_function(features, model, call_model_args=None, expected_keys=None):
+    device = next(model.parameters()).device
+    features = features.to(device)
+    features.requires_grad_(True)
+    model.eval()
 
+    model_output = model(features, [features.shape[0]])
+    logits = model_output[0] if isinstance(model_output, tuple) else model_output
+
+    target_class_idx = call_model_args['target_class_idx']
+    if logits.dim() == 1:
+        target_logit = logits[target_class_idx]
+    else:
+        target_logit = logits[:, target_class_idx].sum()
+
+    grads = torch.autograd.grad(
+        outputs=target_logit,
+        inputs=features,
+        grad_outputs=torch.ones_like(target_logit),
+        create_graph=False,
+        retain_graph=False
+    )[0]
+
+    gradients = grads.detach().cpu().numpy()
+    if gradients.ndim == 1:
+        gradients = np.expand_dims(gradients, axis=0)  # Ensure (N, D)
+    return {INPUT_OUTPUT_GRADIENTS: gradients} 
 class IntegratedGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
