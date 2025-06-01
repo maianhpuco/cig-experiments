@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     i = 1
     split_csv_path = os.path.join(args.split_folder, f'fold_{i}.csv')
-    fold_id = i
+    fold_id = str(i)
 
     df = pd.read_csv(split_csv_path)
 
