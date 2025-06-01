@@ -140,6 +140,8 @@ def main(args, config):
     
     baseline_pred = model(baseline.squeeze(0))  # Ensure baseline is processed by model
     print(f"> Baseline prediction: {baseline_pred}")
+    return 
+
     # IG methods to evaluate
     ig_methods = ['ig', 'cig', 'idg', 'eg']
     saliency_thresholds = np.linspace(0.005, 0.75, 20)  # Finer thresholds
