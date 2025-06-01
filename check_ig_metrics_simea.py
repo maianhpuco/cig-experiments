@@ -108,7 +108,7 @@ def get_dummy_args():
     return parser.parse_args(args=[])
 
 def main(args, config):
-    basename = "tumor_029"
+    basename = "normal_001"  # Example basename, adjust as needed
     fold_idx = 1
     feature_path = os.path.join(config['paths']['feature_files'], f"{basename}.pt")
     checkpoint_path = os.path.join(config['paths'][f'for_ig_checkpoint_path_fold_{fold_idx}'])
@@ -256,12 +256,7 @@ def main(args, config):
 
     # Save results
     output_file = os.path.join(memmap_path, "pic_results.yaml")
-    with open(output_file, 'w') as f:
-        yaml.safe_dump({
-            "wsi_file": os.path.basename(feature_path),
-            "predicted_class": pred_class,
-            "results": results_all
-        }, f)
+ 
     print(f"> Results saved to: {output_file}")
 
 if __name__ == "__main__":
