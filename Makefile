@@ -351,10 +351,10 @@ check_score:
 	python check_score.py --config  configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient 
 
 simea_check_clam_ig:
-	python check_clam_predict_ig.py --config configs_simea/clam_camelyon16.yaml 
+	python check_ig_metrics_simea.py --config configs_simea/clam_camelyon16.yaml 
 
 # ==============MAUI================
 # SANITY CHECK FOR MAUI 
 maui_check_clam_ig:
-	python check_clam_predict_ig.py --config configs_maui/clam_camelyon16.yaml 
+	python check_ig_metrics_maui.py --config configs_maui/clam_camelyon16.yaml 
 
