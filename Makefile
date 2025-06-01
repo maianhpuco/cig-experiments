@@ -357,8 +357,8 @@ mean_std_camelyon16:
 	python compute_mean_std_folds.py \
 	--config configs_simea/clam_camelyon16.yaml \
 	--start_fold 1 \
-	--end_fold 1
-	
+	--end_fold 5
+
 # ==============MAUI================
 # SANITY CHECK FOR MAUI 
 maui_check_clam_ig:
