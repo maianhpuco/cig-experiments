@@ -109,7 +109,7 @@ def main(args, config):
     baseline = mean_vector.expand_as(features)
 
     ig_methods = ['ig', 'cig', 'idg', 'eg']
-    ig_methods = ['eg']
+    ig_methods = ['eg'] 
     num_patches = features.shape[1]
     saliency_thresholds = [0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.07, 0.10, 0.13, 0.21, 0.34, 0.5, 0.75]
     random_mask = generate_random_mask(num_patches, fraction=0.01)
@@ -185,4 +185,12 @@ if __name__ == "__main__":
         else:
             setattr(args, key, val)
 
-    args
+    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+
+    print("=== Configuration Loaded ===")
+    print(f"> Device       : {args.device}")
+    print(f"> Dropout      : {args.drop_out}")
+    print(f"> Embed dim    : {args.embed_dim}")
+    print(f"> Model type   : {args.model_type}")
+
+    main(args, config)
