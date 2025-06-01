@@ -1,8 +1,8 @@
 import pandas as pd
-from args import parse_args
 
 sys.path.append(os.path.join("src/externals/camil-iclr-clone")) 
 
+from args import parse_args
 from models.camil import CAMIL
 import os
 from flushed_print import print
