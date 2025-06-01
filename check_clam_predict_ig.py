@@ -168,8 +168,8 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    args.ig_name = 'ig' 
-    args.ig_name = 'cig'
+    # args.ig_name = 'ig' 
+    # args.ig_name = 'cig'
     args.ig_name = 'idg' 
     
     print("=== Configuration Loaded ===")

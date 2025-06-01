@@ -12,7 +12,7 @@ class IDG(CoreSaliency):
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
     @staticmethod
-    def getSlopes(x_baseline_batch, x_value, model, x_steps, device, target_class_idx=0):
+    def getSlopes(x_baseline_batch, x_value, model, x_steps, device, call_model_function, call_model_args=None, target_class_idx=0): 
         alphas = torch.linspace(0, 1, x_steps, device=device)
         logits = torch.zeros(x_steps, device=device)
         slopes = torch.zeros(x_steps, device=device)
@@ -21,7 +21,17 @@ class IDG(CoreSaliency):
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing Slopes", ncols=100)):
             with torch.no_grad():
                 x_step_batch = (x_baseline_batch + alpha * x_diff).to(device)
-                model_output = model(x_step_batch)
+                # Call the model using call_model_function
+                model_output = call_model_function(
+                    x_step_batch,
+                    model,
+                    call_model_args=call_model_args,
+                    expected_keys=None  # No gradients needed for slopes
+                ) 
+                # if x_step_batch.dim() == 3:
+                #     x_step_batch = x_step_batch.squeeze(0)  # [1, N, D] -> [N, D]
+                # model_output = model(x_step_batch, [x_step_batch.shape[0]]) 
+                # model_output = model(x_step_batch)
                 logits_tensor = model_output[0] if isinstance(model_output, tuple) else model_output
                 logit = logits_tensor[0, target_class_idx] if logits_tensor.dim() == 2 else logits_tensor[target_class_idx]
                 logits[step_idx] = logit
@@ -81,8 +91,11 @@ class IDG(CoreSaliency):
         sample_idx = torch.randint(0, baseline_features.size(0), (x_value.size(0),), device=device)
         x_baseline_batch = baseline_features[sample_idx]
         x_diff = x_value - x_baseline_batch
-
-        slopes, _, _ = self.getSlopes(x_baseline_batch, x_value, model, x_steps, device, target_class_idx)
+        
+        slopes, _, _ = self.getSlopes(
+            x_baseline_batch, x_value, model, x_steps, device, call_model_function, call_model_args, target_class_idx
+        ) 
+        # slopes, _, _ = self.getSlopes(x_baseline_batch, x_value, model, x_steps, device, target_class_idx)
         alphas, alpha_sizes = self.getAlphaParameters(slopes, x_steps, 1.0 / x_steps)
 
         integrated = torch.zeros_like(x_value, dtype=torch.float32, device=device)
