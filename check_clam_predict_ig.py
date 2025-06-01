@@ -19,7 +19,7 @@ def load_ig_module(args):
     elif args.ig_name == 'cig':
        from attr_method.cig import CIG as AttrMethod
     elif args.ig_name == 'idg':
-        from attr_method.idg import IDG as AttrMethod 
+        from attr_method.idg import IDGWrapper as AttrMethod 
     else:
         print("> Error: Unsupported attribution method name.")
     # === CONFIG FOR CLAM MODEL === 
