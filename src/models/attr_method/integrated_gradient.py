@@ -48,8 +48,8 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     logits = model_output[0] if isinstance(model_output, tuple) else model_output
 
     target_class_idx = call_model_args['target_class_idx']
-    target_logit = logits[target_class_idx]
-    print(f">>>>>>> Target logit shape: {target_logit.shape}")
+    target_logit = logits[:, target_class_idx]  # shape: [N] — no .sum() here!
+
     grads = torch.autograd.grad(
         outputs=target_logit,
         inputs=features,
@@ -59,11 +59,8 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     )[0]
 
     gradients = grads.detach().cpu().numpy()
-    print(f">>>>>>> Gradients shape: {gradients.shape}")
-
-    # if gradients.ndim == 1:
-    #     gradients = np.expand_dims(gradients, axis=0)  # Ensure (N, D)
-    return {INPUT_OUTPUT_GRADIENTS: gradients} 
+    print(f">>>>>>> Gradients shape: {gradients.shape}")  # should be [N, D]
+    return {INPUT_OUTPUT_GRADIENTS: gradients}
 
 class IntegratedGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
@@ -101,7 +98,7 @@ class IntegratedGradients(CoreSaliency):
                 expected_keys=self.expected_keys
             )
 
-            # self.format_and_check_call_model_output(call_model_output, x_step_batch_tensor.shape, self.expected_keys)
+            self.format_and_check_call_model_output(call_model_output, x_step_batch_tensor.shape, self.expected_keys)
 
             gradients_batch_np = call_model_output[INPUT_OUTPUT_GRADIENTS]  # shape: (N, D), np.ndarray
             gradients_avg = torch.tensor(gradients_batch_np, device=device)  # Convert to tensor for torch ops
