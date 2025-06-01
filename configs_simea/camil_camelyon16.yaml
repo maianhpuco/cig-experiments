@@ -1,0 +1,31 @@
+split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
+feature_path: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files"
+save_dir: "/home/mvu9/processing_datasets/processing_camelyon16/camil_result"
+
+test: false
+epochs: 200
+batch_size: 1
+init_lr: 0.0001
+drop_out: 0.25
+bag_loss: ce
+model_size: small
+
+subtyping: false
+B: 8
+n_classes: 2
+
+seed: 42
+log_data: false
+testing: false
+
+early_stopping: false
+opt: adam
+bag_weight: 0.7
+
+model_type: camil_sb
+exp_code: camil_camelyon16
+weighted_sample: false
+no_inst_cluster: false
+inst_loss: null
+
+input_shape: [128, 128, 3]
