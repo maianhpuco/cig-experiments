@@ -91,16 +91,7 @@ def main(args):
      # === Load IG module config ===
     ig_module, call_model_function  = load_ig_module(args) 
      
-    kwargs = {
-        "x_value": features,
-        "call_model_function": call_model_function,
-        "model": model,
-        "baseline_features": baseline,
-        "memmap_path": memmap_path,
-        "x_steps": 50,
-        "device": args.device,
-        "call_model_args": {"target_class_idx": pred_class}
-    }
+
     
 
     # =======Loop thru each example and compute Load feature file ===
@@ -142,7 +133,16 @@ def main(args):
     
     
     # === Run Integrated Gradients ===
-
+    kwargs = {
+        "x_value": features,
+        "call_model_function": call_model_function,
+        "model": model,
+        "baseline_features": baseline,
+        "memmap_path": memmap_path,
+        "x_steps": 50,
+        "device": args.device,
+        "call_model_args": {"target_class_idx": pred_class}
+    }
 
     attribution_values = ig_module.GetMask(**kwargs)
     scores = attribution_values.mean(1)
