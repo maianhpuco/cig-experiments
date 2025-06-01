@@ -133,7 +133,6 @@ def main(args, config):
         "batch_size": 500
     }
     attribution_values = ig_module.GetMask(**kwargs)
-    # saliency_map = attribution_values.mean()
     saliency_map = np.abs(attribution_values).sum(axis=-1).squeeze()  # shape: [N]
  
     print(f"  - Attribution shape: {attribution_values.shape}\n  - Mean score shape : {saliency_map.shape}")
@@ -176,13 +175,14 @@ def main(args, config):
             "sic_auc": sic_score.auc,
             "aic_auc": aic_score.auc
         }
-        output_file = os.path.join(memmap_path, "pic_results.yaml")
-        with open(output_file, 'w') as f:
-            yaml.safe_dump(results, f)
-        print(f"> Results saved to: {output_file}")
+        print(results)
+    #     output_file = os.path.join(memmap_path, "pic_results.yaml")
+    #     with open(output_file, 'w') as f:
+    #         yaml.safe_dump(results, f)
+    #     print(f"> Results saved to: {output_file}")
 
-    except ComputePicMetricError as e:
-        print(f"> Failed to compute PIC metrics: {e}")
+    # except ComputePicMetricError as e:
+    #     print(f"> Failed to compute PIC metrics: {e}")
 
 
 if __name__ == "__main__":
