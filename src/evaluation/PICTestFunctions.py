@@ -92,7 +92,7 @@ class ComputePicMetricError(Exception):
 
 def getPrediction(input: torch.Tensor, model_wrapper, intendedClass: int, method: int, device: str) -> Tuple[float, int]:
     input = input.to(device)
-    output = model(input)
+    # output = model(input)
     output = model_wrapper.forward(input)   
     if intendedClass == -1:
         _, index = torch.max(output, 1)
