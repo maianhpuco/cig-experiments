@@ -21,12 +21,16 @@ def load_ig_module(args):
     def get_module_by_name(name):
         if name == 'ig':
             from attr_method.ig import IG as AttrMethod
+            print("Using Integrated Gradients (IG) method")
         elif name == 'cig':
             from attr_method.cig import CIG as AttrMethod
+            print("Using Cumulative Integrated Gradients (CIG) method")
         elif name == 'idg':
             from attr_method.idg_w_batch import IDG as AttrMethod
+            print("Using Integrated Decision Gradients (IDG) method with batch support")
         elif name == 'eg':
             from attr_method.eg import EG as AttrMethod
+            print("Using Efficient Expected Gradients (EG) method")
         else:
             raise ValueError(f"Unsupported IG method: {name}")
         return AttrMethod()
