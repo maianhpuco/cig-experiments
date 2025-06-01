@@ -168,8 +168,10 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    args.ig_name = 'integrated_gradient' 
     args.ig_name = 'contrastive_gradient'
-
+    args.ig_name = 'integrated_decision_gradient' 
+    
     print("=== Configuration Loaded ===")
     print(f"> Device       : {args.device}")
     print(f"> Dropout      : {args.drop_out}")
