@@ -11,7 +11,7 @@ sys.path.append(os.path.join("src/models/classifiers"))
 sys.path.append(os.path.join("attr_method"))
 
 from clam import load_clam_model
-from attr_method.integrated_gradient import IntegratedGradients  # Only using IG here
+from attr_method_old.integrated_gradient import IntegratedGradients  # Only using IG here
 
 
 def get_dummy_args():
@@ -79,8 +79,15 @@ def main(args):
     mean_vector = features.mean(dim=0, keepdim=True)     # shape: [1, D]
     baseline = mean_vector.expand_as(features)           # shape: [N, D]
     print(f"> Baseline shape   : {baseline.shape}")
-
+    
+    # === Add batch dimension ===
+    features = features.unsqueeze(0)  # [1, N, D]
+    mean_vector = features.mean(dim=1, keepdim=True)         # [1, 1, D]
+    baseline = mean_vector.expand_as(features)               # [1, N, D]
+    print(f"> Feature shape  : {features.shape}")
+    print(f"> Baseline shape : {baseline.shape}")
     # === Run Integrated Gradients ===
+    
     ig = IntegratedGradients()
     print(f"\n> Running Integrated Gradients for class {pred_class}")
 

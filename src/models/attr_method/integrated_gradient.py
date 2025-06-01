@@ -49,7 +49,7 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
 
     target_class_idx = call_model_args['target_class_idx']
     target_logit = logits[:, target_class_idx]  # shape: [N] — no .sum() here!
-
+    print(f">>>>>>> Target logit shape: {target_logit.shape}")  # should be [N]
     grads = torch.autograd.grad(
         outputs=target_logit,
         inputs=features,
@@ -82,15 +82,11 @@ class IntegratedGradients(CoreSaliency):
         sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
         x_baseline_batch = baseline_features[sampled_indices]  # [1, N, D]
         x_diff = x_value - x_baseline_batch.squeeze(0)
-        print(">>>>>>>")
-        print(f"x_baseline_batch shape: {x_baseline_batch.shape}")  # Debugging line
+
         for alpha in tqdm(alphas, desc="Computing:", ncols=100):
             x_step_batch = x_baseline_batch + alpha * x_diff.unsqueeze(0)
-            x_step_batch_tensor = x_step_batch.reshape(-1, x_value.shape[-1]).clone().detach().requires_grad_(True).to(device)
+            x_step_batch_tensor = x_step_batch.squeeze(0).clone().detach().requires_grad_(True).to(device)
 
-            # x_step_batch_tensor = x_step_batch.squeeze(0).clone().detach().requires_grad_(True).to(device)
-            print(f"x_step_batch_tensor shape: {x_step_batch_tensor.shape}")  # Debugging line
-            
             call_model_output = call_model_function(
                 x_step_batch_tensor,
                 model,
@@ -102,11 +98,11 @@ class IntegratedGradients(CoreSaliency):
 
             gradients_batch_np = call_model_output[INPUT_OUTPUT_GRADIENTS]  # shape: (N, D), np.ndarray
             gradients_avg = torch.tensor(gradients_batch_np, device=device)  # Convert to tensor for torch ops
-            print(f"gradients_avg shape: {gradients_avg.shape}")
+            print(f">>>>>>> Gradients batch shape: {gradients_avg.shape}")
             attribution_values += gradients_avg
 
         x_diff = x_diff.reshape(-1, x_value.shape[-1]).to(device)  # (N, D)
         attribution_values = attribution_values * x_diff
-
+        print(f">>>>>>> Attribution values shape: {attribution_values.shape}")
         return attribution_values.cpu().numpy() / x_steps
  
