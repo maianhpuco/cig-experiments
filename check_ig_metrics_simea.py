@@ -148,7 +148,7 @@ def main(args, config):
     # no need - justtest the baseline pool 
     sampled_indices = np.random.choice(stacked_features_baseline.shape[0], (1, features.shape[0]), replace=True)
     print("indice shape: ", sampled_indices)
-    baseline = stacked_features_baseline[sampled_indices].squeeze(0)  # shape: [N, D]
+    baseline = stacked_features_baseline[sampled_indices]  # shape: [N, D]
     print(f"> Baseline shape: {baseline.shape}")
     baseline_pred = model(baseline.squeeze(0))
     print(f"> Baseline prediction: {baseline_pred}")
@@ -158,7 +158,7 @@ def main(args, config):
     random_mask = generate_random_mask(num_patches, fraction=0.01)
     print(f"\n> Number of patches: {num_patches}")
     print(f"> Number of masked patches: {random_mask.sum()}")
-
+    print(features.shape)
     results_all = {}
     saliency_maps = {}
     for ig_name in ig_methods:
