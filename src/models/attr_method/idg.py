@@ -102,14 +102,17 @@ class IDG(CoreSaliency):
         prev_logit = None
         slope_cache = torch.zeros(x_steps, device=device)
 
-        for step_idx, (alpha, step_size) in enumerate(tqdm(zip(alphas, alpha_sizes), total=x_steps, desc="Computing IG²", ncols=100)):
+        for step_idx, (alpha, step_size) in enumerate(tqdm(zip(alphas, alpha_sizes), total=x_steps, desc="Computing IDG", ncols=100)):
             x_step = (x_baseline_batch + alpha * x_diff).detach().requires_grad_(True)
 
             call_output = call_model_function(
                 x_step, model, call_model_args=call_model_args, expected_keys=self.expected_keys
             )
-
-            model_output = model(x_step)
+            # Compute logits
+            model_output = call_model_function(
+                x_step, model, call_model_args=call_model_args, expected_keys=None
+            )
+            
             logits_tensor = model_output[0] if isinstance(model_output, tuple) else model_output
             logit = logits_tensor[0, target_class_idx] if logits_tensor.dim() == 2 else logits_tensor[target_class_idx]
 
