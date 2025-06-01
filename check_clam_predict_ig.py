@@ -12,7 +12,7 @@ sys.path.append(os.path.join("attr_method"))
 
 from clam import load_clam_model
 from attr_method_old.integrated_gradient import IntegratedGradients  # Only using IG here
-
+from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS 
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
@@ -22,16 +22,6 @@ def get_dummy_args():
     parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
     parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
     return parser.parse_args(args=[])
-
-
-def call_model_function(x, model, call_model_args=None, expected_keys=None):
-    x = x.to(next(model.parameters()).device)
-    model.eval()
-    with torch.set_grad_enabled(True):
-        x.requires_grad_(True)
-        output = model(x, [x.shape[0]])
-        logits = output[0]  # tuple: (logits, probs, pred_class, ...)
-        return logits[:, call_model_args['target_class_idx']]
 
 
 def main(args):
@@ -90,7 +80,35 @@ def main(args):
     
     ig = IntegratedGradients()
     print(f"\n> Running Integrated Gradients for class {pred_class}")
+    
+    def call_model_function(features, model, call_model_args=None, expected_keys=None):
+        device = next(model.parameters()).device
+        features = features.to(device)
+        features.requires_grad_(True)
+        model.eval()
 
+        if features.dim() == 3:
+            features = features.squeeze(0)  # [1, N, D] -> [N, D] => for CLAM 
+            
+        model_output = model(features, [features.shape[0]])
+        logits = model_output[0] if isinstance(model_output, tuple) else model_output
+
+        target_class_idx = call_model_args['target_class_idx']
+        target_logit = logits[:, target_class_idx]  # shape: [N] — no .sum() here!
+        print(f">>>>>>> Target logit shape: {target_logit.shape}")  # should be [N]
+        grads = torch.autograd.grad(
+            outputs=target_logit,
+            inputs=features,
+            grad_outputs=torch.ones_like(target_logit),
+            create_graph=False,
+            retain_graph=False
+        )[0]
+
+        gradients = grads.detach().cpu().numpy()
+        print(f">>>>>>> Gradients shape: {gradients.shape}")  # should be [N, D]
+        return {INPUT_OUTPUT_GRADIENTS: gradients}
+    
+ 
     kwargs = {
         "x_value": features,
         "call_model_function": call_model_function,
