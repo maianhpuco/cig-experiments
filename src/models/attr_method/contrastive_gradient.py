@@ -4,39 +4,6 @@ import torch
 from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 
-def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-    """
-    Generic model call with gradient support for class attribution.
-    """
-    device = next(model.parameters()).device
-    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor)
-              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True).to(device)
-
-    model.eval()
-    outputs = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
-    logits_tensor = outputs[0] if isinstance(outputs, tuple) else outputs
-
-    if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
-        target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
-        if logits_tensor.dim() == 2:
-            target_output = logits_tensor[:, target_class_idx].sum()
-        else:
-            target_output = logits_tensor[target_class_idx].sum()
-        gradients = torch.autograd.grad(
-            outputs=target_output,
-            inputs=inputs,
-            grad_outputs=torch.ones_like(target_output),
-            create_graph=False,
-            retain_graph=False
-        )[0]
-        return {INPUT_OUTPUT_GRADIENTS: gradients.detach().cpu().numpy()}
-
-    target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
-    if logits_tensor.dim() == 2:
-        return logits_tensor[:, target_class_idx]
-    return logits_tensor
-
-
 class ContrastiveGradients(CoreSaliency):
     """
     Contrastive Gradients Attribution for per-class computation using autograd.
@@ -45,6 +12,7 @@ class ContrastiveGradients(CoreSaliency):
 
     def GetMask(self, **kwargs):
         x_value = kwargs["x_value"]
+        call_model_function = kwargs.get("call_model_function") or call_model_function 
         model = kwargs["model"]
         call_model_args = kwargs.get("call_model_args", {})
         baseline_features = kwargs["baseline_features"]
@@ -91,4 +59,5 @@ class ContrastiveGradients(CoreSaliency):
 
         x_diff_mean = x_diff.mean(dim=0)
         final_attribution = (attribution_values * x_diff_mean) / x_steps
+        
         return final_attribution.detach().cpu().numpy()

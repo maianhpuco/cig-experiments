@@ -12,11 +12,13 @@ sys.path.append(os.path.join("attr_method"))
 
 from clam import load_clam_model
 
-
 def load_ig_module(args):
     from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS  
     if args.ig_name == 'integrated_gradient':
         from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
+    if args.ig_name == 'contrastive_gradient':
+        from attr_method.integrated_gradient import ContrastiveGradients as AttrMethod
+      
     else:
         print("> Error: Unsupported attribution method name.")
     # === CONFIG FOR CLAM MODEL === 
@@ -91,9 +93,6 @@ def main(args):
      # === Load IG module config ===
     ig_module, call_model_function  = load_ig_module(args) 
      
-
-    
-
     # =======Loop thru each example and compute Load feature file ===
     print(f"\n> Loading feature from: {feature_path}")
     data = torch.load(feature_path)
@@ -118,6 +117,7 @@ def main(args):
     print(f"  - Predicted class: {pred_class}")
     print(f"\n> Running Integrated Gradients for class {pred_class}")
 
+
     # === Generate average baseline ===
     mean_vector = features.mean(dim=0, keepdim=True)     # shape: [1, D]
     baseline = mean_vector.expand_as(features)           # shape: [N, D]
@@ -129,9 +129,7 @@ def main(args):
     baseline = mean_vector.expand_as(features)               # [1, N, D]
     print(f"> Feature shape  : {features.shape}")
     print(f"> Baseline shape : {baseline.shape}")
-    
-    
-    
+        
     # === Run Integrated Gradients ===
     kwargs = {
         "x_value": features,
