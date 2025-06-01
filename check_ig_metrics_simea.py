@@ -181,8 +181,8 @@ def main(args, config):
     #         yaml.safe_dump(results, f)
     #     print(f"> Results saved to: {output_file}")
 
-    # except ComputePicMetricError as e:
-    #     print(f"> Failed to compute PIC metrics: {e}")
+    except ComputePicMetricError as e:
+        print(f"> Failed to compute PIC metrics: {e}")
 
 
 if __name__ == "__main__":
