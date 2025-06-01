@@ -11,7 +11,7 @@ sys.path.append(os.path.join("src/models/classifiers"))
 sys.path.append(os.path.join("attr_method"))
 
 from clam import load_clam_model
-from attr_method_old.integrated_gradient import IntegratedGradients  # Only using IG here
+
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS 
 
 def get_dummy_args():
@@ -77,8 +77,11 @@ def main(args):
     print(f"> Feature shape  : {features.shape}")
     print(f"> Baseline shape : {baseline.shape}")
     # === Run Integrated Gradients ===
+    if args.ig_name != 'integrated_gradient':
+        from attr_method_clam.integrated_gradient import IntegratedGradients  as AttrMethod # Only using IG here  
+        
+    ig = AttrMethod()
     
-    ig = IntegratedGradients()
     print(f"\n> Running Integrated Gradients for class {pred_class}")
 
     # === CONFIG FOR CLAM MODEL === 

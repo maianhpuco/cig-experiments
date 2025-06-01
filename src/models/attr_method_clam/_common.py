@@ -4,65 +4,43 @@ import saliency.core as saliency
 import numpy as np 
 from tqdm import tqdm 
 import random 
-
-# def PreprocessInputs(inputs):
-#     """ Convert inputsa to a PyTorch tensor and enable gradient tracking """
-#     inputs = torch.tensor(inputs, dtype=torch.float32).clone().detach()
-#     return inputs.requires_grad_(True)
-def PreprocessInputs(inputs):
-    """
-    Convert inputs to a PyTorch tensor with gradient tracking.
-    This avoids unnecessary use of `torch.tensor()` on a tensor and ensures safe usage.
-    """
-    if isinstance(inputs, torch.Tensor):
-        return inputs.clone().detach().requires_grad_(True)
-    else:
-        return torch.tensor(inputs, dtype=torch.float32, requires_grad=True)
-  
-# def call_model_function(images, model, call_model_args=None, expected_keys=None):
-#     """ Compute model logits and gradients """
-#     images = PreprocessInputs(images)
-#     model.eval()
-#     logits = model(images, [images.shape[0]])
-#     output = logits
-#     grads = torch.autograd.grad(output, images, grad_outputs=torch.ones_like(output), create_graph=False)
-#     gradients = grads[0].detach().cpu().numpy()
-#     return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
-
-
 '''
 FOR CLAM MODEL: 
         # logits, Y_prob, Y_hat, _, instance_dict = model(data, label=label, instance_eval=True)  
 '''
-def call_model_function(images, model, call_model_args=None, expected_keys=None):
-    """Compute model logits and gradients for saliency"""
-    device = next(model.parameters()).device  # Get model's device (e.g., cuda:0)
+from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS 
 
-    images = PreprocessInputs(images).to(device)  # Ensure images on same device
+
+def call_model_function(features, model, call_model_args=None, expected_keys=None):
+    device = next(model.parameters()).device
+    features = features.to(device)
+    features.requires_grad_(True)
     model.eval()
 
-    model_output = model(images, [images.shape[0]])
+    was_batched = features.dim() == 3
+    if was_batched:
+        features = features.squeeze(0)  # [1, N, D] -> [N, D]
+        
+    model_output = model(features, [features.shape[0]])
+    logits = model_output[0] if isinstance(model_output, tuple) else model_output
 
-    # CLAM returns tuple: logits, probs, pred, etc.
-    if isinstance(model_output, tuple):
-        logits = model_output[0]
-    else:
-        logits = model_output
-
-    # Choose class index (here: class 1)
-    target_logit = logits[:, 1].sum()
-
+    target_class_idx = call_model_args['target_class_idx']
+    target_logit = logits[:, target_class_idx]  # shape: [N] — no .sum() here!
+    # print(f">>>>>>> Target logit shape: {target_logit.shape}")  # should be [N]
     grads = torch.autograd.grad(
         outputs=target_logit,
-        inputs=images,
+        inputs=features,
         grad_outputs=torch.ones_like(target_logit),
-        create_graph=False, 
+        create_graph=False,
         retain_graph=False
     )[0]
 
     gradients = grads.detach().cpu().numpy()
-    return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
-
+    if was_batched:
+        gradients = np.expand_dims(gradients, axis=0)  # shape: [1, N, D] 
+    # print(f">>>>>>> Gradients shape: {gradients.shape}")  # should be [N, D]
+    return {INPUT_OUTPUT_GRADIENTS: gradients}
+    
 
 def get_mean_std_for_normal_dist(dataset):
     # Initialize accumulators
