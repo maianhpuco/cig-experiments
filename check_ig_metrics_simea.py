@@ -109,7 +109,7 @@ def get_dummy_args():
     return parser.parse_args(args=[])
 
 def main(args, config):
-    basename = "normal_001"  # Example basename, adjust as needed
+    basename = "tumor_029"  # Example basename, adjust as needed
     fold_idx = 1
     feature_path = os.path.join(config['paths']['feature_files'], f"{basename}.pt")
     checkpoint_path = os.path.join(config['paths'][f'for_ig_checkpoint_path_fold_{fold_idx}'])
