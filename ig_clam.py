@@ -57,21 +57,10 @@ def main(args):
     elif args.ig_name == 'eg':
         from attr_method.eg import EG as AttrMethod
         print("Using Expected Gradients (EG) method")
-    # if args.ig_name == 'integrated_gradient':
-    #     from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
-    # elif args.ig_name == 'vanilla_gradient':
-    #     from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
-    # elif args.ig_name == 'contrastive_gradient':
-    #     from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
-    # elif args.ig_name == 'expected_gradient':
-    #     from attr_method.expected_gradient import ExpectedGradients as AttrMethod
-    # elif args.ig_name == 'integrated_decision_gradient':
-    #     from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
-    # elif args.ig_name == 'optim_square_integrated_gradient':
-    #     from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
-    # elif args.ig_name == 'square_integrated_gradient':
-    #     from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
-
+    elif args.ig_name == 'g':
+        from attr_method.g import VanillaGradients as AttrMethod
+        
+        print("Using Expected Gradients (EG) method")
     print(f"Running for {args.ig_name} Attribution method")
     attribution_method = AttrMethod()
 
