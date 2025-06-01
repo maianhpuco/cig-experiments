@@ -16,38 +16,6 @@ from clam import load_clam_model
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePicMetricError, ModelWrapper
 
-# Inline IDGWrapper for IDG instantiation
-# class IDGWrapper(CoreSaliency):
-#     expected_keys = [INPUT_OUTPUT_GRADIENTS]
-
-#     def GetMask(self, **kwargs):
-#         x_value = kwargs.get("x_value")
-#         model = kwargs.get("model")
-#         baseline_features = kwargs.get("baseline_features")
-#         x_steps = kwargs.get("x_steps", 10)
-#         device = kwargs.get("device", "cpu")
-#         call_model_args = kwargs.get("call_model_args", {})
-#         batch_size = kwargs.get("batch_size", 500)
-#         target_class = call_model_args.get("target_class_idx", 0)
-
-#         if x_value.dim() == 3:
-#             x_value = x_value.squeeze(0)
-
-#         from attr_method.idg_w_batch import IDG
-#         attribution = IDG(
-#             input=x_value,
-#             model=model,
-#             steps=x_steps,
-#             batch_size=batch_size,
-#             baseline=baseline_features,
-#             device=device,
-#             target_class=target_class
-#         )
-
-#         if attribution.dim() == 2:
-#             attribution = attribution.unsqueeze(0)
-
-#         return attribution.cpu().numpy()
 
 def load_ig_module(args):
     def get_module_by_name(name):
@@ -173,7 +141,7 @@ def main(args, config):
     # IG methods to evaluate
     ig_methods = ['ig', 'cig', 'idg', 'eg']
     saliency_thresholds = np.linspace(0.005, 0.75, 20)  # Finer thresholds
-    random_mask = generate_random_mask(num_patches, fraction=0.5)
+    random_mask = generate_random_mask(num_patches, fraction=0.01) #ONLY 1% visible patches 
     print(f"\n> Number of patches: {num_patches}")
     print(f"> Number of masked patches: {random_mask.sum()}")
 
