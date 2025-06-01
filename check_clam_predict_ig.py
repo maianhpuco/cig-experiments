@@ -166,8 +166,8 @@ if __name__ == "__main__":
             args.paths = val
         else:
             setattr(args, key, val)
-
-    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    args.device = "cpu"
+    # args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     # args.ig_name = 'ig' 
     # args.ig_name = 'cig'
     args.ig_name = 'idg' 
