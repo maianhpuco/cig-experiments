@@ -80,7 +80,7 @@ def main(args, config):
     sys.path.append(os.path.join("src/evaluation"))
     from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePicMetricError
 
-    basename = "tumor_028"
+    basename = "tumor_029"
     fold_idx = 1
     feature_path = os.path.join(config['paths']['feature_files'], f"{basename}.pt")
     checkpoint_path = os.path.join(config['paths'][f'for_ig_checkpoint_path_fold_{fold_idx}'])
