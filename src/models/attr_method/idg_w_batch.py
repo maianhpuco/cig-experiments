@@ -78,10 +78,14 @@ class IDG(CoreSaliency):
         model = kwargs.get("model")
         call_model_args = kwargs.get("call_model_args", None)
         baseline_features = kwargs.get("baseline_features")  # [1, N, D]
-        x_steps = kwargs.get("x_steps", 25)
+        x_steps = kwargs.get("x_steps", 20)  # Reduced default
         device = kwargs.get("device", "cpu")
         target_class_idx = call_model_args.get("target_class_idx", 0) if call_model_args else 0
-        batch_size = kwargs.get("batch_size", 100)  # New parameter for batch processing
+        batch_size = kwargs.get("batch_size", 200)  # Reduced batch size
+        memmap_path = kwargs.get("memmap_path", "./temp_idg")  # Path for temporary files
+
+        # Create temporary directory for intermediate results
+        os.makedirs(memmap_path, exist_ok=True)
 
         # Device and format checks
         x_value = x_value.to(device, dtype=torch.float32)
@@ -98,10 +102,9 @@ class IDG(CoreSaliency):
         )
         alphas, alpha_sizes = self.getAlphaParameters(slopes, x_steps, 1.0 / x_steps)
 
-        # Initialize integrated tensor
-        integrated = torch.zeros_like(x_value, dtype=torch.float32, device=device)  # [1, N, D]
         num_instances = x_value.size(1)  # N
         batch_size = min(batch_size, num_instances)
+        temp_files = []
 
         # Process instances in batches
         for batch_start in range(0, num_instances, batch_size):
@@ -140,10 +143,22 @@ class IDG(CoreSaliency):
                 del x_step, grads_avg, call_output, model_output, logits_tensor
                 torch.cuda.empty_cache()
 
-            # Accumulate batch results
-            integrated[:, batch_start:batch_end, :] = integrated_batch
+            # Save integrated_batch to disk
+            temp_file = os.path.join(memmap_path, f"integrated_batch_{batch_start}_{batch_end}.npy")
+            np.save(temp_file, integrated_batch.cpu().numpy())
+            temp_files.append(temp_file)
             del x_value_batch, x_baseline_batch_batch, x_diff_batch, integrated_batch
             torch.cuda.empty_cache()
 
-        attribution = integrated * x_diff  # [1, N, D]
-        return attribution.detach().cpu().numpy()
+        # Read back and aggregate integrated results
+        integrated = torch.zeros_like(x_value, dtype=torch.float32, device='cpu')  # [1, N, D]
+        for batch_start, temp_file in enumerate(temp_files):
+            batch_end = min(batch_start + batch_size, num_instances)
+            batch_start_idx = batch_start * batch_size
+            integrated[:, batch_start_idx:batch_end, :] = torch.from_numpy(np.load(temp_file))
+            os.remove(temp_file)  # Clean up temporary file
+        temp_files.clear()
+
+        # Compute final attribution on CPU
+        attribution = integrated * x_diff.to('cpu')  # [1, N, D]
+        return attribution.numpy()
