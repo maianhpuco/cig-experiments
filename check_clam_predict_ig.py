@@ -130,7 +130,7 @@ def main(args):
 
     print(f"  - Attribution shape: {attribution_values.shape}")
     print(f"  - Mean score shape : {scores.shape}")
-    print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}")
+    # print(f"  - Top scores       : {scores.topk(5).values.cpu().numpy()}")
 
     # === Save results ===
 
