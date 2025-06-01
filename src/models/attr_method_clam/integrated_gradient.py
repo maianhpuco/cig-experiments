@@ -12,7 +12,7 @@ class IntegratedGradients(CoreSaliency):
     
     def GetMask(self, **kwargs): 
         x_value = kwargs.get("x_value")  # torch.Tensor
-        call_model_function = kwargs.get("call_model_function")
+        call_model_function = kwargs.get("call_model_function") or call_model_function
         model = kwargs.get("model") 
         call_model_args = kwargs.get("call_model_args", None)
         baseline_features = kwargs.get("baseline_features", None)  # torch.Tensor

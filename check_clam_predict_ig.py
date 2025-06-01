@@ -88,41 +88,10 @@ def main(args):
     print(f"\n> Running Integrated Gradients for class {pred_class}")
 
     # === CONFIG FOR CLAM MODEL === 
-    
-    def call_model_function(features, model, call_model_args=None, expected_keys=None):
-        device = next(model.parameters()).device
-        features = features.to(device)
-        features.requires_grad_(True)
-        model.eval()
 
-        was_batched = features.dim() == 3
-        if was_batched:
-            features = features.squeeze(0)  # [1, N, D] -> [N, D]
-            
-        model_output = model(features, [features.shape[0]])
-        logits = model_output[0] if isinstance(model_output, tuple) else model_output
-
-        target_class_idx = call_model_args['target_class_idx']
-        target_logit = logits[:, target_class_idx]  # shape: [N] — no .sum() here!
-        # print(f">>>>>>> Target logit shape: {target_logit.shape}")  # should be [N]
-        grads = torch.autograd.grad(
-            outputs=target_logit,
-            inputs=features,
-            grad_outputs=torch.ones_like(target_logit),
-            create_graph=False,
-            retain_graph=False
-        )[0]
-
-        gradients = grads.detach().cpu().numpy()
-        if was_batched:
-            gradients = np.expand_dims(gradients, axis=0)  # shape: [1, N, D] 
-        # print(f">>>>>>> Gradients shape: {gradients.shape}")  # should be [N, D]
-        return {INPUT_OUTPUT_GRADIENTS: gradients}
-    
- 
     kwargs = {
         "x_value": features,
-        "call_model_function": call_model_function,
+        "call_model_function": None,
         "model": model,
         "baseline_features": baseline,
         "memmap_path": memmap_path,
