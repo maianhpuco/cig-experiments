@@ -34,6 +34,7 @@ def sample_random_features(dataset, num_files=20):
     flattened = padded.view(-1, padded.size(-1))
     return flattened
 
+
 def get_dummy_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--drop_out', type=float, default=0.25)

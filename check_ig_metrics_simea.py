@@ -4,6 +4,7 @@ import argparse
 import torch
 import yaml
 import numpy as np
+import random
 from scipy.stats import pearsonr
 
 # Add paths for model, attribution, and evaluation code
@@ -16,6 +17,19 @@ from clam import load_clam_model
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePicMetricError, ModelWrapper
 
+#  Offline Baseline Pool Creation:
+def sample_random_features(dataset, num_files=100, features_per_file=100):
+    indices = np.random.choice(len(dataset), num_files, replace=False)
+    feature_list = []
+    for idx in indices:
+        features, _, _ = dataset[idx]
+        features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
+        if features.size(0) >= features_per_file:
+            chosen = features[torch.randperm(features.size(0))[:features_per_file]]
+        else:
+            chosen = features[torch.randint(0, features.size(0), (features_per_file,))]
+        feature_list.append(chosen)
+    return torch.cat(feature_list, dim=0)  # [num_files * features_per_file, D] 
 
 def load_ig_module(args):
     def get_module_by_name(name):
@@ -75,29 +89,27 @@ def get_dummy_args():
     parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
     parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
     return parser.parse_args(args=[])
-
+           
 def main(args, config):
     basename = "tumor_029"  # Example basename, adjust as needed
-    fold_idx = 1
+    fold_id = 1
     feature_path = os.path.join(config['paths']['feature_files'], f"{basename}.pt")
-    checkpoint_path = os.path.join(config['paths'][f'for_ig_checkpoint_path_fold_{fold_idx}'])
+    checkpoint_path = os.path.join(config['paths'][f'for_ig_checkpoint_path_fold_{fold_id}'])
     memmap_path = os.path.join(config['paths']['memmap_path'])
     os.makedirs(memmap_path, exist_ok=True)
 
-    # Load dataset mean and variance
-    mean_std_path = os.path.join("/home/mvu9/processing_datasets/processing_camelyon16/dataset_mean_variance", f"fold_{fold_idx}_mean_std.pt")
-    print(f"\n> Loading dataset mean and variance from: {mean_std_path}")
-    try:
-        mean_std_data = torch.load(mean_std_path)
-        dataset_mean = mean_std_data['mean'].cpu().numpy()  # Shape: [D,]
-        dataset_std = mean_std_data['std'].cpu().numpy()  # Shape: [D,]
-        print(f"> Dataset mean shape: {dataset_mean.shape}, std shape: {dataset_std.shape}")
-        print(f"> Dataset std range: min={dataset_std.min():.6f}, max={dataset_std.max():.6f}")
-    except Exception as e:
-        print(f"> Failed to load mean and variance: {e}")
-        return
-
-    # Load CLAM model
+    split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
+    from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon 
+    train_dataset, _, _ = return_splits_camelyon(
+        csv_path=split_csv_path,
+        data_dir=args.paths['pt_files'],
+        label_dict={'normal': 0, 'tumor': 1},
+        seed=args.seed,
+        print_info=False,
+        use_h5=True
+    )
+    
+    
     args_clam = get_dummy_args()
     args_clam.drop_out = args.drop_out
     args_clam.n_classes = args.n_classes
@@ -108,7 +120,6 @@ def main(args, config):
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
     model.eval()
 
-    # Load feature file
     print(f"\n> Loading feature from: {feature_path}")
     data = torch.load(feature_path)
     features = data['features'] if isinstance(data, dict) else data
@@ -117,7 +128,6 @@ def main(args, config):
         features = features.squeeze(0)
     print(f"> Feature shape: {features.shape}")
 
-    # Predict class
     with torch.no_grad():
         model_wrapper = ModelWrapper(model, model_type='clam')
         logits = model_wrapper.forward(features.unsqueeze(0))
@@ -126,26 +136,22 @@ def main(args, config):
     pred_class = predicted_class.item()
     print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
 
-    # Create baseline by sampling from normal distribution
+
     features = features.unsqueeze(0)  # [1, N, D]
     num_patches = features.shape[1]
     embed_dim = features.shape[2]
-    mean_tensor = torch.from_numpy(dataset_mean).to(args.device, dtype=torch.float32)  # [D,]
-    std_tensor = torch.from_numpy(dataset_std).to(args.device, dtype=torch.float32)  # [D,]
-    dist = torch.distributions.Normal(mean_tensor, std_tensor * 2 + 1e-6)  # Scale std and add epsilon
-    baseline = dist.sample((1, num_patches)).to(args.device, dtype=torch.float32)  # [1, N, D]
-    print(f"> Feature shape  : {features.shape}")
-    print(f"> Baseline shape : {baseline.shape}")
-    print(f"> Baseline stats : mean={baseline.mean().item():.6f}, std={baseline.std().item():.6f}")
-    
-    baseline_pred = model(baseline.squeeze(0))  # Ensure baseline is processed by model
-    print(f"> Baseline prediction: {baseline_pred}")
-    return 
 
-    # IG methods to evaluate
+    print(f"\n> Sampling baseline features from chunk dir")
+    baseline = sample_random_features(train_dataset).to(args.device, dtype=torch.float32)
+    print(f"> Sampled baseline features shape: {baseline.shape}")
+    print(f"> Baseline shape : {baseline.shape}")
+
+    baseline_pred = model(baseline.squeeze(0))
+    print(f"> Baseline prediction: {baseline_pred}")
+
     ig_methods = ['ig', 'cig', 'idg', 'eg']
-    saliency_thresholds = np.linspace(0.005, 0.75, 20)  # Finer thresholds
-    random_mask = generate_random_mask(num_patches, fraction=0.01) #ONLY 1% visible patches 
+    saliency_thresholds = np.linspace(0.005, 0.75, 20)
+    random_mask = generate_random_mask(num_patches, fraction=0.01)
     print(f"\n> Number of patches: {num_patches}")
     print(f"> Number of masked patches: {random_mask.sum()}")
 
@@ -169,49 +175,20 @@ def main(args, config):
         }
         try:
             attribution_values = ig_module.GetMask(**kwargs)
-            saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()  # [N,]
-            # Normalize saliency map
-            saliency_map = saliency_map / (saliency_map.max() + 1e-8)  # Normalize to [0, 1]
+            saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
+            saliency_map = saliency_map / (saliency_map.max() + 1e-8)
             saliency_maps[ig_name] = saliency_map
-            print(f"  - Attribution shape: {attribution_values.shape}")
-            print(f"  - Saliency map shape: {saliency_map.shape}")
-            print(f"  - Saliency map stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}, min={saliency_map.min():.6f}, max={saliency_map.max():.6f}")
-            print(f"  - Saliency map unique values: {np.unique(saliency_map).size}")
+            print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
 
-            sic_score = compute_pic_metric(
-                features=features.squeeze().cpu().numpy(),
-                saliency_map=saliency_map,
-                random_mask=random_mask,
-                saliency_thresholds=saliency_thresholds,
-                method=0,  # SIC
-                model=model,
-                device=args.device,
-                dataset_mean=dataset_mean,
-                dataset_std=dataset_std,
-                min_pred_value=0.3,  # Lowered further
-                keep_monotonous=False
-            )
-            aic_score = compute_pic_metric(
-                features=features.squeeze().cpu().numpy(),
-                saliency_map=saliency_map,
-                random_mask=random_mask,
-                saliency_thresholds=saliency_thresholds,
-                method=1,  # AIC
-                model=model,
-                device=args.device,
-                dataset_mean=dataset_mean,
-                dataset_std=dataset_std,
-                min_pred_value=0.3,
-                keep_monotonous=False
-            )
+            sic_score = compute_pic_metric(features.squeeze().cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 0, model, args.device, dataset_mean, dataset_std, min_pred_value=0.3, keep_monotonous=False)
+            aic_score = compute_pic_metric(features.squeeze().cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 1, model, args.device, dataset_mean, dataset_std, min_pred_value=0.3, keep_monotonous=False)
+
             results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
-            print(f"  - SIC AUC: {sic_score.auc:.3f}")
-            print(f"  - AIC AUC: {aic_score.auc:.3f}")
+            print(f"  - SIC AUC: {sic_score.auc:.3f}\n  - AIC AUC: {aic_score.auc:.3f}")
         except Exception as e:
             print(f"  > Failed for {ig_name}: {e}")
             results_all[ig_name] = None
 
-    # Print correlations between saliency maps
     print("\n=== Saliency Map Correlations ===")
     for m1 in ig_methods:
         for m2 in ig_methods:
@@ -219,7 +196,6 @@ def main(args, config):
                 corr, _ = pearsonr(saliency_maps[m1], saliency_maps[m2])
                 print(f"{m1.upper()} vs {m2.upper()}: Pearson correlation = {corr:.3f}")
 
-    # Print summary of results
     print("\n=== Summary of PIC Scores ===")
     for k, v in results_all.items():
         if v:
@@ -227,9 +203,7 @@ def main(args, config):
         else:
             print(f"{k.upper():<5} : FAILED")
 
-    # Save results
     output_file = os.path.join(memmap_path, "pic_results.yaml")
- 
     print(f"> Results saved to: {output_file}")
 
 if __name__ == "__main__":
