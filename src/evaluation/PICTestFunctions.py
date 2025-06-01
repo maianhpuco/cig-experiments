@@ -147,7 +147,6 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         PicMetricResultBasic containing the curve and AUC.
     """
     model_wrapper = ModelWrapper(model, model_type='clam')
-    
     neutral_features = []
     predictions = []
     entropy_pred_tuples = []
