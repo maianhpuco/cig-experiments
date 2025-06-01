@@ -17,7 +17,7 @@ def load_ig_module(args):
     if args.ig_name == 'integrated_gradient':
         from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
     if args.ig_name == 'contrastive_gradient':
-        from attr_method.integrated_gradient import ContrastiveGradients as AttrMethod
+        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
       
     else:
         print("> Error: Unsupported attribution method name.")
