@@ -100,26 +100,13 @@ def main(args, config):
     memmap_path = os.path.join(config['paths']['memmap_path'])
     os.makedirs(memmap_path, exist_ok=True)
 
-    split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-    from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon 
-    train_dataset, _, _ = return_splits_camelyon(
-        csv_path=split_csv_path,
-        data_dir=args.paths['pt_files'],
-        label_dict={'normal': 0, 'tumor': 1},
-        seed=args.seed,
-        print_info=False,
-        use_h5=True
-    )
-
-    stacked_features_baseline_pool = sample_random_features(train_dataset, num_files=200, features_per_file=100).to(args.device, dtype=torch.float32)
-    print(f"> Total baseline pool shape: {stacked_features_baseline_pool.shape}")
-
     args_clam = get_dummy_args()
     args_clam.drop_out = args.drop_out
     args_clam.n_classes = args.n_classes
     args_clam.embed_dim = args.embed_dim
     args_clam.model_type = args.model_type
     args_clam.model_size = args.model_size
+    
     print(f"\n> Loading CLAM model from: {checkpoint_path}")
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
     model.eval()
@@ -139,6 +126,8 @@ def main(args, config):
         _, predicted_class = torch.max(logits, dim=1)
     pred_class = predicted_class.item()
     
+    
+    #==== sampling baseline features ==== 
     print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
     from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon 
     split_csv_path = os.path.join(config.paths['split_folder'], f'fold_{fold_id}.csv')
