@@ -12,7 +12,6 @@ sys.path.append(os.path.join("attr_method"))
 
 from clam import load_clam_model
 
-from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS 
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()

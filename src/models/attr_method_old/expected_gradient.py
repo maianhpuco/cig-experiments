@@ -6,7 +6,7 @@ from saliency.core.base import CoreSaliency
 from saliency.core.base import INPUT_OUTPUT_GRADIENTS
 import torch
 import matplotlib.pyplot as plt
-from attr_method._common import PreprocessInputs, call_model_function 
+from attr_method_clam._common import PreprocessInputs, call_model_function 
 
 class ExpectedGradients(CoreSaliency):
     """Efficient Expected Gradients Attribution"""
