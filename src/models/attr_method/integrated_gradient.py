@@ -63,9 +63,12 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     )[0]
 
     gradients = grads.detach().cpu().numpy()
-    if gradients.ndim == 1:
-        gradients = np.expand_dims(gradients, axis=0)  # Ensure (N, D)
+    print(f"> Gradients shape: {gradients.shape}")
+
+    # if gradients.ndim == 1:
+    #     gradients = np.expand_dims(gradients, axis=0)  # Ensure (N, D)
     return {INPUT_OUTPUT_GRADIENTS: gradients} 
+
 class IntegratedGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
