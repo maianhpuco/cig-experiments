@@ -123,6 +123,7 @@ def main(args, config):
         dataset_mean = mean_std_data['mean'].cpu().numpy()  # Shape: [D,]
         dataset_std = mean_std_data['std'].cpu().numpy()  # Shape: [D,]
         print(f"> Dataset mean shape: {dataset_mean.shape}, std shape: {dataset_std.shape}")
+        print(f"> Dataset std range: min={dataset_std.min():.6f}, max={dataset_std.max():.6f}")
     except Exception as e:
         print(f"> Failed to load mean and variance: {e}")
         return
@@ -162,7 +163,7 @@ def main(args, config):
     embed_dim = features.shape[2]
     mean_tensor = torch.from_numpy(dataset_mean).to(args.device, dtype=torch.float32)  # [D,]
     std_tensor = torch.from_numpy(dataset_std).to(args.device, dtype=torch.float32)  # [D,]
-    dist = torch.distributions.Normal(mean_tensor, std_tensor + 1e-6)  # Add small epsilon to avoid zero std
+    dist = torch.distributions.Normal(mean_tensor, std_tensor * 2 + 1e-6)  # Scale std and add epsilon
     baseline = dist.sample((1, num_patches)).to(args.device, dtype=torch.float32)  # [1, N, D]
     print(f"> Feature shape  : {features.shape}")
     print(f"> Baseline shape : {baseline.shape}")
@@ -170,7 +171,7 @@ def main(args, config):
 
     # IG methods to evaluate
     ig_methods = ['ig', 'cig', 'idg', 'eg']
-    saliency_thresholds = [0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.07, 0.10, 0.13, 0.21, 0.34, 0.5, 0.75]
+    saliency_thresholds = np.linspace(0.005, 0.75, 20)  # Finer thresholds
     random_mask = generate_random_mask(num_patches, fraction=0.01)
     print(f"\n> Number of patches: {num_patches}")
     print(f"> Number of masked patches: {random_mask.sum()}")
@@ -196,10 +197,13 @@ def main(args, config):
         try:
             attribution_values = ig_module.GetMask(**kwargs)
             saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()  # [N,]
+            # Normalize saliency map
+            saliency_map = saliency_map / (saliency_map.max() + 1e-8)  # Normalize to [0, 1]
             saliency_maps[ig_name] = saliency_map
             print(f"  - Attribution shape: {attribution_values.shape}")
             print(f"  - Saliency map shape: {saliency_map.shape}")
             print(f"  - Saliency map stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}, min={saliency_map.min():.6f}, max={saliency_map.max():.6f}")
+            print(f"  - Saliency map unique values: {np.unique(saliency_map).size}")
 
             sic_score = compute_pic_metric(
                 features=features.squeeze().cpu().numpy(),
@@ -210,7 +214,8 @@ def main(args, config):
                 model=model,
                 device=args.device,
                 dataset_mean=dataset_mean,
-                min_pred_value=0.5,  # Lowered to avoid errors
+                dataset_std=dataset_std,
+                min_pred_value=0.3,  # Lowered further
                 keep_monotonous=False
             )
             aic_score = compute_pic_metric(
@@ -222,7 +227,8 @@ def main(args, config):
                 model=model,
                 device=args.device,
                 dataset_mean=dataset_mean,
-                min_pred_value=0.5,
+                dataset_std=dataset_std,
+                min_pred_value=0.3,
                 keep_monotonous=False
             )
             results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
