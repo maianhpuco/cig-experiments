@@ -134,6 +134,16 @@ def main(args, config):
         saliency_map = np.abs(attribution_values).sum(axis=-1).squeeze()
 
         try:
+            sic_score = compute_pic_metric(
+                features=features.squeeze().cpu().numpy(),
+                saliency_map=saliency_map,
+                random_mask=random_mask,
+                saliency_thresholds=saliency_thresholds,
+                method=0,  # SIC
+                model=model,
+                device=args.device,
+                min_pred_value=0.8
+            )
             aic_score = compute_pic_metric(
                 features=features.squeeze().cpu().numpy(),
                 saliency_map=saliency_map,
@@ -144,15 +154,19 @@ def main(args, config):
                 device=args.device,
                 min_pred_value=0.8
             )
-            results_all[ig_name] = aic_score.auc
+            results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
+            print(f"  - SIC AUC: {sic_score.auc:.3f}")
             print(f"  - AIC AUC: {aic_score.auc:.3f}")
         except ComputePicMetricError as e:
             print(f"  > Failed for {ig_name}: {e}")
             results_all[ig_name] = None
 
-    print("\n=== Summary of AIC Scores ===")
+    print("\n=== Summary of PIC Scores ===")
     for k, v in results_all.items():
-        print(f"{k.upper():<5} : {v}")
+        if v:
+            print(f"{k.upper():<5} : SIC = {v['SIC']:.3f} | AIC = {v['AIC']:.3f}")
+        else:
+            print(f"{k.upper():<5} : FAILED")
 
 
 if __name__ == "__main__":
@@ -170,12 +184,4 @@ if __name__ == "__main__":
         else:
             setattr(args, key, val)
 
-    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-
-    print("=== Configuration Loaded ===")
-    print(f"> Device       : {args.device}")
-    print(f"> Dropout      : {args.drop_out}")
-    print(f"> Embed dim    : {args.embed_dim}")
-    print(f"> Model type   : {args.model_type}")
-
-    main(args, config)
+    args
