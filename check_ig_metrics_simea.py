@@ -150,7 +150,6 @@ def main(args, config):
     print("indice shape: ", sampled_indices)
     baseline = stacked_features_baseline[sampled_indices].squeeze(0)  # shape: [N, D]
     print(f"> Baseline shape: {baseline.shape}")
-    return 
     baseline_pred = model(baseline.squeeze(0))
     print(f"> Baseline prediction: {baseline_pred}")
 
