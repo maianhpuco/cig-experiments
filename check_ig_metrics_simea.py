@@ -130,7 +130,7 @@ def main(args, config):
     #==== sampling baseline features ==== 
     print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
     from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon 
-    split_csv_path = os.path.join(config.paths['split_folder'], f'fold_{fold_id}.csv')
+    split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
 
     train_dataset, _, test_dataset = return_splits_camelyon(
         csv_path=split_csv_path,
