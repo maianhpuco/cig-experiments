@@ -3,13 +3,45 @@ import torch
 from typing import Callable, List, NamedTuple, Optional, Sequence, Tuple
 from scipy import interpolate
 '''
-- create_neutral_features: Replaces create_blurred_image. It uses a binary mask to keep certain patches unchanged and replaces others with the baseline (mean feature vector).
-- generate_random_mask: Adapted to create a 1D mask for patches instead of a 2D pixel mask.
+- create_neutral_features: Replaces create_blurred_image. Uses a binary mask to keep certain patches unchanged and replaces others with the baseline (mean feature vector).
+- generate_random_mask: Creates a 1D mask for patches instead of a 2D pixel mask.
 - estimate_feature_information: Uses the mean L2 norm of feature vectors instead of WebP compression-based entropy.
+- Input Handling: Takes feature tensors [N, D] (e.g., D=1024) and saliency scores [N,] instead of images and 2D saliency maps.
+- Baseline: Uses the mean feature vector as the baseline for neutralization.
+''' 
 
-Input Handling: Takes feature tensors [N, 512] and saliency scores [N,] instead of images and 2D saliency maps.
-Baseline: Uses the mean feature vector as the baseline for neutralization.
-'''
+class ModelWrapper:
+    """Wraps a model to standardize forward calls for different model types."""
+    def __init__(self, model, model_type: str = 'clam'):
+        """
+        Args:
+            model: The underlying model (e.g., CLAM model).
+            model_type: Type of model ('clam' or 'standard').
+        """
+        self.model = model
+        self.model_type = model_type.lower()
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Performs a forward pass with the appropriate input format.
+
+        Args:
+            input: Input tensor of shape [1, N, D] or [N, D].
+
+        Returns:
+            Logits tensor (e.g., [1, C] for CLAM).
+        """
+        if input.dim() == 3:
+            input = input.squeeze(0)  # [1, N, D] -> [N, D]
+
+        if self.model_type == 'clam':
+            output = self.model(input, [input.shape[0]])  # CLAM-specific call
+            logits = output[0] if isinstance(output, tuple) else output
+        else:  # Standard model
+            logits = self.model(input)
+
+        return logits
+
 
 def create_neutral_features(full_features: np.ndarray, patch_mask: np.ndarray, baseline: np.ndarray) -> np.ndarray:
     """
@@ -58,10 +90,10 @@ def estimate_feature_information(features: np.ndarray) -> float:
 class ComputePicMetricError(Exception):
     pass
 
-def getPrediction(input: torch.Tensor, model, intendedClass: int, method: int, device: str) -> Tuple[float, int]:
+def getPrediction(input: torch.Tensor, model_wrapper, intendedClass: int, method: int, device: str) -> Tuple[float, int]:
     input = input.to(device)
     output = model(input)
-    
+    output = model_wrapper.forward(input)   
     if intendedClass == -1:
         _, index = torch.max(output, 1)
         softmax = torch.nn.functional.softmax(output, dim=1)[0, index[0]].detach().cpu().numpy()
@@ -101,6 +133,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     Returns:
         PicMetricResultBasic containing the curve and AUC.
     """
+    model_wrapper = ModelWrapper(model, model_type='clam')
     neutral_features = []
     predictions = []
     entropy_pred_tuples = []
@@ -119,7 +152,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
 
     # Compute model prediction for fully neutral features
     fully_neutral_pred_features = torch.from_numpy(fully_neutral_features).unsqueeze(0)
-    fully_neutral_pred, _ = getPrediction(fully_neutral_pred_features, model, correctClassIndex, 0, device)
+    fully_neutral_pred, _ = getPrediction(fully_neutral_pred_features, model_wrapper, correctClassIndex, 0, device)
 
     neutral_features.append(fully_neutral_features)
     predictions.append(fully_neutral_pred)
@@ -134,7 +167,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
 
         info = estimate_feature_information(neutral_features_current)
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0)
-        pred, _ = getPrediction(pred_input, model, correctClassIndex, method, device)
+        pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
 
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
