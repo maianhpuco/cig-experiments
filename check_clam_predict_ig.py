@@ -139,7 +139,7 @@ def main(args):
         "x_steps": 50,
         "device": args.device,
         "call_model_args": {"target_class_idx": pred_class}, 
-        "batch_size": 100 # Optional, can be adjusted
+        # "batch_size": 100 # Optional, can be adjusted
     }
 
     attribution_values = ig_module.GetMask(**kwargs)
