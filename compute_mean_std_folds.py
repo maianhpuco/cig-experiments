@@ -10,7 +10,12 @@ def compute_mean_variance(dataset):
 
     for i in range(len(dataset)):
         item = dataset[i]
-        feats = item['features'] if isinstance(item, dict) else item
+        if isinstance(item, dict):
+            feats = item['features']
+        elif isinstance(item, tuple) or isinstance(item, list):
+            feats = item[0]  # (features, label)
+        else:
+            feats = item
         feats = feats.view(-1, feats.shape[-1])  # [N, D]
         all_feats.append(feats)
 
@@ -18,7 +23,6 @@ def compute_mean_variance(dataset):
     mean = torch.mean(all_feats, dim=0)
     std = torch.std(all_feats, dim=0)
     return mean, std
-
 
 def main(args):
     with open(args.config, 'r') as f:
