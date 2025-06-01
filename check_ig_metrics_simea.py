@@ -18,18 +18,19 @@ from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePicMetricError, ModelWrapper
 
 #  Offline Baseline Pool Creation:
-def sample_random_features(dataset, num_files=100, features_per_file=100):
+
+def sample_random_features(dataset, num_files=20):
     indices = np.random.choice(len(dataset), num_files, replace=False)
     feature_list = []
     for idx in indices:
         features, _, _ = dataset[idx]
         features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
-        if features.size(0) >= features_per_file:
-            chosen = features[torch.randperm(features.size(0))[:features_per_file]]
-        else:
-            chosen = features[torch.randint(0, features.size(0), (features_per_file,))]
-        feature_list.append(chosen)
-    return torch.cat(feature_list, dim=0)  # [num_files * features_per_file, D] 
+        if features.size(0) > 128:
+            features = features[:128]
+        feature_list.append(features)
+    padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
+    flattened = padded.view(-1, padded.size(-1))
+    return flattened
 
 def load_ig_module(args):
     def get_module_by_name(name):
@@ -137,17 +138,29 @@ def main(args, config):
         probs = torch.nn.functional.softmax(logits, dim=1)
         _, predicted_class = torch.max(logits, dim=1)
     pred_class = predicted_class.item()
+    
     print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
+    from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon 
+    split_csv_path = os.path.join(config.paths['split_folder'], f'fold_{fold_id}.csv')
 
-    features = features.unsqueeze(0)
+    train_dataset, _, test_dataset = return_splits_camelyon(
+        csv_path=split_csv_path,
+        data_dir=args.paths['pt_files'],
+        label_dict={'normal': 0, 'tumor': 1},
+        seed=args.seed,
+        print_info=False,
+        use_h5=True
+    ) 
+
+
     num_patches = features.shape[1]
-    embed_dim = features.shape[2]
 
-    print(f"\n> Sampling per-example baseline from precomputed pool")
-    rand_indices = torch.randperm(stacked_features_baseline_pool.size(0))[:num_patches]
-    baseline = stacked_features_baseline_pool[rand_indices].unsqueeze(0).to(args.device)
-    print(f"> Baseline shape : {baseline.shape}")
-
+    stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
+    # no need - justtest the baseline pool 
+    sampled_indices = np.random.choice(stacked_features_baseline.shape[0], (1, features.shape[1]), replace=True)
+    baseline = stacked_features_baseline[sampled_indices].squeeze(0)  # shape: [N, D]
+    print(f"> Baseline shape: {baseline.shape}")
+    return 
     baseline_pred = model(baseline.squeeze(0))
     print(f"> Baseline prediction: {baseline_pred}")
 
