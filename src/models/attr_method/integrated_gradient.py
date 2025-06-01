@@ -63,7 +63,7 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     )[0]
 
     gradients = grads.detach().cpu().numpy()
-    print(f">>>> Gradients shape: {gradients.shape}")
+    print(f">>>>>>> Gradients shape: {gradients.shape}")
 
     # if gradients.ndim == 1:
     #     gradients = np.expand_dims(gradients, axis=0)  # Ensure (N, D)
@@ -89,13 +89,15 @@ class IntegratedGradients(CoreSaliency):
         sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
         x_baseline_batch = baseline_features[sampled_indices]  # [1, N, D]
         x_diff = x_value - x_baseline_batch.squeeze(0)
-
+        print(">>>>>>>")
+        print(f"x_baseline_batch shape: {x_baseline_batch.shape}")  # Debugging line
         for alpha in tqdm(alphas, desc="Computing:", ncols=100):
             x_step_batch = x_baseline_batch + alpha * x_diff.unsqueeze(0)
             x_step_batch_tensor = x_step_batch.reshape(-1, x_value.shape[-1]).clone().detach().requires_grad_(True).to(device)
 
             # x_step_batch_tensor = x_step_batch.squeeze(0).clone().detach().requires_grad_(True).to(device)
             print(f"x_step_batch_tensor shape: {x_step_batch_tensor.shape}")  # Debugging line
+            
             call_model_output = call_model_function(
                 x_step_batch_tensor,
                 model,
