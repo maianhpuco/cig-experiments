@@ -172,7 +172,7 @@ def main(args, config):
     # IG methods to evaluate
     ig_methods = ['ig', 'cig', 'idg', 'eg']
     saliency_thresholds = np.linspace(0.005, 0.75, 20)  # Finer thresholds
-    random_mask = generate_random_mask(num_patches, fraction=0.01)
+    random_mask = generate_random_mask(num_patches, fraction=1)
     print(f"\n> Number of patches: {num_patches}")
     print(f"> Number of masked patches: {random_mask.sum()}")
 
