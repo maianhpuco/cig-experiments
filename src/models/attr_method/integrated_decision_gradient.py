@@ -159,4 +159,39 @@ def IDG(input, model, steps, batch_size, baseline, device, target_class):
     grads = gradients.mean(dim=0)
     grads = grads * baseline_diff[0]
 
-    return grads 
+    return grads
+
+class IDGWrapper(CoreSaliency):
+    """Wrapper for IDG function to match CoreSaliency interface."""
+    expected_keys = [INPUT_OUTPUT_GRADIENTS]
+
+    def GetMask(self, **kwargs):
+        x_value = kwargs.get("x_value")  # [1, N, D]
+        model = kwargs.get("model")
+        baseline_features = kwargs.get("baseline_features")
+        x_steps = kwargs.get("x_steps", 25)
+        device = kwargs.get("device", "cpu")
+        call_model_args = kwargs.get("call_model_args", {})
+        batch_size = kwargs.get("batch_size", 10)  # Default batch size
+        target_class = call_model_args.get("target_class_idx", 0)
+
+        # Ensure x_value is in the correct shape for IDG ([1, N, D] -> [N, D])
+        if x_value.dim() == 3:
+            x_value = x_value.squeeze(0)
+
+        # Call IDG function
+        attribution = IDG(
+            input=x_value,
+            model=model,
+            steps=x_steps,
+            batch_size=batch_size,
+            baseline=baseline_features,
+            device=device,
+            target_class=target_class
+        )
+
+        # Ensure output is in the expected shape [1, N, D]
+        if attribution.dim() == 2:
+            attribution = attribution.unsqueeze(0)
+
+        return attribution.cpu().numpy() 

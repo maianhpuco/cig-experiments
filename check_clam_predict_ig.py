@@ -16,9 +16,10 @@ def load_ig_module(args):
     from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS  
     if args.ig_name == 'integrated_gradient':
         from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
-    if args.ig_name == 'contrastive_gradient':
-        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
-      
+    elif args.ig_name == 'contrastive_gradient':
+       from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
+    elif args.ig_name == 'integrated_decision_gradient':
+        from attr_method.integrated_decicion_gradient import IDG as AttrMethod 
     else:
         print("> Error: Unsupported attribution method name.")
     # === CONFIG FOR CLAM MODEL === 
@@ -54,11 +55,9 @@ def load_ig_module(args):
 
         return logits 
  
-    ig = AttrMethod()
-    
+    ig = AttrMethod()    
     return ig, call_model_function
 
-    
 
 def get_dummy_args():
     parser = argparse.ArgumentParser()
