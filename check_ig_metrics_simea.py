@@ -17,37 +17,37 @@ from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePicMetricError, ModelWrapper
 
 # Inline IDGWrapper for IDG instantiation
-class IDGWrapper(CoreSaliency):
-    expected_keys = [INPUT_OUTPUT_GRADIENTS]
+# class IDGWrapper(CoreSaliency):
+#     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
-    def GetMask(self, **kwargs):
-        x_value = kwargs.get("x_value")
-        model = kwargs.get("model")
-        baseline_features = kwargs.get("baseline_features")
-        x_steps = kwargs.get("x_steps", 10)
-        device = kwargs.get("device", "cpu")
-        call_model_args = kwargs.get("call_model_args", {})
-        batch_size = kwargs.get("batch_size", 500)
-        target_class = call_model_args.get("target_class_idx", 0)
+#     def GetMask(self, **kwargs):
+#         x_value = kwargs.get("x_value")
+#         model = kwargs.get("model")
+#         baseline_features = kwargs.get("baseline_features")
+#         x_steps = kwargs.get("x_steps", 10)
+#         device = kwargs.get("device", "cpu")
+#         call_model_args = kwargs.get("call_model_args", {})
+#         batch_size = kwargs.get("batch_size", 500)
+#         target_class = call_model_args.get("target_class_idx", 0)
 
-        if x_value.dim() == 3:
-            x_value = x_value.squeeze(0)
+#         if x_value.dim() == 3:
+#             x_value = x_value.squeeze(0)
 
-        from attr_method.idg_w_batch import IDG
-        attribution = IDG(
-            input=x_value,
-            model=model,
-            steps=x_steps,
-            batch_size=batch_size,
-            baseline=baseline_features,
-            device=device,
-            target_class=target_class
-        )
+#         from attr_method.idg_w_batch import IDG
+#         attribution = IDG(
+#             input=x_value,
+#             model=model,
+#             steps=x_steps,
+#             batch_size=batch_size,
+#             baseline=baseline_features,
+#             device=device,
+#             target_class=target_class
+#         )
 
-        if attribution.dim() == 2:
-            attribution = attribution.unsqueeze(0)
+#         if attribution.dim() == 2:
+#             attribution = attribution.unsqueeze(0)
 
-        return attribution.cpu().numpy()
+#         return attribution.cpu().numpy()
 
 def load_ig_module(args):
     def get_module_by_name(name):
@@ -61,7 +61,8 @@ def load_ig_module(args):
             return AttrMethod()
         elif name == 'idg':
             print("Using Integrated Decision Gradients (IDG) method with batch support")
-            return IDGWrapper()
+            from attr_methodi.idg_w_batch import IDG as AttrMethod 
+            return AttrMethod()
         elif name == 'eg':
             from attr_method.eg import EG as AttrMethod
             print("Using Expected Gradients (EG) method")
