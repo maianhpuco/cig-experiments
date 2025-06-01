@@ -25,8 +25,7 @@ def call_model_function_old(features, model, call_model_args=None, expected_keys
     # Get target class index from call_model_args
     class_idx_str = 'class_idx_str'
     target_class_idx = call_model_args[class_idx_str] 
-    target_logit = logits[:, target_class_idx].sum()  # Sum logits for the target class
-
+    target_logit = logits[:, target_class_idx]
     # Compute gradients
     grads = torch.autograd.grad(
         outputs=target_logit,
@@ -49,11 +48,8 @@ def call_model_function(features, model, call_model_args=None, expected_keys=Non
     logits = model_output[0] if isinstance(model_output, tuple) else model_output
 
     target_class_idx = call_model_args['target_class_idx']
-    if logits.dim() == 1:
-        target_logit = logits[target_class_idx]
-    else:
-        target_logit = logits[:, target_class_idx].sum()
-
+    target_logit = logits[target_class_idx]
+    print(f">>>>>>> Target logit shape: {target_logit.shape}")
     grads = torch.autograd.grad(
         outputs=target_logit,
         inputs=features,
