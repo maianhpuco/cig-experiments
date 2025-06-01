@@ -80,6 +80,8 @@ def main(args):
     
     ig = IntegratedGradients()
     print(f"\n> Running Integrated Gradients for class {pred_class}")
+
+    # === CONFIG FOR CLAM MODEL === 
     
     def call_model_function(features, model, call_model_args=None, expected_keys=None):
         device = next(model.parameters()).device

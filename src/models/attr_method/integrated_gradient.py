@@ -42,11 +42,11 @@ class IntegratedGradients(CoreSaliency):
 
             gradients_batch_np = call_model_output[INPUT_OUTPUT_GRADIENTS]  # shape: (N, D), np.ndarray
             gradients_avg = torch.tensor(gradients_batch_np, device=device)  # Convert to tensor for torch ops
-            print(f">>>>>>> Gradients batch shape: {gradients_avg.shape}")
+            # print(f">>>>>>> Gradients batch shape: {gradients_avg.shape}")
             attribution_values += gradients_avg
 
         x_diff = x_diff.reshape(-1, x_value.shape[-1]).to(device)  # (N, D)
         attribution_values = attribution_values * x_diff
-        print(f">>>>>>> Attribution values shape: {attribution_values.shape}")
+        # print(f">>>>>>> Attribution values shape: {attribution_values.shape}")
         return attribution_values.cpu().numpy() / x_steps
  
