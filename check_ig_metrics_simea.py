@@ -113,12 +113,15 @@ def main(args, config):
     baseline = mean_vector.expand_as(features)
 
     ig_methods = ['ig', 'cig', 'idg', 'eg']
-    ig_methods = ['eg'] 
+    # ig_methods = ['eg'] 
     num_patches = features.shape[1]
     saliency_thresholds = [0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.07, 0.10, 0.13, 0.21, 0.34, 0.5, 0.75]
     random_mask = generate_random_mask(num_patches, fraction=0.01)
-
+    print(f"\n> Number of patches: {num_patches}")
+    print("Number of masked patches:", random_mask.sum())
     results_all = {}
+    
+    saliency_maps = {}
     for ig_name in ig_methods:
         print(f"\n>> Running IG method: {ig_name}")
         args.ig_name = ig_name
@@ -130,7 +133,7 @@ def main(args, config):
             "model": model,
             "baseline_features": baseline,
             "memmap_path": memmap_path,
-            "x_steps": 5,
+            "x_steps": 10,
             "device": args.device,
             "call_model_args": {"target_class_idx": pred_class},
             "batch_size": 500
@@ -172,6 +175,16 @@ def main(args, config):
             print(f"{k.upper():<5} : SIC = {v['SIC']:.3f} | AIC = {v['AIC']:.3f}")
         else:
             print(f"{k.upper():<5} : FAILED")
+
+# Print correlations between saliency maps
+    from scipy.stats import pearsonr
+
+    print("\n=== Saliency Map Correlations ===")
+    for m1 in ig_methods:
+        for m2 in ig_methods:
+            if m1 < m2 and m1 in saliency_maps and m2 in saliency_maps:
+                corr, _ = pearsonr(saliency_maps[m1], saliency_maps[m2])
+                print(f"{m1.upper()} vs {m2.upper()}: Pearson correlation = {corr:.3f}")
 
 
 if __name__ == "__main__":
