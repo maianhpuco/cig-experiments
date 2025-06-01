@@ -12,7 +12,7 @@ paths:
   memmap_path: "/project/hnguyen2/mvu9/cig_attributions/memmap_tmp_camelyon16"
   slide_dir: "/project/hnguyen2/mvu9/datasets/camelyon16/raw_data/camelyon16/images"
   h5_files: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files" 
-  pt_files: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files"
+  feature_files: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files"
   metrics_dir: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/metrics"
   predictions_dir: "/project/hnguyen2/mvu9/processing_datasets/processing_camelyon16/predictions/clam"
 
