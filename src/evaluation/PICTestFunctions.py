@@ -2,13 +2,14 @@ import numpy as np
 import torch
 from typing import Callable, List, NamedTuple, Optional, Sequence, Tuple
 from scipy import interpolate
+
 '''
 - create_neutral_features: Replaces create_blurred_image. Uses a binary mask to keep certain patches unchanged and replaces others with the baseline (mean feature vector).
 - generate_random_mask: Creates a 1D mask for patches instead of a 2D pixel mask.
 - estimate_feature_information: Uses the mean L2 norm of feature vectors instead of WebP compression-based entropy.
 - Input Handling: Takes feature tensors [N, D] (e.g., D=1024) and saliency scores [N,] instead of images and 2D saliency maps.
 - Baseline: Uses the mean feature vector as the baseline for neutralization.
-''' 
+'''
 
 class ModelWrapper:
     """Wraps a model to standardize forward calls for different model types."""
@@ -42,18 +43,17 @@ class ModelWrapper:
 
         return logits
 
-
 def create_neutral_features(full_features: np.ndarray, patch_mask: np.ndarray, baseline: np.ndarray) -> np.ndarray:
     """
     Creates a neutralized feature set by replacing unmasked patches with a baseline.
     
     Args:
-        full_features: Original feature tensor of shape [N, 512].
+        full_features: Feature tensor of shape [N, D] (e.g., D=1024).
         patch_mask: Binary mask of shape [N,], where True indicates patches to keep.
-        baseline: Baseline feature vector of shape [512,] or [N, 512].
+        baseline: Baseline feature vector of shape [D,] or [N, D].
     
     Returns:
-        Neutralized feature tensor of shape [N, 512].
+        Neutralized feature tensor of shape [N, D].
     """
     neutral_features = full_features.copy()
     neutral_features[~patch_mask] = baseline[~patch_mask] if baseline.shape == full_features.shape else baseline
@@ -77,10 +77,10 @@ def generate_random_mask(num_patches: int, fraction: float = 0.01) -> np.ndarray
 
 def estimate_feature_information(features: np.ndarray) -> float:
     """
-    Estimates the information content of a feature set using the L2 norm.
+    Estimates the information content of a feature set using the mean L2 norm.
     
     Args:
-        features: Feature tensor of shape [N, 512].
+        features: Feature tensor of shape [N, D].
     
     Returns:
         Scalar value representing the information content.
@@ -90,20 +90,33 @@ def estimate_feature_information(features: np.ndarray) -> float:
 class ComputePicMetricError(Exception):
     pass
 
-def getPrediction(input: torch.Tensor, model_wrapper, intendedClass: int, method: int, device: str) -> Tuple[float, int]:
+def getPrediction(input: torch.Tensor, model_wrapper: ModelWrapper, intendedClass: int, method: int, device: str) -> Tuple[float, int]:
+    """
+    Get model predictions for input features using a model wrapper.
+    
+    Args:
+        input: Feature tensor of shape [1, N, D].
+        model_wrapper: ModelWrapper instance for the model.
+        intendedClass: Target class index (-1 for auto-detection).
+        method: 0 for SIC, 1 for AIC.
+        device: Device for computation ('cuda' or 'cpu').
+    
+    Returns:
+        Tuple of (prediction score, class index or -1).
+    """
     input = input.to(device)
-    # output = model(input)
-    output = model_wrapper.forward(input)   
+    logits = model_wrapper.forward(input)  # Use wrapper for model call
+
     if intendedClass == -1:
-        _, index = torch.max(output, 1)
-        softmax = torch.nn.functional.softmax(output, dim=1)[0, index[0]].detach().cpu().numpy()
-        return softmax, index[0]
+        _, index = torch.max(logits, dim=1)
+        softmax = torch.nn.functional.softmax(logits, dim=1)[0, index[0]].detach().cpu().numpy()
+        return softmax, index[0].item()
     else:
         if method == 0:  # SIC
-            softmax = torch.nn.functional.softmax(output, dim=1)[0, intendedClass].detach().cpu().numpy()
+            softmax = torch.nn.functional.softmax(logits, dim=1)[0, intendedClass].detach().cpu().numpy()
             return softmax, -1
         elif method == 1:  # AIC
-            _, index = torch.max(output, 1)
+            _, index = torch.max(logits, dim=1)
             return 1.0 if index[0] == intendedClass else 0.0, -1
 
 class PicMetricResultBasic(NamedTuple):
@@ -119,12 +132,12 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     Computes Performance Information Curve (SIC or AIC) for a single WSI feature set.
     
     Args:
-        features: Feature tensor of shape [N, 512].
+        features: Feature tensor of shape [N, D] (e.g., D=1024).
         saliency_map: Saliency scores of shape [N,].
         random_mask: Binary mask of shape [N,].
         saliency_thresholds: Fractions of important patches to reveal.
         method: 0 for SIC, 1 for AIC.
-        model: Model for prediction.
+        model: CLAM model (wrapped in ModelWrapper internally).
         device: Device for computation.
         min_pred_value: Minimum prediction confidence for original features.
         keep_monotonous: Whether to enforce monotonicity in the curve.
@@ -134,12 +147,13 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         PicMetricResultBasic containing the curve and AUC.
     """
     model_wrapper = ModelWrapper(model, model_type='clam')
+    
     neutral_features = []
     predictions = []
     entropy_pred_tuples = []
 
     # Compute baseline (mean feature vector)
-    baseline = np.mean(features, axis=0)  # Shape: [512,]
+    baseline = np.mean(features, axis=0)  # Shape: [D,]
 
     # Estimate information content
     original_features_info = estimate_feature_information(features)
@@ -147,11 +161,15 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     fully_neutral_info = estimate_feature_information(fully_neutral_features)
 
     # Compute model prediction for original features
-    input_features = torch.from_numpy(features).unsqueeze(0)
-    original_pred, correctClassIndex = getPrediction(input_features, model, -1, method, device)
+    input_features = torch.from_numpy(features).unsqueeze(0)  # [1, N, D]
+    original_pred, correctClassIndex = getPrediction(input_features, model_wrapper, -1, method, device)
+
+    # Check minimum prediction value
+    if original_pred < min_pred_value:
+        raise ComputePicMetricError(f"Original prediction {original_pred} is below min_pred_value {min_pred_value}")
 
     # Compute model prediction for fully neutral features
-    fully_neutral_pred_features = torch.from_numpy(fully_neutral_features).unsqueeze(0)
+    fully_neutral_pred_features = torch.from_numpy(fully_neutral_features).unsqueeze(0)  # [1, N, D]
     fully_neutral_pred, _ = getPrediction(fully_neutral_pred_features, model_wrapper, correctClassIndex, 0, device)
 
     neutral_features.append(fully_neutral_features)
@@ -166,7 +184,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
 
         info = estimate_feature_information(neutral_features_current)
-        pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0)
+        pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0)  # [1, N, D]
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
 
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
