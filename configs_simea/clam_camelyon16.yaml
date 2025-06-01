@@ -12,6 +12,7 @@ paths:
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_camelyon16"
   slide_dir: "/home/mvu9/datasets/camelyon16/raw_data/camelyon16/images"
   h5_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files" 
+  feature_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files"  
   metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/metrics"
   predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/predictions/clam"
 fold_number: 5 
