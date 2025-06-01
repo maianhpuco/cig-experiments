@@ -133,7 +133,9 @@ def main(args, config):
         "batch_size": 500
     }
     attribution_values = ig_module.GetMask(**kwargs)
-    saliency_map = attribution_values.mean(1)
+    # saliency_map = attribution_values.mean()
+    saliency_map = attribution_values.abs().mean(dim=-1).squeeze(0)  # [N] in PyTorch
+ 
     print(f"  - Attribution shape: {attribution_values.shape}\n  - Mean score shape : {saliency_map.shape}")
 
     # Compute AIC and SIC using PIC metrics
