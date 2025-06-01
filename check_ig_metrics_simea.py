@@ -171,7 +171,7 @@ def main(args, config):
             "x_value": features,
             "call_model_function": call_model_function,
             "model": model,
-            "baseline_features": baseline,
+            "baseline_features": stacked_features_baseline,
             "memmap_path": memmap_path,
             "x_steps": 10,
             "device": args.device,
