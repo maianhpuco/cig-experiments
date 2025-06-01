@@ -87,8 +87,8 @@ def main(args):
         features.requires_grad_(True)
         model.eval()
 
-        if features.dim() == 3:
-            features = features.squeeze(0)  # [1, N, D] -> [N, D] => for CLAM 
+        # if features.dim() == 3:
+        #     features = features.squeeze(0)  # [1, N, D] -> [N, D] => for CLAM 
             
         model_output = model(features, [features.shape[0]])
         logits = model_output[0] if isinstance(model_output, tuple) else model_output
