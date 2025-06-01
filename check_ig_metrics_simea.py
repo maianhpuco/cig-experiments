@@ -138,7 +138,7 @@ def main(args, config):
 
     # Compute AIC and SIC using PIC metrics
     sys.path.append(os.path.join("src/evaluation"))
-    from pic import compute_pic_metric, generate_random_mask, ComputePicMetricError
+    from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePicMetricError
 
     num_patches = features.shape[1]
     random_mask = generate_random_mask(num_patches, fraction=0.01)
@@ -201,7 +201,7 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    args.ig_name = 'idg'  # Select IG variant to run (e.g., ig, cig, idg, eg)
+    args.ig_name = 'ig'  # Select IG variant to run (e.g., ig, cig, idg, eg)
 
     print("=== Configuration Loaded ===")
     print(f"> Device       : {args.device}")

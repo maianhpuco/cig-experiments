@@ -75,9 +75,10 @@ def get_dummy_args():
 
 def main(args):
     # === Setup fixed paths ===
-    feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"
-    checkpoint_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/checkpoints_simea/clam/camelyon16/s_1_checkpoint.pt"
-    memmap_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/memmap_path"
+    # feature_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/data_for_checking/clam_camelyon16/tumor_028.pt"
+    # checkpoint_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/checkpoints_simea/clam/camelyon16/s_1_checkpoint.pt"
+    # memmap_path = "/project/hnguyen2/mvu9/processing_datasets/cig_data/memmap_path"
+    
     os.makedirs(memmap_path, exist_ok=True)
 
     # === Create dummy args and override from config ===
