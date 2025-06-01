@@ -45,19 +45,19 @@ def get_dummy_args():
     return parser.parse_args(args=[])
 
 def main(args):
-    if name == 'ig':
+    if args.ig_name == 'ig':
         from attr_method.ig import IG as AttrMethod
         print("Using Integrated Gradients (IG) method")
         return AttrMethod()
-    elif name == 'cig':
+    elif args.ig_name == 'cig':
         from attr_method.cig import CIG as AttrMethod
         print("Using Cumulative Integrated Gradients (CIG) method")
         return AttrMethod()
-    elif name == 'idg':
+    elif args.ig_name == 'idg':
         print("Using Integrated Decision Gradients (IDG) method with batch support")
         from attr_method.idg_w_batch import IDG as AttrMethod 
         return AttrMethod()
-    elif name == 'eg':
+    elif args.ig_name == 'eg':
         from attr_method.eg import EG as AttrMethod
         print("Using Expected Gradients (EG) method")
         return AttrMethod()
