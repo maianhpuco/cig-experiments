@@ -61,7 +61,7 @@ def load_ig_module(args):
             return AttrMethod()
         elif name == 'idg':
             print("Using Integrated Decision Gradients (IDG) method with batch support")
-            from attr_methodi.idg_w_batch import IDG as AttrMethod 
+            from attr_method.idg_w_batch import IDG as AttrMethod 
             return AttrMethod()
         elif name == 'eg':
             from attr_method.eg import EG as AttrMethod
