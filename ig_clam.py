@@ -45,20 +45,36 @@ def get_dummy_args():
     return parser.parse_args(args=[])
 
 def main(args):
-    if args.ig_name == 'integrated_gradient':
-        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
-    elif args.ig_name == 'vanilla_gradient':
-        from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
-    elif args.ig_name == 'contrastive_gradient':
-        from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
-    elif args.ig_name == 'expected_gradient':
-        from attr_method.expected_gradient import ExpectedGradients as AttrMethod
-    elif args.ig_name == 'integrated_decision_gradient':
-        from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
-    elif args.ig_name == 'optim_square_integrated_gradient':
-        from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
-    elif args.ig_name == 'square_integrated_gradient':
-        from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
+    if name == 'ig':
+        from attr_method.ig import IG as AttrMethod
+        print("Using Integrated Gradients (IG) method")
+        return AttrMethod()
+    elif name == 'cig':
+        from attr_method.cig import CIG as AttrMethod
+        print("Using Cumulative Integrated Gradients (CIG) method")
+        return AttrMethod()
+    elif name == 'idg':
+        print("Using Integrated Decision Gradients (IDG) method with batch support")
+        from attr_method.idg_w_batch import IDG as AttrMethod 
+        return AttrMethod()
+    elif name == 'eg':
+        from attr_method.eg import EG as AttrMethod
+        print("Using Expected Gradients (EG) method")
+        return AttrMethod()
+    # if args.ig_name == 'integrated_gradient':
+    #     from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
+    # elif args.ig_name == 'vanilla_gradient':
+    #     from attr_method.vanilla_gradient import VanillaGradients as AttrMethod
+    # elif args.ig_name == 'contrastive_gradient':
+    #     from attr_method.contrastive_gradient import ContrastiveGradients as AttrMethod
+    # elif args.ig_name == 'expected_gradient':
+    #     from attr_method.expected_gradient import ExpectedGradients as AttrMethod
+    # elif args.ig_name == 'integrated_decision_gradient':
+    #     from attr_method.integrated_decision_gradient import IntegratedDecisionGradients as AttrMethod
+    # elif args.ig_name == 'optim_square_integrated_gradient':
+    #     from attr_method.optim_square_integrated_gradient import OptimSquareIntegratedGradients as AttrMethod
+    # elif args.ig_name == 'square_integrated_gradient':
+    #     from attr_method.square_integrated_gradient import SquareIntegratedGradients as AttrMethod
 
     print(f"Running for {args.ig_name} Attribution method")
     attribution_method = AttrMethod()

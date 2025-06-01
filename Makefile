@@ -138,16 +138,16 @@ pr_metric:
 # Makefile for running different IG variants ===== on camelyon16 
 
 ig_clam_integrated_gradient:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_gradient
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig 
 ig_clam_expected_gradient:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name expected_gradient
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
 ig_clam_integrated_decision_gradient:
 	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name integrated_decision_gradient --device cpu
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg --device cpu
 ig_clam_contrastive_gradient:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
 ig_clam_vanilla_gradient:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name vanilla_gradient
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
 ig_clam_square_integrated_gradient:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
 ig_clam_optim_square_integrated_gradient:
