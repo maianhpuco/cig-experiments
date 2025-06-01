@@ -98,7 +98,7 @@ def main(args):
 
         target_class_idx = call_model_args['target_class_idx']
         target_logit = logits[:, target_class_idx]  # shape: [N] — no .sum() here!
-        print(f">>>>>>> Target logit shape: {target_logit.shape}")  # should be [N]
+        # print(f">>>>>>> Target logit shape: {target_logit.shape}")  # should be [N]
         grads = torch.autograd.grad(
             outputs=target_logit,
             inputs=features,
@@ -110,7 +110,7 @@ def main(args):
         gradients = grads.detach().cpu().numpy()
         if was_batched:
             gradients = np.expand_dims(gradients, axis=0)  # shape: [1, N, D] 
-        print(f">>>>>>> Gradients shape: {gradients.shape}")  # should be [N, D]
+        # print(f">>>>>>> Gradients shape: {gradients.shape}")  # should be [N, D]
         return {INPUT_OUTPUT_GRADIENTS: gradients}
     
  
