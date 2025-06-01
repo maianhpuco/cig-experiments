@@ -89,9 +89,10 @@ def get_dummy_args():
     parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
     parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
     return parser.parse_args(args=[])
-           
+
+
 def main(args, config):
-    basename = "tumor_029"  # Example basename, adjust as needed
+    basename = "tumor_029"
     fold_id = 1
     feature_path = os.path.join(config['paths']['feature_files'], f"{basename}.pt")
     checkpoint_path = os.path.join(config['paths'][f'for_ig_checkpoint_path_fold_{fold_id}'])
@@ -108,8 +109,10 @@ def main(args, config):
         print_info=False,
         use_h5=True
     )
-    
-    
+
+    stacked_features_baseline_pool = sample_random_features(train_dataset, num_files=200, features_per_file=100).to(args.device, dtype=torch.float32)
+    print(f"> Total baseline pool shape: {stacked_features_baseline_pool.shape}")
+
     args_clam = get_dummy_args()
     args_clam.drop_out = args.drop_out
     args_clam.n_classes = args.n_classes
@@ -136,14 +139,13 @@ def main(args, config):
     pred_class = predicted_class.item()
     print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
 
-
-    features = features.unsqueeze(0)  # [1, N, D]
+    features = features.unsqueeze(0)
     num_patches = features.shape[1]
     embed_dim = features.shape[2]
 
-    print(f"\n> Sampling baseline features from chunk dir")
-    baseline = sample_random_features(train_dataset).to(args.device, dtype=torch.float32)
-    print(f"> Sampled baseline features shape: {baseline.shape}")
+    print(f"\n> Sampling per-example baseline from precomputed pool")
+    rand_indices = torch.randperm(stacked_features_baseline_pool.size(0))[:num_patches]
+    baseline = stacked_features_baseline_pool[rand_indices].unsqueeze(0).to(args.device)
     print(f"> Baseline shape : {baseline.shape}")
 
     baseline_pred = model(baseline.squeeze(0))
