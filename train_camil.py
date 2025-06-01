@@ -11,7 +11,8 @@ import numpy as np
 import gc
 import random
 from dataset_utils.camelyon16 import Camelyon16Dataset
-
+import argparse
+import yaml
 def set_seed(seed: int = 42) -> None:
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -28,7 +29,34 @@ def create_dataset(col_case, col_label):
     return case_ids, labels
 
 if __name__ == "__main__":
-    args = parse_args()
+    parser = argparse.ArgumentParser(description='Configurations for WSI Training')
+    parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
+    args = parser.parse_args()
+
+    with open(args.config, 'r') as f:
+        config = yaml.safe_load(f)
+
+    args.feature_path = config['feature_path']
+    args.save_dir = config['save_dir']
+    args.split_folder = config['split_folder']
+    args.test = config['test']
+    args.epochs = config['epochs']
+    args.batch_size = config['batch_size']
+    args.init_lr = config['init_lr']
+    args.drop_out = config['drop_out']
+    args.bag_loss = config['bag_loss']
+    args.model_size = config['model_size']
+    args.subtyping = config['subtyping']
+    args.B = config['B']
+    args.n_classes = config['n_classes']
+    args.seed = config['seed']
+    args.log_data = config['log_data']
+    args.testing = config['testing']
+    args.early_stopping = config['early_stopping']
+    args.opt = config['opt']
+    args.bag_weight = config['bag_weight']
+    args.model_type = config['model_type']
+    args.exp_code = config['exp_code']
 
     print("Called with args:", args)
 
