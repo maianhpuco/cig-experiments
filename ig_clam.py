@@ -173,7 +173,7 @@ def main(args):
                 print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
 
                 features = features.to(args.device, dtype=torch.float32)
-                stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
+                stacked_features_baseline = sample_random_features(train_dataset).to(args.device, dtype=torch.float32)
 
                 for class_idx in range(args.n_classes):
                     print(f"==> Attribution for class {class_idx}")

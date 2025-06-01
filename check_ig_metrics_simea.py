@@ -116,12 +116,12 @@ def main(args, config):
     features = data['features'] if isinstance(data, dict) else data
     features = features.to(args.device, dtype=torch.float32)
     if features.dim() == 3:
-        features = features.squeeze(0)
-    print(f"> Feature shape: {features.shape}")
+        _features = features.squeeze(0)
+    print(f"> Feature shape: {_features.shape}")
 
     with torch.no_grad():
         model_wrapper = ModelWrapper(model, model_type='clam')
-        logits = model_wrapper.forward(features.unsqueeze(0))
+        logits = model_wrapper.forward(_features.unsqueeze(0))
         probs = torch.nn.functional.softmax(logits, dim=1)
         _, predicted_class = torch.max(logits, dim=1)
     pred_class = predicted_class.item()
@@ -141,9 +141,6 @@ def main(args, config):
         use_h5=True
     ) 
 
-
-    num_patches = features.shape[1]
-
     stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
     print("stacked_features_baseline", stacked_features_baseline.shape)
     # no need - justtest the baseline pool 
@@ -156,10 +153,12 @@ def main(args, config):
 
     ig_methods = ['ig', 'cig', 'idg', 'eg']
     saliency_thresholds = np.linspace(0.005, 0.75, 20)
-    random_mask = generate_random_mask(num_patches, fraction=0.01)
-    print(f"\n> Number of patches: {num_patches}")
+    random_mask = generate_random_mask(features.shape[-2], fraction=0.01)
+    print(f"\n> Number of patches: {features.shape[-2]}")
+    
     print(f"> Number of masked patches: {random_mask.sum()}")
     print(features.shape)
+    
     results_all = {}
     saliency_maps = {}
     for ig_name in ig_methods:
