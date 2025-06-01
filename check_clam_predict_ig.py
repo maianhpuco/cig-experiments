@@ -76,10 +76,11 @@ def main(args):
     print(f"> Feature shape  : {features.shape}")
     print(f"> Baseline shape : {baseline.shape}")
     # === Run Integrated Gradients ===
-    if args.ig_name != 'integrated_gradient':
+    
+    if args.ig_name == 'integrated_gradient':
         from attr_method_clam.integrated_gradient import IntegratedGradients as AttrMethod
     else:
-        print("> Using Integrated Gradients from saliency.core")
+        print("> Error: Unsupported attribution method name.")
 
  
     ig = AttrMethod()
