@@ -13,6 +13,51 @@ sys.path.append(os.path.join("attr_method"))
 from clam import load_clam_model
 
 
+def load_ig_module(args):
+    from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS  
+    if args.ig_name == 'integrated_gradient':
+        from attr_method.integrated_gradient import IntegratedGradients as AttrMethod
+    else:
+        print("> Error: Unsupported attribution method name.")
+    # === CONFIG FOR CLAM MODEL === 
+    
+    def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
+        
+        
+        device = next(model.parameters()).device
+        was_batched = inputs.dim() == 3
+
+        inputs = inputs.to(device).clone().detach().requires_grad_(True)
+        if was_batched:
+            inputs = inputs.squeeze(0)  # [1, N, D] -> [N, D]
+
+        model.eval()
+        outputs = model(inputs, [inputs.shape[0]])
+        logits = outputs[0] if isinstance(outputs, tuple) else outputs
+
+        if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
+            class_idx = call_model_args.get("target_class_idx", 0)
+            target = logits[:, class_idx]  # [N]
+            grads = torch.autograd.grad(
+                outputs=target,
+                inputs=inputs,
+                grad_outputs=torch.ones_like(target),
+                retain_graph=False,
+                create_graph=False
+            )[0]
+            grads_np = grads.detach().cpu().numpy()
+            if was_batched or grads_np.ndim == 2:
+                grads_np = np.expand_dims(grads_np, axis=0)  # Ensure [1, N, D]
+            return {INPUT_OUTPUT_GRADIENTS: grads_np}
+
+        return logits 
+ 
+    ig = AttrMethod()
+    
+    return ig, call_model_function
+
+    
+
 def get_dummy_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--drop_out', type=float, default=0.25)
@@ -42,7 +87,23 @@ def main(args):
     print(f"\n> Loading CLAM model from: {checkpoint_path}")
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
 
-    # === Load feature file ===
+
+     # === Load IG module config ===
+    ig_module, call_model_function  = load_ig_module(args) 
+     
+    kwargs = {
+        "x_value": features,
+        "call_model_function": call_model_function,
+        "model": model,
+        "baseline_features": baseline,
+        "memmap_path": memmap_path,
+        "x_steps": 50,
+        "device": args.device,
+        "call_model_args": {"target_class_idx": pred_class}
+    }
+    
+
+    # =======Loop thru each example and compute Load feature file ===
     print(f"\n> Loading feature from: {feature_path}")
     data = torch.load(feature_path)
     features = data['features'] if isinstance(data, dict) else data
@@ -52,6 +113,7 @@ def main(args):
         features = features.squeeze(0)
 
     print(f"> Feature shape: {features.shape}")
+
 
     # === Predict class ===
     with torch.no_grad():
@@ -63,6 +125,7 @@ def main(args):
     print(f"  - Logits         : {logits}")
     print(f"  - Probabilities  : {probs}")
     print(f"  - Predicted class: {pred_class}")
+    print(f"\n> Running Integrated Gradients for class {pred_class}")
 
     # === Generate average baseline ===
     mean_vector = features.mean(dim=0, keepdim=True)     # shape: [1, D]
@@ -75,64 +138,13 @@ def main(args):
     baseline = mean_vector.expand_as(features)               # [1, N, D]
     print(f"> Feature shape  : {features.shape}")
     print(f"> Baseline shape : {baseline.shape}")
+    
+    
+    
     # === Run Integrated Gradients ===
-    
-    if args.ig_name == 'integrated_gradient':
-        from attr_method_clam.integrated_gradient import IntegratedGradients as AttrMethod
-    else:
-        print("> Error: Unsupported attribution method name.")
 
- 
-    ig = AttrMethod()
-    
-    print(f"\n> Running Integrated Gradients for class {pred_class}")
 
-    # === CONFIG FOR CLAM MODEL === 
-    
-    def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-        from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS 
-        
-        device = next(model.parameters()).device
-        was_batched = inputs.dim() == 3
-
-        inputs = inputs.to(device).clone().detach().requires_grad_(True)
-        if was_batched:
-            inputs = inputs.squeeze(0)  # [1, N, D] -> [N, D]
-
-        model.eval()
-        outputs = model(inputs, [inputs.shape[0]])
-        logits = outputs[0] if isinstance(outputs, tuple) else outputs
-
-        if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
-            class_idx = call_model_args.get("target_class_idx", 0)
-            target = logits[:, class_idx]  # [N]
-            grads = torch.autograd.grad(
-                outputs=target,
-                inputs=inputs,
-                grad_outputs=torch.ones_like(target),
-                retain_graph=False,
-                create_graph=False
-            )[0]
-            grads_np = grads.detach().cpu().numpy()
-            if was_batched or grads_np.ndim == 2:
-                grads_np = np.expand_dims(grads_np, axis=0)  # Ensure [1, N, D]
-            return {INPUT_OUTPUT_GRADIENTS: grads_np}
-
-        return logits
-
- 
-    kwargs = {
-        "x_value": features,
-        "call_model_function": call_model_function,
-        "model": model,
-        "baseline_features": baseline,
-        "memmap_path": memmap_path,
-        "x_steps": 50,
-        "device": args.device,
-        "call_model_args": {"target_class_idx": pred_class}
-    }
-
-    attribution_values = ig.GetMask(**kwargs)
+    attribution_values = ig_module.GetMask(**kwargs)
     scores = attribution_values.mean(1)
 
     print(f"  - Attribution shape: {attribution_values.shape}")
