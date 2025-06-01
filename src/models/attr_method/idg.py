@@ -4,26 +4,6 @@ import torch
 from tqdm import tqdm
 import saliency.core as saliency
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
-from attr_method._common import PreprocessInputs
-
-
-def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-    inputs = (inputs.clone().detach() if isinstance(inputs, torch.Tensor)
-              else torch.tensor(inputs, dtype=torch.float32)).requires_grad_(True)
-
-    logits = model(inputs)  # CLAM returns (logits, prob, pred, _, dict)
-
-    if INPUT_OUTPUT_GRADIENTS in expected_keys:
-        target_class_idx = call_model_args.get('target_class_idx', 0) if call_model_args else 0
-        logits_tensor = logits[0] if isinstance(logits, tuple) else logits
-        if logits_tensor.dim() == 2:
-            target_output = logits_tensor[:, target_class_idx].sum()
-        else:
-            target_output = logits_tensor[target_class_idx].sum()
-        gradients = torch.autograd.grad(target_output, inputs)[0]
-        return {INPUT_OUTPUT_GRADIENTS: gradients}
-
-    return logits
 
 
 class IDG(CoreSaliency):
