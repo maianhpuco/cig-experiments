@@ -34,6 +34,7 @@ split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcg
 save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_renal_results"
 paths:
   predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_renal_predictions" 
+  split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_renal"
 # Data Directory Mapping
 data_dir_map:
   KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"

@@ -34,6 +34,7 @@ split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcg
 save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results"
 paths:
   predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_predictions"
+  split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
 
 
 # Data Directory Mapping
