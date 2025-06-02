@@ -30,56 +30,60 @@ random.seed(32)
 data_dir = "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
 
 def main(args):
-    torch.autograd.set_detect_anomaly(True)  # Add this line for better error reporting
-    epoch_step = json.loads(args.epoch_step)
-    writer = SummaryWriter(os.path.join(args.log_dir, "LOG", args.name))
+    for iteration in range(args.k_start, args.k_end + 1): 
+        args.log_dir = os.path.join(args.log_dir, f'fold_{iteration}')
+        print(f" [INFO] Log directory: {args.log_dir}")
+        torch.autograd.set_detect_anomaly(True)  # Add this line for better error reporting
+        epoch_step = json.loads(args.epoch_step)
+        writer = SummaryWriter(os.path.join(args.log_dir, "LOG", args.name))
 
-    in_chn = 1024
+        in_chn = 1024
 
-    classifier = Classifier_1fc(args.mDim, args.num_cls, args.droprate).to(
-        args.device
-    )
-    attention = Attention(args.mDim).to(args.device)
-    dimReduction = DimReduction(
-        in_chn, args.mDim, numLayer_Res=args.numLayer_Res
-    ).to(args.device)
-    attCls = Attention_with_Classifier(
-        L=args.mDim, num_cls=args.num_cls, droprate=args.droprate_2
-    ).to(args.device)
+        classifier = Classifier_1fc(args.mDim, args.num_cls, args.droprate).to(
+            args.device
+        )
+        attention = Attention(args.mDim).to(args.device)
+        dimReduction = DimReduction(
+            in_chn, args.mDim, numLayer_Res=args.numLayer_Res
+        ).to(args.device)
+        attCls = Attention_with_Classifier(
+            L=args.mDim, num_cls=args.num_cls, droprate=args.droprate_2
+        ).to(args.device)
 
-    if args.isPar:
-        classifier = DataParallel(classifier)
-        attention = DataParallel(attention)
-        dimReduction = DataParallel(dimReduction)
-        attCls = DataParallel(attCls)
+        if args.isPar:
+            classifier = DataParallel(classifier)
+            attention = DataParallel(attention)
+            dimReduction = DataParallel(dimReduction)
+            attCls = DataParallel(attCls)
 
-    ce_cri = torch.nn.CrossEntropyLoss(reduction="none").to(args.device)
+        ce_cri = torch.nn.CrossEntropyLoss(reduction="none").to(args.device)
 
-    if not os.path.exists(args.log_dir):
-        os.makedirs(args.log_dir)
-    log_dir = os.path.join(args.log_dir, "log.txt")
-    save_dir = os.path.join(args.log_dir, "best_model.pth")
-    z = vars(args).copy()
-    with open(log_dir, "a") as f:
-        f.write(json.dumps(z))
-    log_file = open(log_dir, "a")
+        if not os.path.exists(args.log_dir):
+            os.makedirs(args.log_dir)
+        log_dir = os.path.join(args.log_dir, "log.txt")
+        save_dir = os.path.join(args.log_dir, "best_model.pth")
+        z = vars(args).copy()
+        with open(log_dir, "a") as f:
+            f.write(json.dumps(z))
+        log_file = open(log_dir, "a")
 
-    trainable_parameters = []
-    trainable_parameters = trainable_parameters + list(classifier.parameters())
-    trainable_parameters = trainable_parameters + list(attention.parameters())
-    trainable_parameters = trainable_parameters + list(dimReduction.parameters())
+        trainable_parameters = []
+        trainable_parameters = trainable_parameters + list(classifier.parameters())
+        trainable_parameters = trainable_parameters + list(attention.parameters())
+        trainable_parameters = trainable_parameters + list(dimReduction.parameters())
 
-    optimizer_adam0 = torch.optim.Adam(trainable_parameters, lr=args.lr, weight_decay=args.weight_decay)
-    optimizer_adam1 = torch.optim.Adam(attCls.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        optimizer_adam0 = torch.optim.Adam(trainable_parameters, lr=args.lr, weight_decay=args.weight_decay)
+        optimizer_adam1 = torch.optim.Adam(attCls.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-    scheduler0 = torch.optim.lr_scheduler.MultiStepLR(optimizer_adam0, epoch_step, gamma=args.lr_decay_ratio)
-    scheduler1 = torch.optim.lr_scheduler.MultiStepLR(optimizer_adam1, epoch_step, gamma=args.lr_decay_ratio)
+        scheduler0 = torch.optim.lr_scheduler.MultiStepLR(optimizer_adam0, epoch_step, gamma=args.lr_decay_ratio)
+        scheduler1 = torch.optim.lr_scheduler.MultiStepLR(optimizer_adam1, epoch_step, gamma=args.lr_decay_ratio)
 
-    best_auc = 0
-    best_epoch = -1
-    test_auc = 0
+        best_auc = 0
+        best_epoch = -1
+        test_auc = 0
 
-    for iteration in range(args.k_start, args.k_end + 1):
+        # original for 
+    
         csv_path = os.path.join(args.split_folder, f'fold_{iteration}.csv')
         print(">>>>>>>>>>>>>  Loading data from:", csv_path)
         df = pd.read_csv(csv_path)
