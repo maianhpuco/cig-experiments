@@ -73,7 +73,15 @@ def main(args):
         label_dict = {'normal': 0, 'tumor': 1}
         split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
         df = pd.read_csv(split_csv_path)
-        print(df.head(5))
+        
+        train_count = df['train'].notna().sum()
+        val_count = df['val'].notna().sum()
+        test_count = df['test'].notna().sum()
+
+        print(f"[INFO] Number of slides in each split:")
+        print(f"  Train: {train_count}")
+        print(f"  Val:   {val_count}")
+        print(f"  Test:  {test_count}")
         return 
         train_dataset, val_dataset, test_dataset = return_splits_camelyon16(
             csv_path=split_csv_path,
