@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 import random
 from torch.nn.parallel import DataParallel
 
-sys.path.append(os.path.join("src/externals/dtfd-mil"))
+sys.path.append(os.path.join("src/externals/dtfd-mil-ngoc"))
 
 from Model.Attention import Attention_Gated as Attention
 from Model.Attention import Attention_with_Classifier
@@ -244,11 +244,9 @@ def test_attention_DTFD_preFeat_MultipleMean(
                 tslideLabel = label_tensor[tidx].unsqueeze(0)
 
                 full_path = os.path.join(data_dir_map[labels_list[slide_idx]], 'pt_files', f"{slides_list[slide_idx]}.pt")
-                print("full_path", full_path)
                 features = torch.load(full_path, weights_only=True, map_location='cuda:0')
 
                 tfeat = features
-                print("tfeat", tfeat.shape)
                 tfeat = tfeat.to(args.device)
                 midFeat = dimReduction(tfeat)
 
@@ -563,7 +561,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--batch_size_v", default=1, type=int)
     parser.add_argument("--num_workers", default=4, type=int)
-    parser.add_argument("--num_cls", default=2, type=int)
+    parser.add_argument("--num_cls", default=3, type=int)
     parser.add_argument("--numGroup", default=4, type=int)
     parser.add_argument("--total_instance", default=4, type=int)
     parser.add_argument("--numGroup_test", default=4, type=int)
