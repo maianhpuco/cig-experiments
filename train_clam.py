@@ -110,7 +110,7 @@ def main(args):
         # fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
         # os.makedirs(fold_result_dir, exist_ok=True)
         
-        filename = os.path.join(args.result_dir , f'split_{i}_results.pkl')
+        filename = os.path.join(args.results_dir , f'split_{i}_results.pkl')
         save_pkl(filename, results)
         print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
 
