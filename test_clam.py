@@ -68,7 +68,7 @@ def main(args):
     all_logits, all_probs = [], []
 
     # for i in range(len(test_dataset)):
-    for idx, (features, label, _) in enumerate(test_dataset):
+    for idx, (features, label) in enumerate(test_dataset):
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
         features = features.to(device) 
