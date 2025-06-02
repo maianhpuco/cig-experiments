@@ -1,6 +1,6 @@
 # DSMIL Training Configuration
 # Train DSMIL on 20x patch features learned by SimCLR
-
+dataset_name: 'camelyon16'
 # Model Configuration
 num_classes: 2  # Number of output classes
 feats_size: 1024  # Dimension of the feature size
@@ -34,3 +34,4 @@ config: "./configs_simea/dsmil_camelyon16.yaml"
 split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
 data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
 save_path: "/home/mvu9/processing_datasets/processing_camelyon16/dsmil_results"
+predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/dsmil_predictions"

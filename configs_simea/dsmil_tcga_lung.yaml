@@ -1,6 +1,6 @@
 # DSMIL Training Configuration for TCGA Dataset
 # Train DSMIL on 20x patch features learned by SimCLR
-
+dataset_name: 'tcga_lung'
 # Model Configuration
 num_classes: 2  # Number of output classes (LUAD, LUSC)
 feats_size: 1024  # Dimension of the feature size
@@ -32,6 +32,7 @@ eval_scheme: "5-fold-cv"  # Options: 5-fold-cv | 5-fold-cv-standalone-test | 5-t
 config: "./configs_simea/dsmil_tcga_lung.yaml"
 split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
 save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results"
+predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_predictions" 
 
 # Data Directory Mapping
 data_dir_map:
