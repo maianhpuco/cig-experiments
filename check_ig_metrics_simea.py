@@ -146,6 +146,7 @@ def main(args, config):
         use_h5=True
     ) 
     # For example, if features_data is [N, D], match shape
+    
     stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
     
     if features_data.dim() == 2:
