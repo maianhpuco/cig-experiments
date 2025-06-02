@@ -53,7 +53,7 @@ data_dir_map:
   LUAD: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
   LUSC: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"
 paths:
-  predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_predictions"
+  predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_predictions"
   split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
   data_dir:
     LUAD: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
