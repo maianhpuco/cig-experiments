@@ -37,3 +37,5 @@ save_path: "/home/mvu9/processing_datasets/processing_camelyon16/dsmil_results"
 paths:
   predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/dsmil_predictions"
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
+  data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
+  save_path: "/home/mvu9/processing_datasets/processing_camelyon16/dsmil_results"
