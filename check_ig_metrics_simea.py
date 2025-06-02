@@ -189,8 +189,8 @@ def main(args, config):
             saliency_maps[ig_name] = saliency_map
             print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
 
-            sic_score = compute_pic_metric(features.squeeze().cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 0, model, args.device, dataset_mean, dataset_std, min_pred_value=0.3, keep_monotonous=False)
-            aic_score = compute_pic_metric(features.squeeze().cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 1, model, args.device, dataset_mean, dataset_std, min_pred_value=0.3, keep_monotonous=False)
+            sic_score = compute_pic_metric(features.squeeze().cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 0, model, args.device, baseline=baseline.cpu().numpy(), min_pred_value=0.3, keep_monotonous=False)
+            aic_score = compute_pic_metric(features.squeeze().cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 1, model, args.device, baseline=baseline.cpu().numpy(), min_pred_value=0.3, keep_monotonous=False)
 
             results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
             print(f"  - SIC AUC: {sic_score.auc:.3f}\n  - AIC AUC: {aic_score.auc:.3f}")
