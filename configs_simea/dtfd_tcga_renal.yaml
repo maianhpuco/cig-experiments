@@ -43,10 +43,6 @@ num_MeanInference: 1
 # Distillation Settings
 distill_type: "AFS"  # Options: MaxMinS, MaxS, AFS
 
-# Cross-validation
-k_start: 1
-k_end: 5
-
 # Paths
 split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_renal"
 save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_renal_results"

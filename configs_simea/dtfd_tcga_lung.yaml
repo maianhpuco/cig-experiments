@@ -8,7 +8,7 @@ device: "cuda"
 isPar: false
 
 # Logging
-log_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results"
+log_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results_1fold"
 train_show_freq: 40
 
 # Model Parameters
@@ -43,13 +43,9 @@ num_MeanInference: 1
 # Distillation Settings
 distill_type: "AFS"  # Options: MaxMinS, MaxS, AFS
 
-# Cross-validation
-k_start: 1
-k_end: 5
-
 # Paths
 split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
-save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results"
+save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results_1fold"
 config_path: "./configs_simea/dtfd_tcga_lung.yaml"
 
 # Data Directory Mapping
