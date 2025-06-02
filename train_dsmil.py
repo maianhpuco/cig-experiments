@@ -315,6 +315,7 @@ def main(args):
 if __name__ == '__main__':
     import yaml
     parser = argparse.ArgumentParser(description='Train DSMIL using a full YAML config.')
+    parser.add_argument('--num_epochs', type=int, help='Number of total training epochs [100]') 
     parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
     parser.add_argument('--k_end', default=1, type=int, help='End fold number')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML configuration file.')
