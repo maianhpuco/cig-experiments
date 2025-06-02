@@ -117,7 +117,8 @@ if __name__ == "__main__":
     parser.add_argument('--ig_name', default='integrated_gradient')
     parser.add_argument('--fold', type=int, default=1, help='Fold index to evaluate')
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'], help='Device to run the model on')
-
+    parser.add_argument('--ckpt_path', type=str, default=None, help='Optional checkpoint path override')
+ 
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
@@ -133,6 +134,12 @@ if __name__ == "__main__":
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     os.makedirs(args.paths['predictions_dir'], exist_ok=True)
-
+    if args.ckpt_path is not None:
+        checkpoint_path = args.ckpt_path
+        print(f"[INFO] Using checkpoint from --ckpt_path argument: {checkpoint_path}")
+    else:
+        checkpoint_path = args.paths[f'for_ig_checkpoint_path_fold_{args.fold}']
+        print(f"[INFO] Using checkpoint from config file: {checkpoint_path}") 
+        
     print(" > Start compute PREDICTION for dataset: ", args.dataset_name)
     main(args)
