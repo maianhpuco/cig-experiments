@@ -66,7 +66,7 @@ def main(args):
 
         _, _, test_dataset = return_splits_camelyon16(
             csv_path=split_csv_path,
-            data_dir=args.paths['pt_files'],
+            data_dir=args.paths['data_dir'],
             label_dict=label_dict,
             seed=42,
             print_info=True
