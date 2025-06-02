@@ -319,6 +319,7 @@ if __name__ == '__main__':
     parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
     parser.add_argument('--k_end', default=1, type=int, help='End fold number')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML configuration file.')
+    
     args = parser.parse_args()
 
     # Load full config from YAML
@@ -326,9 +327,11 @@ if __name__ == '__main__':
         config = yaml.safe_load(f)
 
     # Convert config dictionary to an argparse.Namespace object
-    from types import SimpleNamespace
-    args = SimpleNamespace(**config)
-
+    for key, val in config.items():
+        if key == 'paths':
+            args.paths = val
+        else:
+            setattr(args, key, val)
     # Set GPU
     os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(map(str, args.gpu_index))
 
