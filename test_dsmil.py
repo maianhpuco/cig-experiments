@@ -19,7 +19,6 @@ from src.datasets.classification.tcga import return_splits_custom as return_spli
 def load_dsmil_model(args, ckpt_path):
     sys.path.append(os.path.join("src/externals/dsmil-wsi"))
     import dsmil as mil 
-    from src.externals.dsmil import MILNet, FCLayer, BClassifier  # Adjust import path if needed
  
     """
     Load a trained DSMIL model from a checkpoint file.
@@ -35,12 +34,12 @@ def load_dsmil_model(args, ckpt_path):
     print(f"[INFO] Loading DSMIL model from: {ckpt_path}")
 
     # Initialize instance and bag classifiers
-    i_classifier = FCLayer(in_size=args.feats_size, out_size=args.num_classes).cuda()
-    b_classifier = BClassifier(input_size=args.feats_size, output_class=args.num_classes,
+    i_classifier = mil.FCLayer(in_size=args.feats_size, out_size=args.num_classes).cuda()
+    b_classifier = mil.BClassifier(input_size=args.feats_size, output_class=args.num_classes,
                                dropout_v=args.dropout_node, nonlinear=args.non_linearity).cuda()
 
     # Wrap into MILNet
-    model = MILNet(i_classifier, b_classifier).cuda()
+    model = mil.MILNet(i_classifier, b_classifier).cuda()
 
     # Load checkpoint weights
     state_dict = torch.load(ckpt_path, map_location='cuda')
