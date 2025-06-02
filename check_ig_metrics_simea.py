@@ -115,10 +115,15 @@ def main(args, config):
     data = torch.load(feature_path)
     features = data['features'] if isinstance(data, dict) else data
     features = features.to(args.device, dtype=torch.float32)
+    
     if features.dim() == 3:
         _features = features.squeeze(0)
+    else:
+        _features = features 
     print(f"> Feature shape: {_features.shape}")
 
+    features_data = _features.unsqueeze(0) if _features.dim() == 2 else _features 
+    
     with torch.no_grad():
         model_wrapper = ModelWrapper(model, model_type='clam')
         logits = model_wrapper.forward(_features.unsqueeze(0))
@@ -144,7 +149,7 @@ def main(args, config):
     stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
     print("stacked_features_baseline", stacked_features_baseline.shape)
     # no need - justtest the baseline pool 
-    sampled_indices = np.random.choice(stacked_features_baseline.shape[0], (1, features.shape[0]), replace=True)
+    sampled_indices = np.random.choice(stacked_features_baseline.shape[0], (1, features_data.shape[0]), replace=True)
     print("indice shape: ", sampled_indices)
     baseline = stacked_features_baseline[sampled_indices].squeeze(0)  # shape: [N, D]
     print(f"> Baseline shape: {baseline.shape}")
@@ -153,8 +158,8 @@ def main(args, config):
 
     ig_methods = ['ig', 'cig', 'idg', 'eg']
     saliency_thresholds = np.linspace(0.005, 0.75, 20)
-    random_mask = generate_random_mask(features.shape[-2], fraction=0.01)
-    print(f"\n> Number of patches: {features.shape[-2]}")
+    random_mask = generate_random_mask(features_data.shape[-2], fraction=0.01)
+    print(f"\n> Number of patches: {features_data.shape[-2]}")
     
     print(f"> Number of masked patches: {random_mask.sum()}")
     print(features.shape)
@@ -167,7 +172,7 @@ def main(args, config):
         ig_module, call_model_function = load_ig_module(args)
 
         kwargs = {
-            "x_value": features,
+            "x_value": features_data,
             "call_model_function": call_model_function,
             "model": model,
             "baseline_features": stacked_features_baseline,
