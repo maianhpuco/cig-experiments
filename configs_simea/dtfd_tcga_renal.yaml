@@ -58,8 +58,8 @@ paths:
   predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_renal_predictions" 
   split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_renal"
   data_dir:
-    KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
-    KIRC: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
-    KIRP: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+    kich: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
+    kirc: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
+    kirp: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
 
 dataset_name: 'tcga_renal'
