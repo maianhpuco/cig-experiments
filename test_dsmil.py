@@ -72,14 +72,14 @@ def main(args):
     if args.dataset_name == 'camelyon16':
         label_dict = {'normal': 0, 'tumor': 1}
         split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-        test_dataset, _, _ = return_splits_camelyon16(
+        train_dataset, _, _ = return_splits_camelyon16(
             csv_path=split_csv_path,
             data_dir=args.paths['data_dir'],
             label_dict=label_dict,
             seed=42,
             print_info=True
         )
-        
+        test_dataset = train_dataset  # For DSMIL, we use the same dataset for testing
     else:
         label_dict = args.label_dict if hasattr(args, "label_dict") else None
         split_folder = args.paths['split_folder']
