@@ -2,15 +2,19 @@ import os
 import yaml
 import argparse
 import torch
-import sys 
-ig_path = os.path.abspath(os.path.join("src/models"))
-clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
-sys.path.append(ig_path)   
-sys.path.append(clf_path)   
-from src.models.clam import load_clam_model
-from src.datasets.classification.camelyon16 import return_splits_custom
+import sys
 import numpy as np
 import pandas as pd
+
+# Add model paths
+ig_path = os.path.abspath(os.path.join("src/models"))
+clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
+sys.path.append(ig_path)
+sys.path.append(clf_path)
+
+from src.models.clam import load_clam_model
+from src.datasets.classification.camelyon16 import return_splits_custom_with_slidename as return_splits_camelyon16
+from src.datasets.classification.tcga import return_splits_custom_with_slidename as return_splits_tcga
 
 
 def main(args):
@@ -19,37 +23,89 @@ def main(args):
 
     print(f"[INFO] Loading model checkpoint from: {args.paths[f'for_ig_checkpoint_path_fold_{fold_id}']}")
     model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device)
-
-    # Load split
-    print("[INFO] Loading test set...")
-    split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-    label_dict = {'normal': 0, 'tumor': 1}
-    _, _, test_dataset = return_splits_custom(
-        csv_path=split_csv_path,
-        data_dir=args.paths['pt_files'],
-        label_dict=label_dict,
-        seed=42,
-        print_info=True
-    )
-
     model.eval()
-    all_preds, all_labels = [], []
+
+    print("========= Reading on Test Set ===========")
+
+    if args.dataset_name == 'camelyon16':
+        split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
+        label_dict = {'normal': 0, 'tumor': 1}
+
+        _, _, test_dataset = return_splits_camelyon16(
+            csv_path=split_csv_path,
+            data_dir=args.paths['pt_files'],
+            label_dict=label_dict,
+            seed=42,
+            print_info=True
+        )
+        print(f"[INFO] Test Set Size: {len(test_dataset)}")
+
+    elif args.dataset_name in ['tcga_renal', 'tcga_lung']:
+        label_dict = args.label_dict if hasattr(args, "label_dict") else None
+        split_folder = args.paths['split_folder']
+        data_dir_map = args.paths['data_dir']
+
+        train_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
+        val_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
+        test_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
+
+        train_dataset, val_dataset, test_dataset = return_splits_tcga(
+            train_csv_path,
+            val_csv_path,
+            test_csv_path,
+            data_dir_map=data_dir_map,
+            label_dict=label_dict,
+            seed=42,
+            print_info=True
+        )
+        print(f"[INFO] FOLD {fold_id} -> Train: {len(train_dataset)} | Val: {len(val_dataset)} | Test: {len(test_dataset)}")
+
+    else:
+        raise ValueError(f"Unsupported dataset: {args.dataset_name}")
+
+    print("========= Start Prediction on Test Set ===========")
+    all_preds, all_labels, all_slide_ids = [], [], []
+    all_logits, all_probs = [], []
+
     for i in range(len(test_dataset)):
-        features, label, _ = test_dataset[i]
-        features = features.unsqueeze(0).to(device)  # Add batch dim
+        sample = test_dataset[i]
+        if len(sample) == 4:
+            features, label, _, slide_id = sample
+        elif len(sample) == 3:
+            print("[WARNING] Test dataset does not return slide_id, using index instead.")
+            features, label, slide_id = sample
+        else:
+            raise ValueError("Unexpected number of return values from test_dataset")
+
+        features = features.unsqueeze(0).to(device)
         with torch.no_grad():
             logits, Y_prob, Y_hat, _, _ = model(features)
             pred = torch.argmax(Y_prob, dim=1).item()
 
         all_preds.append(pred)
         all_labels.append(label)
+        all_slide_ids.append(slide_id)
+        all_logits.append(logits.cpu().numpy().flatten())
+        all_probs.append(Y_prob.cpu().numpy().flatten())
+
+    # Create prediction folder if not exists
+    os.makedirs(args.paths['predictions_dir'], exist_ok=True)
 
     # Save predictions
-    output_df = pd.DataFrame({
+    df_dict = {
+        'slide_id': all_slide_ids,
         'true_label': all_labels,
         'pred_label': all_preds
-    })
-    save_path = os.path.join(args.paths['attribution_scores_folder'], f'test_preds_fold{fold_id}.csv')
+    }
+
+    # Add logit and prob for each class (multi-class support)
+    num_classes = len(all_probs[0])
+    for c in range(num_classes):
+        df_dict[f'logit_class_{c}'] = [logit[c] for logit in all_logits]
+        df_dict[f'prob_class_{c}'] = [prob[c] for prob in all_probs]
+
+    output_df = pd.DataFrame(df_dict)
+    save_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     output_df.to_csv(save_path, index=False)
     print(f"[INFO] Predictions saved to {save_path}")
 
@@ -74,12 +130,9 @@ if __name__ == "__main__":
             setattr(args, key, val)
 
     args.dataset_name = config['dataset_name']
-    if args.dataset_name == 'tcga_renal':
-        args.data_dir_map = config['paths']['data_dir']
-
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-    os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
+    os.makedirs(args.paths['predictions_dir'], exist_ok=True)
 
-    print(" > Start compute IG for dataset: ", args.dataset_name)
+    print(" > Start compute PREDICTION for dataset: ", args.dataset_name)
     main(args)

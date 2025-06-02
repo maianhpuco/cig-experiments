@@ -14,8 +14,9 @@ paths:
   h5_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files" 
   feature_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files"  
   metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/metrics"
-  predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/predictions/clam"
+  predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_predictions"
   dataset_mean: "/home/mvu9/processing_datasets/processing_camelyon16/dataset_mean_variance" 
+
 fold_number: 5 
 label_dict:
   0: "normal"

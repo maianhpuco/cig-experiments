@@ -24,6 +24,7 @@ train_clam_camelyon16_5fold:
 	conda activate clam_env && \
 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 1 --k_end 5
 
+# ============= CLAM ============= 
 
 train_clam_tcga_renal_1fold:
 	@echo "Activating conda environment for simea .."
