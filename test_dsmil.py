@@ -79,6 +79,7 @@ def main(args):
             seed=42,
             print_info=True
         )
+        
     else:
         label_dict = args.label_dict if hasattr(args, "label_dict") else None
         split_folder = args.paths['split_folder']
