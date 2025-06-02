@@ -12,7 +12,7 @@ clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 sys.path.append(ig_path)
 sys.path.append(clf_path)
 
-from src.models.clam import load_clam_model
+from clam import load_clam_model  
 from src.datasets.classification.camelyon16 import return_splits_custom_with_slidename as return_splits_camelyon16
 from src.datasets.classification.tcga import return_splits_custom_with_slidename as return_splits_tcga
 
