@@ -110,7 +110,14 @@ def main(args):
         print(f"[INFO] Val Set Size: {len(val_dataset)}")
         print(f"[INFO] Test Set Size: {len(test_dataset)}")
         print(f"[INFO] Train Set Size: {len(train_dataset)}")
-        
+    # for i in range(len(test_dataset)):
+    for idx, data in enumerate(test_dataset):
+        if args.dataset_name == 'camelyon16':
+            (features, label) = data
+        if args.dataset_name in ['tcga_renal', 'tcga_lung']:
+            (features, label, _) = data 
+        print(data)
+        break  
     print("========= Start Prediction on Test Set ===========")
     all_preds, all_labels, all_slide_ids, all_logits, all_probs = predict(
         model=model,
