@@ -51,7 +51,7 @@ def predict(model, test_dataset, device, dataset_name):
     """Run prediction using the loaded DTFD model on a test set."""
     classifier, dimReduction, attention, attCls = model
 
-    all_preds, all_labels, all_slide_ids, all_logits, all_probs = [], [], [], [], []
+    all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts = [], [], [], [], [], []
     for idx, data in enumerate(test_dataset):
         if dataset_name == 'camelyon16':
             features, label = data
@@ -77,8 +77,8 @@ def predict(model, test_dataset, device, dataset_name):
         all_preds.append(pred_label)
         all_logits.append(slide_logits.squeeze().cpu())
         all_probs.append(prob.squeeze().cpu())
-
-    return all_preds, all_labels, all_slide_ids, all_logits, all_probs
+        all_feature_counts.append(features.shape[0])
+    return all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts
 
 
 def main(args):
@@ -113,7 +113,7 @@ def main(args):
         )
 
     print("========= Start Prediction on Test Set ===========")
-    all_preds, all_labels, all_slide_ids, all_logits, all_probs = predict(
+    all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts = predict(
         model=model,
         test_dataset=test_dataset,
         device=device,
@@ -123,6 +123,7 @@ def main(args):
     os.makedirs(args.paths['predictions_dir'], exist_ok=True)
     results_dict = {
         'slide_id': all_slide_ids,
+        'feature_count': all_feature_counts,
         'true_label': all_labels,
         'pred_label': all_preds,
         'logits': [logit.tolist() for logit in all_logits],

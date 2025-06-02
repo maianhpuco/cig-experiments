@@ -35,7 +35,7 @@ def predict(model, test_dataset, device, dataset_name):
     model.eval()
     all_preds, all_labels, all_slide_ids = [], [], []
     all_logits, all_probs = [], []
-
+    all_feature_counts = [] 
     for idx, data in enumerate(test_dataset):
         if dataset_name == 'camelyon16':
             (features, label) = data
@@ -59,8 +59,8 @@ def predict(model, test_dataset, device, dataset_name):
         all_slide_ids.append(slide_id)
         all_logits.append(logits.cpu().numpy())
         all_probs.append(probs.cpu().numpy())
-
-    return all_preds, all_labels, all_slide_ids, all_logits, all_probs
+        all_feature_counts.append(features.shape[0])
+    return all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts
 
 def main(args):
     fold_id = args.fold
@@ -133,6 +133,7 @@ def main(args):
     os.makedirs(args.paths['predictions_dir'], exist_ok=True)
     df_dict = {
         'slide_id': all_slide_ids,
+        "feature_count": all_feature_counts,
         'true_label': all_labels,
         'pred_label': all_preds,
         'logits': [logit.tolist() for logit in all_logits],

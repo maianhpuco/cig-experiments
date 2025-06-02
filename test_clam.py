@@ -67,7 +67,7 @@ def main(args):
     print("========= Start Prediction on Test Set ===========")
     all_preds, all_labels, all_slide_ids = [], [], []
     all_logits, all_probs = [], []
-
+    all_feature_counts = []
     # for i in range(len(test_dataset)):
     for idx, data in enumerate(test_dataset):
         if args.dataset_name == 'camelyon16':
@@ -76,6 +76,7 @@ def main(args):
             (features, label, _) = data
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
+        all_feature_counts.append(features.shape[0])
         features = features.to(device) 
         with torch.no_grad():
             output = model(features, [features.shape[0]])
@@ -95,6 +96,7 @@ def main(args):
     # Save predictions
     df_dict = {
         'slide_id': all_slide_ids,
+        "feature_count": all_feature_counts,
         'true_label': all_labels,
         'pred_label': all_preds,
         'logits': [logit.tolist() for logit in all_logits],
