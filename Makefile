@@ -17,6 +17,12 @@ train_clam_camelyon16_5fold:
 test_clam_camelyon16_fold_1:
 	python test_clam.py \
 	--config configs_simea/clam_camelyon16.yaml --fold 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/result_2025-05-18/result_2025-05-18_22-23-56/s_1_checkpoint.pt
+#--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt 
+
+test_clam_tcga_renal_fold_1:
+	python test_clam.py \
+	--config configs_simea/clam_camelyon16.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt 
 
 
