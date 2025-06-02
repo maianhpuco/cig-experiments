@@ -205,7 +205,7 @@ def main(args):
     all_save_paths = []
     for iteration in range(args.k_start, args.k_end + 1):
         
-        os.mkdir(args.save_path, exist_ok=True)
+        os.makedirs(args.save_path, exist_ok=True)
         save_path = os.path.join(args.save_path, f"fold_{iteration}")
         os.makedirs(save_path, exist_ok=True)
         
