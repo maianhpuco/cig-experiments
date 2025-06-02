@@ -72,7 +72,7 @@ def main(args):
     if args.dataset_name == 'camelyon16':
         label_dict = {'normal': 0, 'tumor': 1}
         split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-        _, _, test_dataset = return_splits_camelyon16(
+        test_dataset, _, _ = return_splits_camelyon16(
             csv_path=split_csv_path,
             data_dir=args.paths['data_dir'],
             label_dict=label_dict,
