@@ -72,17 +72,17 @@ def main(args):
     if args.dataset_name == 'camelyon16':
         label_dict = {'normal': 0, 'tumor': 1}
         split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-        df = pd.read_csv(split_csv_path)
+        # df = pd.read_csv(split_csv_path)
         
-        train_count = df['train'].notna().sum()
-        val_count = df['val'].notna().sum()
-        test_count = df['test'].notna().sum()
+        # train_count = df['train'].notna().sum()
+        # val_count = df['val'].notna().sum()
+        # test_count = df['test'].notna().sum()
 
-        print(f"[INFO] Number of slides in each split:")
-        print(f"  Train: {train_count}")
-        print(f"  Val:   {val_count}")
-        print(f"  Test:  {test_count}")
-        return 
+        # print(f"[INFO] Number of slides in each split:")
+        # print(f"  Train: {train_count}")
+        # print(f"  Val:   {val_count}")
+        # print(f"  Test:  {test_count}")
+    
         train_dataset, val_dataset, test_dataset = return_splits_camelyon16(
             csv_path=split_csv_path,
             data_dir=args.paths['data_dir'],
@@ -93,7 +93,6 @@ def main(args):
         print(f"[INFO] Val Set Size: {len(val_dataset)}")
         print(f"[INFO] Test Set Size: {len(test_dataset)}")
         print(f"[INFO] Train Set Size: {len(train_dataset)}")
-        test_dataset = train_dataset  # For DSMIL, we use the same dataset for testing
     else:
         label_dict = args.label_dict if hasattr(args, "label_dict") else None
         split_folder = args.paths['split_folder']
@@ -101,11 +100,14 @@ def main(args):
         val_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
         test_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
 
-        _, _, test_dataset = return_splits_tcga(
+        train_dataset, val_dataset, test_dataset = return_splits_tcga(
             train_csv_path, val_csv_path, test_csv_path,
             data_dir_map=args.paths['data_dir'], label_dict=label_dict, seed=42, print_info=True
         )
-
+        print(f"[INFO] Val Set Size: {len(val_dataset)}")
+        print(f"[INFO] Test Set Size: {len(test_dataset)}")
+        print(f"[INFO] Train Set Size: {len(train_dataset)}")
+        return 
     print("========= Start Prediction on Test Set ===========")
     all_preds, all_labels, all_slide_ids, all_logits, all_probs = predict(
         model=model,

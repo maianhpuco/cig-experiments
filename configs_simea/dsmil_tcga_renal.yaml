@@ -19,7 +19,7 @@ gpu_index: [0]  # GPU ID(s)
 dataset: "TCGA-renal-default"  # Dataset folder name
 split: 0.2  # Training/Validation split
 
-# Model Architecture
+# Model Architecture  
 dropout_patch: 0.0  # Patch dropout rate
 dropout_node: 0.0  # Bag classifier dropout rate
 non_linearity: 1.0  # Additional nonlinear operation
@@ -35,8 +35,13 @@ save_path: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_renal_
 paths:
   predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_renal_predictions" 
   split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_renal"
+
 # Data Directory Mapping
 data_dir_map:
+  KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
+  KIRC: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
+  KIRP: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+data_dir:
   KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
   KIRC: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
   KIRP: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
