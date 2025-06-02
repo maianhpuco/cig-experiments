@@ -68,7 +68,11 @@ def main(args):
     all_logits, all_probs = [], []
 
     # for i in range(len(test_dataset)):
-    for idx, (features, label) in enumerate(test_dataset):
+    for idx, data in enumerate(test_dataset):
+        if args.dataset_name == 'camelyon16':
+            (features, label) = data
+        if args.dataset_name in ['tcga_renal', 'tcga_lung']:
+            (features, label, _) = data
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
         features = features.to(device) 
