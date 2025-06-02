@@ -140,10 +140,11 @@ test_dtfd_tcga_lung_fold_1:
 test_dtfd_fold_1: test_dtfd_camelyon16_fold_1  test_dtfd_tcga_lung_fold_1
 
 # ============= PREDICT CLAM =============
-python sample_contrastive_features.py \
-    --config configs_simea/clam_camelyon16.yaml \
-    --start_fold 1 \
-    --end_fold 1
+baseline_clam_camelyon16:
+	python sample_contrastive_features.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--start_fold 1 \
+		--end_fold 1
 
 
 
