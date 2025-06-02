@@ -18,19 +18,74 @@ from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from PICTestFunctions import compute_pic_metric, generate_random_mask, ComputePicMetricError, ModelWrapper
 
 #  Offline Baseline Pool Creation:
-
-def sample_random_features(dataset, num_files=50):
-    indices = np.random.choice(len(dataset), num_files, replace=False)
+def sample_random_features(dataset, num_files=50, max_patches_per_file=1000):
+    """
+    Samples features from the dataset, selecting 50% from Class 0 (normal) and 50% from Class 1 (tumor).
+    
+    Args:
+        dataset: Dataset object returning (features, label, _) for each item.
+        num_files: Total number of files to sample (default: 50).
+        max_patches_per_file: Maximum patches per file (default: 256).
+    
+    Returns:
+        torch.Tensor: Flattened tensor of shape [total_patches, D] containing sampled features.
+    """
+    # Separate indices by class
+    class_0_indices = [idx for idx in range(len(dataset)) if dataset[idx][1] == 0]
+    class_1_indices = [idx for idx in range(len(dataset)) if dataset[idx][1] == 1]
+    
+    print(f"> Class 0 (normal) files: {len(class_0_indices)}")
+    print(f"> Class 1 (tumor) files: {len(class_1_indices)}")
+    
+    # Calculate files per class
+    files_per_class = num_files // 2  # e.g., 25
+    if len(class_0_indices) < files_per_class or len(class_1_indices) < files_per_class:
+        print("> Warning: Insufficient files in one or both classes. Adjusting selection.")
+        total_available = min(len(class_0_indices), len(class_1_indices))
+        files_per_class = min(files_per_class, total_available)
+    
+    # Select files
+    selected_0 = np.random.choice(class_0_indices, files_per_class, replace=False)
+    selected_1 = np.random.choice(class_1_indices, files_per_class, replace=False)
+    selected_indices = np.concatenate([selected_0, selected_1])
+    np.random.shuffle(selected_indices)  # Shuffle to mix classes
+    
+    print(f"> Selected {len(selected_0)} Class 0 files, {len(selected_1)} Class 1 files")
+    
     feature_list = []
-    for idx in indices:
-        features, _, _ = dataset[idx]
+    for idx in selected_indices:
+        features, label, _ = dataset[idx]
         features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
-        if features.size(0) > 128:
-            features = features[:128]
+        # Shuffle patches and limit to max_patches_per_file
+        if features.size(0) > max_patches_per_file:
+            perm = torch.randperm(features.size(0))[:max_patches_per_file]
+            features = features[perm]
+        elif features.size(0) > 1:
+            perm = torch.randperm(features.size(0))
+            features = features[perm]
         feature_list.append(features)
+    
+    # Pad and flatten
     padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
     flattened = padded.view(-1, padded.size(-1))
-    return flattened
+    
+    print(f"> Sampled feature pool shape: {flattened.shape}")
+    print(f"> Sampled feature stats: mean={flattened.mean().item():.6f}, std={flattened.std().item():.6f}")
+    
+    return flattened 
+
+# def sample_random_features(dataset, num_files=50):
+#     indices = np.random.choice(len(dataset), num_files, replace=False)
+#     feature_list = []
+#     for idx in indices:
+#         features, _, _ = dataset[idx]
+#         features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
+#         if features.size(0) > 128:
+#             features = features[:128]
+#         feature_list.append(features)
+#     padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
+#     flattened = padded.view(-1, padded.size(-1))
+#     return flattened
 
 def load_ig_module(args):
     def get_module_by_name(name):
