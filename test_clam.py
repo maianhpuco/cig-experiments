@@ -13,8 +13,8 @@ sys.path.append(ig_path)
 sys.path.append(clf_path)
 
 from clam import load_clam_model  
-from src.datasets.classification.camelyon16 import return_splits_custom_with_slidename as return_splits_camelyon16
-from src.datasets.classification.tcga import return_splits_custom_with_slidename as return_splits_tcga
+from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon16
+from src.datasets.classification.tcga import return_splits_custom as return_splits_tcga
 
 
 def main(args):
@@ -67,24 +67,20 @@ def main(args):
     all_preds, all_labels, all_slide_ids = [], [], []
     all_logits, all_probs = [], []
 
-    for i in range(len(test_dataset)):
-        sample = test_dataset[i]
-        if len(sample) == 4:
-            features, label, _, slide_id = sample
-        elif len(sample) == 3:
-            print("[WARNING] Test dataset does not return slide_id, using index instead.")
-            features, label, slide_id = sample
-        else:
-            raise ValueError("Unexpected number of return values from test_dataset")
-
-        features = features.unsqueeze(0).to(device)
+    # for i in range(len(test_dataset)):
+    for idx, (features, label, _) in enumerate(test_dataset):
+        basename = test_dataset.slide_data['slide_id'].iloc[idx]
+        print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
+        features = features.to(device) 
         with torch.no_grad():
-            logits, Y_prob, Y_hat, _, _ = model(features)
-            pred = torch.argmax(Y_prob, dim=1).item()
+            output = model(features, [features.shape[0]])
+            logits, Y_prob, Y_hat, _, _ = output  # Unpack CLAM output tuple
+            pred = torch.argmax(logits, dim=1)[0].item()  # Get predicted class
+        print(f"Predicted class for {basename} {pred} ground truth {label}")  
 
         all_preds.append(pred)
         all_labels.append(label)
-        all_slide_ids.append(slide_id)
+        all_slide_ids.append(basename)
         all_logits.append(logits.cpu().numpy().flatten())
         all_probs.append(Y_prob.cpu().numpy().flatten())
 
@@ -95,7 +91,9 @@ def main(args):
     df_dict = {
         'slide_id': all_slide_ids,
         'true_label': all_labels,
-        'pred_label': all_preds
+        'pred_label': all_preds,
+        'logits': [logit.tolist() for logit in all_logits],
+        'probs': [prob.tolist() for prob in all_probs],
     }
 
     # Add logit and prob for each class (multi-class support)
