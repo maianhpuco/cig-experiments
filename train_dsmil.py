@@ -194,16 +194,28 @@ def main(args):
         optimizer = torch.optim.Adam(milnet.parameters(), lr=args.lr, betas=(0.5, 0.9), weight_decay=args.weight_decay)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.num_epochs, 0.000005)
         return milnet, criterion, optimizer, scheduler
-
+    
+    import time
+    start_time = time.time()
     label_dict = {'normal': 0, 'tumor': 1}
     # bags_path = bags_path.sample(n=50, random_state=42)
     fold_results = []
-
-    save_path = os.path.join(args.save_path, datetime.date.today().strftime("%Y%m%d"))
-    os.makedirs(save_path, exist_ok=True)
-    run = len(glob.glob(os.path.join(save_path, '*.pth')))
-
+    
+    
+    all_save_paths = []
     for iteration in range(args.k_start, args.k_end + 1):
+        
+        os.mkdir(args.save_path, exist_ok=True)
+        save_path = os.path.join(args.save_path, f"fold_{iteration}")
+        os.makedirs(save_path, exist_ok=True)
+        
+        # save_path = os.path.join(args.save_path, datetime.date.today().strftime("%Y%m%d"))
+        all_save_paths.append(save_path) 
+       
+        print("---------------------") 
+        print(f"Saving results to: {save_path}")
+        
+        run = len(glob.glob(os.path.join(save_path, '*.pth'))) 
         print(f"Starting iteration {iteration}.")
         milnet, criterion, optimizer, scheduler = init_model(args)
 
@@ -254,7 +266,11 @@ def main(args):
     print(f"Final results: Mean Accuracy: {mean_ac}")
     for i, mean_score in enumerate(mean_auc):
         print(f"Class {i}: Mean AUC = {mean_score:.4f}")
-
+    elapsed = time.time() - start_time
+    
+    print(f"\n All folds complete. Results saved under: {all_save_paths}")
+    print(f" Total run time: {elapsed:.2f} seconds ({elapsed/60:.2f} minutes)\n") 
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train DSMIL on 20x patch features learned by SimCLR')
     parser.add_argument('--num_classes', default=2, type=int, help='Number of output classes [2]')
@@ -275,11 +291,11 @@ if __name__ == '__main__':
     parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
     parser.add_argument('--k_end', default=1, type=int, help='End fold number')
     parser.add_argument("--config", default="./configs_simea/dsmil_camelyon16.yaml", type=str)
-    parser.add_argument("--split_folder", default="/home/mvu9/processing_datasets/processing_camelyon16/splits_csv", type=str)
-    parser.add_argument("--data_dir", default="/home/mvu9/processing_datasets/processing_camelyon16/features_fp", type=str)
-    parser.add_argument("--save_path", default="/home/mvu9/processing_datasets/processing_camelyon16/results", type=str)
-    
-    
+    # parser.add_argument("--split_folder", default="/home/mvu9/processing_datasets/processing_camelyon16/splits_csv", type=str)
+    # parser.add_argument("--data_dir", default="/home/mvu9/processing_datasets/processing_camelyon16/features_fp", type=str)
+    # # parser.add_argument("--save_path", default="/home/mvu9/processing_datasets/processing_camelyon16/results", type=str)
+    # parser.add_argument("--save_path", default="/home/mvu9/processing_datasets/processing_camelyon16/dsmil_camelyon16_results", type=str)
+
     args = parser.parse_args()
     print(args.eval_scheme)
 
@@ -293,4 +309,5 @@ if __name__ == '__main__':
     # Merge YAML config into args
     for key, value in config.items():
         setattr(args, key, value)
+        
     main(args)
