@@ -145,12 +145,11 @@ def main(args, config):
         print_info=False,
         use_h5=True
     ) 
-
+    
     stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
-    print("stacked_features_baseline", stacked_features_baseline.shape)
-    # no need - justtest the baseline pool 
-    sampled_indices = np.random.choice(stacked_features_baseline.shape[0], features_data.shape[0], replace=True)
-    baseline = stacked_features_baseline[sampled_indices]
+    num_patches = features_data.shape[0]  # Make sure this is an integer
+    sampled_indices = np.random.choice(stacked_features_baseline.shape[0], size=num_patches, replace=True)
+    baseline = stacked_features_baseline[sampled_indices] 
     print(f"> Baseline shape: {baseline.shape}")
     baseline_pred = model(baseline)
     print(f"> Baseline prediction: {baseline_pred}")
