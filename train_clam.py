@@ -127,14 +127,12 @@ def main(args):
         'val_acc': all_val_acc
     })
     
-    print("=======Number of folds:", len(folds), "=========") 
+    # print("=======Number of folds:", len(folds), "=========") 
     
-    if len(folds) != args.k:
-        save_name = f'summary_partial_{start}_{end}.csv'
-    else:
-        save_name = 'summary.csv'
-    final_df.to_csv(os.path.join(args.results_dir, save_name))
-    print(f"=========> [x] Summary saved at: {os.path.join(args.results_dir, save_name)}")
+    # # if len(folds) != args.k:
+    # save_name = f'summary_partial_{start}_{end}.csv'
+    # final_df.to_csv(os.path.join(args.results_dir, save_name))
+    # print(f"=========> [x] Summary saved at: {os.path.join(args.results_dir, save_name)}")
     total_duration = time.time() - start_time
 
     print(f"\n ----> All folds completed in {total_duration:.2f} seconds ({total_duration / 60:.2f} minutes)") 
