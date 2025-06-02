@@ -216,6 +216,8 @@ def main(args):
             seed=42,
             print_info=False
         )
+        print("---------------------")
+        print(f"Train len: {len(train_dataset)} | Val len: {len(val_dataset)} | Test len: {len(test_dataset)}")
         
 
         fold_best_score = 0
