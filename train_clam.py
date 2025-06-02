@@ -42,7 +42,10 @@ def main(args):
     timestamp =  "final"
     # Set paths from YAML
     args.data_root_dir = cfg['paths']['pt_files']
-    args.results_dir = os.path.join(cfg['paths']['save_dir'], f'result_{timestamp}_ep{args.max_epochs}')
+    
+    # args.results_dir = os.path.join(cfg['paths']['save_dir'], f'result_{timestamp}_ep{args.max_epochs}')
+    args.results_dir = os.path.join(cfg['paths']['result_dir'], f'result_{timestamp}_ep{args.max_epochs}')  
+    print(f"[INFO] Data result directory: {args.results_dir}")
     # args.split_dir = os.path.join(cfg['paths']['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
     split_folder =cfg['paths']['split_folder']
     data_dir = cfg['paths']['pt_files']
@@ -180,6 +183,9 @@ if __name__ == "__main__":
     parser.add_argument('--subtyping', action='store_true', default=False)
     parser.add_argument('--bag_weight', type=float, default=0.7)
     parser.add_argument('--B', type=int, default=8)
+    parser.add_argument('--checkpoint_dir', type=str, default=None,
+                    help='Optional: Path to pre-trained model checkpoint folder for each fold')
+
     args = parser.parse_args()
 
     config_path = args.config
