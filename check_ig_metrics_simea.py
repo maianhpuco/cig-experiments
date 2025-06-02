@@ -162,7 +162,7 @@ def main(args, config):
     
     
     print(f"> Baseline shape: {baseline.shape}")
-    baseline_pred = model(baseline)
+    baseline_pred = model(baseline.squeeze(0))
     print(f"> Baseline prediction: {baseline_pred}")
 
     ig_methods = ['ig', 'cig', 'idg', 'eg']
