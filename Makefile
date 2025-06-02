@@ -30,21 +30,21 @@ test_clam_tcga_lung_fold_1:
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 
 
-# ============= TEST CLAM ============= 
+# ============= TEST DSMIL ============= 
 test_dsmil_camelyon16_fold_1:
 	python test_dsmil.py \
 	--config configs_simea/dsmil_camelyon16.yaml --fold 1 \
-	--ckpt_path 
+	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dsmil_results/20250528/fold_1_1.pth
 
 test_dsmil_tcga_renal_fold_1:
 	python test_dsmil.py \
 	--config configs_simea/dsmil_tcga_renal.yaml --fold 1 \
-	--ckpt_path 
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_results/20250528/fold_1_1.pth
 
 test_dsmil_tcga_lung_fold_1:
 	python test_dsmil.py \
 	--config configs_simea/dsmil_tcga_lung.yaml --fold 1 \
-	--ckpt_path 
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results/20250528/fold_1_1.pth 
 
 
 
