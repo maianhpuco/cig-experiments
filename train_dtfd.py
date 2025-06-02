@@ -81,7 +81,7 @@ def main(args):
 
     for iteration in range(args.k_start, args.k_end + 1):
         csv_path = os.path.join(args.split_folder, f'fold_{iteration}.csv')
-
+        print(">>>>>>>>>>>>>  Loading data from:", csv_path)
         df = pd.read_csv(csv_path)
         train_case_ids = df["train"].dropna().tolist()
         val_case_ids = df["val"].dropna().tolist()
@@ -90,7 +90,10 @@ def main(args):
         train_labels = df["train_label"].dropna().astype(int).tolist()
         val_labels = df["val_label"].dropna().astype(int).tolist()
         test_labels = df["test_label"].dropna().astype(int).tolist()
-
+        
+        print(" [INFO] Train slides:", len(train_case_ids))
+        print(" [INFO] Validation slides:", len(val_case_ids))
+        print(" [INFO] Test slides:", len(test_case_ids))
         print_log(
             f"training slides: {len(train_case_ids)}, validation slides: {len(val_case_ids)}, test slides: {len(test_case_ids)}",
             log_file,

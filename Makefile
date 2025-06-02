@@ -13,91 +13,30 @@ train_clam_camelyon16_4fold:
 train_clam_camelyon16_5fold:
 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 1 --k_end 5
 
-# ============= TEST CLAM ============= 
-test_clam_camelyon16_fold_1:
-	python test_clam.py \
-	--config configs_simea/clam_camelyon16.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt 
-
-test_clam_tcga_renal_fold_1:
-	python test_clam.py \
-	--config configs_simea/clam_tcga_renal.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
-
-test_clam_tcga_lung_fold_1:
-	python test_clam.py \
-	--config configs_simea/clam_tcga_lung.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
-
-
-# ============= TEST DSMIL ============= 
-test_dsmil_camelyon16_fold_1:
-	python test_dsmil.py \
-	--config configs_simea/dsmil_camelyon16.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dsmil_results/20250528/fold_1_1.pth
-
-test_dsmil_tcga_renal_fold_1:
-	python test_dsmil.py \
-	--config configs_simea/dsmil_tcga_renal.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_results/20250528/fold_1_1.pth
-
-test_dsmil_tcga_lung_fold_1:
-	python test_dsmil.py \
-	--config configs_simea/dsmil_tcga_lung.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results/20250528/fold_1_1.pth 
-
-
-
-
-
-
-
-
-
-
 
 train_clam_tcga_renal_1fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_clam_tcga_renal.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 1 --k_end 1
 train_clam_tcga_renal_5fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_clam_tcga_renal.py --config configs_simea/clam_tcga_renal.yaml --max_epochs 200 --k_start 1 --k_end 5
-
 train_clam_tcga_lung_1fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_clam_tcga_lung.py --config configs_simea/clam_tcga_lung.yaml --max_epochs 200 --k_start 1 --k_end 1
 train_clam_tcga_lung_5fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_clam_tcga_lung.py --config configs_simea/clam_tcga_lung.yaml --max_epochs 200 --k_start 1 --k_end 5
 	
 
 
 # ============= DSMIL =============
 train_dsmil_camelyon16_1fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_dsmil.py --config configs_simea/dsmil_camelyon16.yaml --num_epochs 200 --k_start 1 --k_end 1
 train_dsmil_camelyon16_4fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_dsmil.py --config configs_simea/dsmil_camelyon16.yaml --num_epochs 200 --k_start 2 --k_end 5
 train_dsmil_camelyon16_5fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_dsmil.py --config configs_simea/dsmil_camelyon16.yaml --num_epochs 200 --k_start 1 --k_end 5
 
 
 train_dsmil_tcga_renal_1fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_dsmil_tcga_renal.py --config configs_simea/dsmil_tcga_renal.yaml --num_epochs 200 --k_start 1 --k_end 1
 train_dsmil_tcga_renal_5fold:
-	@echo "Activating conda environment for simea .."
-	conda activate clam_env && \
 	python train_dsmil_tcga_renal.py --config configs_simea/dsmil_tcga_renal.yaml --num_epochs 200 --k_start 1 --k_end 5
 
 
@@ -109,16 +48,14 @@ train_dsmil_tcga_lung_5fold:
 	@echo "Activating conda environment for simea .."
 	conda activate clam_env && \
 	python train_dsmil_tcga_lung.py --config configs_simea/dsmil_tcga_lung.yaml --num_epochs 200 --k_start 1 --k_end 5
-	
+
 
 
 # ============= DTFD =============
 train_dtfd_camelyon16_1fold:
-	@echo "Activating conda environment for simea .."
 	conda activate dtfd && \
 	python train_dtfd.py --config configs_simea/dtfd_camelyon16.yaml --num_epochs 200 --k_start 1 --k_end 1
 train_dtfd_camelyon16_4fold:
-	@echo "Activating conda environment for simea .."
 	conda activate dtfd && \
 	python train_dtfd.py --config configs_simea/dtfd_camelyon16.yaml --num_epochs 200 --k_start 2 --k_end 5
 train_dtfd_camelyon16_5fold:
@@ -145,7 +82,44 @@ train_dtfd_tcga_lung_5fold:
 	@echo "Activating conda environment for simea .."
 	conda activate dtfd && \
 	python train_dtfd_tcga_lung.py --config configs_simea/dtfd_tcga_lung.yaml --EPOCH 200 --k_start 1 --k_end 5
-	
+
+
+#======================================= test ================================== 
+
+# ============= TEST CLAM ============= 
+test_clam_camelyon16_fold_1:
+	python test_clam.py \
+	--config configs_simea/clam_camelyon16.yaml --fold 1 \
+	--ckpt_path "dang run lai"
+
+test_clam_tcga_renal_fold_1:
+	python test_clam.py \
+	--config configs_simea/clam_tcga_renal.yaml --fold 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+
+test_clam_tcga_lung_fold_1:
+	python test_clam.py \
+	--config configs_simea/clam_tcga_lung.yaml --fold 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+
+
+# ============= TEST DSMIL ============= 
+test_dsmil_camelyon16_fold_1:
+	python test_dsmil.py \
+	--config configs_simea/dsmil_camelyon16.yaml --fold 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dsmil_results/20250528/fold_1_1.pth
+
+test_dsmil_tcga_renal_fold_1:
+	python test_dsmil.py \
+	--config configs_simea/dsmil_tcga_renal.yaml --fold 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_results/20250528/fold_1_1.pth
+
+test_dsmil_tcga_lung_fold_1:
+	python test_dsmil.py \
+	--config configs_simea/dsmil_tcga_lung.yaml --fold 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results/20250528/fold_1_1.pth 	
+ 
+
 # ========= predict ========= 
 predict_clam_camelyon16:
 	python predict_clam.py --config configs_simea/clam_camelyon16.yaml --fold_start 1 --fold_end 1
