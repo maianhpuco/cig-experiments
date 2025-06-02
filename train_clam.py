@@ -77,7 +77,7 @@ def main(args):
     for i in folds:
                         
         args.results_dir = os.path.join(results_folder, f'fold_{i}')
-        os.makedirs(results_folder, exist_ok=True)
+        os.makedirs(args.results_dir, exist_ok=True)
         print("\n ++++++++++++++++++RESULT WILL BE SAVED IN FOLDER++++++++++++++++++++++++++++++")
         print(args.results_dir )
         
