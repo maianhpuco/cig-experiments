@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 import random
 from torch.nn.parallel import DataParallel
 
-sys.path.append(os.path.join("src/externals/dtfd-mil"))
+sys.path.append(os.path.join("src/externals/dtfd-mil-ngoc"))
 
 from Model.Attention import Attention_Gated as Attention
 from Model.Attention import Attention_with_Classifier
@@ -563,7 +563,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--batch_size_v", default=1, type=int)
     parser.add_argument("--num_workers", default=4, type=int)
-    parser.add_argument("--num_cls", default=2, type=int)
+    parser.add_argument("--num_cls", default=3, type=int)
     parser.add_argument("--numGroup", default=4, type=int)
     parser.add_argument("--total_instance", default=4, type=int)
     parser.add_argument("--numGroup_test", default=4, type=int)
