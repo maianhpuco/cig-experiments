@@ -44,8 +44,9 @@ def main(args):
     args.data_root_dir = cfg['paths']['pt_files']
     
     # args.results_dir = os.path.join(cfg['paths']['save_dir'], f'result_{timestamp}_ep{args.max_epochs}')
-    args.results_dir = os.path.join(cfg['paths']['result_dir'], f'result_{timestamp}_ep{args.max_epochs}')  
-    print(f"[INFO] Data result directory: {args.results_dir}")
+    # args.results_dir = os.path.join(cfg['paths']['result_dir'], f'result_{timestamp}_ep{args.max_epochs}')  
+    results_folder = os.path.join(cfg['paths']['result_dir'])
+    print(f"[INFO] Data result directory: {results_folder}")
     # args.split_dir = os.path.join(cfg['paths']['save_dir'], 'splits', 'task_1_tumor_vs_normal_100')
     split_folder =cfg['paths']['split_folder']
     data_dir = cfg['paths']['pt_files']
@@ -53,8 +54,8 @@ def main(args):
     
     
     # Create results directory
-    if not os.path.isdir(args.results_dir):
-        os.makedirs(args.results_dir)
+    if not os.path.isdir(results_folder):
+        os.makedirs(results_folder)
 
     # Set task and classes
     args.task = 'task_1_tumor_vs_normal'
@@ -75,10 +76,10 @@ def main(args):
     start_time = time.time() 
     for i in folds:
                         
-        fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
-        os.makedirs(fold_result_dir, exist_ok=True)
+        args.result_dir = os.path.join(results_folder, f'fold_{i}')
+        os.makedirs(results_folder, exist_ok=True)
         print("++++++++++++++++++RESULT WILL BE SAVED IN FOLDER++++++++++++++++++++++++++++++")
-        print(fold_result_dir)
+        print(args.result_dir )
         
         
         
@@ -109,13 +110,10 @@ def main(args):
         # fold_result_dir = os.path.join(args.results_dir, f'fold{i}')
         # os.makedirs(fold_result_dir, exist_ok=True)
         
-        filename = os.path.join(fold_result_dir, f'split_{i}_results.pkl')
+        filename = os.path.join(args.result_dir , f'split_{i}_results.pkl')
         save_pkl(filename, results)
         print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
 
-        # filename = os.path.join(args.results_dir, f'fold_{i}/split_{i}_results.pkl')
-        # save_pkl(filename, results)
-        # print(f"======> [x] Saved checkpoint for fold {i} at: {filename}") 
         
         
         fold_duration = time.time() - fold_start_time
@@ -159,32 +157,32 @@ def seed_torch(seed=7):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Configurations for WSI Training')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
-    parser.add_argument('--embed_dim', type=int, default=1024)
+    # parser.add_argument('--embed_dim', type=int, default=1024)
     parser.add_argument('--max_epochs', type=int, default=200)
-    parser.add_argument('--lr', type=float, default=1e-4)
-    parser.add_argument('--label_frac', type=float, default=1.0)
-    parser.add_argument('--reg', type=float, default=1e-5)
-    parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--k', type=int, default=10)
+    # parser.add_argument('--lr', type=float, default=1e-4)
+    # parser.add_argument('--label_frac', type=float, default=1.0)
+    # parser.add_argument('--reg', type=float, default=1e-5)
+    # parser.add_argument('--seed', type=int, default=1)
+    # parser.add_argument('--k', type=int, default=10)
     parser.add_argument('--k_start', type=int, default=-1)
     parser.add_argument('--k_end', type=int, default=-1)
-    parser.add_argument('--log_data', action='store_true', default=False)
-    parser.add_argument('--testing', action='store_true', default=False)
-    parser.add_argument('--early_stopping', action='store_true', default=False)
-    parser.add_argument('--opt', type=str, choices=['adam', 'sgd'], default='adam')
-    parser.add_argument('--drop_out', type=float, default=0.25)
-    parser.add_argument('--bag_loss', type=str, choices=['svm', 'ce'], default='ce')
-    parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
-    parser.add_argument('--exp_code', type=str, default='clam_camelyon16')
-    parser.add_argument('--weighted_sample', action='store_true', default=False)
-    parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
-    parser.add_argument('--no_inst_cluster', action='store_true', default=False)
-    parser.add_argument('--inst_loss', type=str, choices=['svm', 'ce', None], default=None)
-    parser.add_argument('--subtyping', action='store_true', default=False)
-    parser.add_argument('--bag_weight', type=float, default=0.7)
-    parser.add_argument('--B', type=int, default=8)
-    parser.add_argument('--checkpoint_dir', type=str, default=None,
-                    help='Optional: Path to pre-trained model checkpoint folder for each fold')
+    # parser.add_argument('--log_data', action='store_true', default=False)
+    # parser.add_argument('--testing', action='store_true', default=False)
+    # parser.add_argument('--early_stopping', action='store_true', default=False)
+    # parser.add_argument('--opt', type=str, choices=['adam', 'sgd'], default='adam')
+    # parser.add_argument('--drop_out', type=float, default=0.25)
+    # parser.add_argument('--bag_loss', type=str, choices=['svm', 'ce'], default='ce')
+    # parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb')
+    # parser.add_argument('--exp_code', type=str, default='clam_camelyon16')
+    # parser.add_argument('--weighted_sample', action='store_true', default=False)
+    # parser.add_argument('--model_size', type=str, choices=['small', 'big'], default='small')
+    # parser.add_argument('--no_inst_cluster', action='store_true', default=False)
+    # parser.add_argument('--inst_loss', type=str, choices=['svm', 'ce', None], default=None)
+    # parser.add_argument('--subtyping', action='store_true', default=False)
+    # parser.add_argument('--bag_weight', type=float, default=0.7)
+    # parser.add_argument('--B', type=int, default=8)
+    # parser.add_argument('--checkpoint_dir', type=str, default=None,
+    #                 help='Optional: Path to pre-trained model checkpoint folder for each fold')
 
     args = parser.parse_args()
 
