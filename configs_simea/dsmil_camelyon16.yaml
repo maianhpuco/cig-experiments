@@ -8,7 +8,7 @@ model: "dsmil"  # MIL model
 
 # Training Parameters
 lr: 0.0001  # Initial learning rate
-num_epochs: 200  # Number of total training epochs
+num_epochs: 2 #200  # Number of total training epochs
 stop_epochs: 200  # Skip remaining epochs if training has not improved after N epochs
 weight_decay: 0.001  # Weight decay
 
