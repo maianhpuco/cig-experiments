@@ -123,7 +123,7 @@ def main(args):
         print(data)
         break  
     print("========= Start Prediction on Test Set ===========")
-    all_preds, all_labels, all_slide_ids, all_logits, all_probs = predict(
+    all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts = predict(
         model=model,
         test_dataset=test_dataset,
         device=device,
