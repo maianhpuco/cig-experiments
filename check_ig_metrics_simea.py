@@ -145,11 +145,20 @@ def main(args, config):
         print_info=False,
         use_h5=True
     ) 
+    # For example, if features_data is [N, D], match shape
+        stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
+    if features_data.dim() == 2:
+        num_patches = features_data.shape[0]
+        sampled_indices = np.random.choice(stacked_features_baseline.shape[0], size=num_patches, replace=True)
+        baseline = stacked_features_baseline[sampled_indices]  # [N, D]
+    elif features_data.dim() == 3:
+        num_patches = features_data.shape[1]
+        sampled_indices = np.random.choice(stacked_features_baseline.shape[0], size=num_patches, replace=True)
+        baseline = stacked_features_baseline[sampled_indices].unsqueeze(0)  # [1, N, D]
+    else:
+        raise ValueError("Unexpected shape of features_data") 
     
-    stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
-    num_patches = features_data.shape[0]  # Make sure this is an integer
-    sampled_indices = np.random.choice(stacked_features_baseline.shape[0], size=num_patches, replace=True)
-    baseline = stacked_features_baseline[sampled_indices] 
+    
     print(f"> Baseline shape: {baseline.shape}")
     baseline_pred = model(baseline)
     print(f"> Baseline prediction: {baseline_pred}")
