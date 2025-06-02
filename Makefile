@@ -105,7 +105,7 @@ test_clam_tcga_lung_fold_1:
 
 # ============= TEST DSMIL ============= 
 test_dsmil_camelyon16_fold_1:
-	python test_dsmil.py \
+	python test_dsmil.py --device cpu \
 	--config configs_simea/dsmil_camelyon16.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dsmil_results/20250528/fold_1_1.pth
 
@@ -121,7 +121,7 @@ test_dsmil_tcga_lung_fold_1:
  
 # ============= TEST DSMIL ============= 
 test_dfdt_camelyon16_fold_1:
-	python test_dfdt.py \
+	python test_dfdt.py --device cpu \
 	--config configs_simea/dfdt_camelyon16.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dtfd_results/best_model.pth
 
@@ -131,7 +131,7 @@ test_dfdt_camelyon16_fold_1:
 # 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dfdt_results/20250528/fold_1_1.pth
 
 test_dfdt_tcga_lung_fold_1:
-	python test_dfdt.py \
+	python test_dfdt.py --device cpu \
 	--config configs_simea/dfdt_tcga_lung.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results_1fold/best_model.pth
  
