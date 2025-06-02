@@ -32,3 +32,12 @@ k_end: 5
 split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
 data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
 log_dir: "/home/mvu9/processing_datasets/processing_camelyon16/dtfd_results"
+
+paths:
+  predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/dsmil_predictions"
+  split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
+  data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
+  pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"  
+
+
+dataset_name: 'camelyon16'
