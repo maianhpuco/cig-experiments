@@ -94,7 +94,9 @@ def main(args):
         print(f"[INFO] Test Set Size: {len(test_dataset)}")
         print(f"[INFO] Train Set Size: {len(train_dataset)}")
     else:
+        
         label_dict = args.label_dict if hasattr(args, "label_dict") else None
+        print(f"[INFO] Using label_dict: {label_dict}")
         split_folder = args.paths['split_folder']
         data_dir_map = args.paths['data_dir']
 

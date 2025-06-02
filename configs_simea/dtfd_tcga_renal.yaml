@@ -63,3 +63,4 @@ paths:
     kirp: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
 
 dataset_name: 'tcga_renal'
+label_dict: {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
