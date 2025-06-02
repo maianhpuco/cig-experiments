@@ -39,7 +39,7 @@ def predict(model, test_dataset, device, dataset_name):
     for idx, data in enumerate(test_dataset):
         if dataset_name == 'camelyon16':
             (features, label) = data
-        if dataset_name in ['tcga_renal', 'tcga_lung']:
+        elif dataset_name in ['tcga_renal', 'tcga_lung']:
             (features, label, _) = data 
 
         slide_id = test_dataset.slide_data['slide_id'].iloc[idx]
@@ -96,6 +96,9 @@ def main(args):
     else:
         label_dict = args.label_dict if hasattr(args, "label_dict") else None
         split_folder = args.paths['split_folder']
+        
+        data_dir_map = args.paths['data_dir']
+        
         train_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
         val_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
         test_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
