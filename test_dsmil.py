@@ -72,6 +72,9 @@ def main(args):
     if args.dataset_name == 'camelyon16':
         label_dict = {'normal': 0, 'tumor': 1}
         split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
+        df = pd.read_csv(split_csv_path)
+        print(df.head(5))
+        return 
         train_dataset, val_dataset, test_dataset = return_splits_camelyon16(
             csv_path=split_csv_path,
             data_dir=args.paths['data_dir'],
