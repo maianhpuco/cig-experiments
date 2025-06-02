@@ -102,7 +102,7 @@ test_clam_tcga_lung_fold_1:
 	--config configs_simea/clam_tcga_lung.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 
-
+test_clam_fold_1: test_clam_camelyon16_fold_1  test_clam_tcga_renal_fold_1 test_clam_tcga_lung_fold_1
 # ============= TEST DSMIL ============= 
 test_dsmil_camelyon16_fold_1:
 	python test_dsmil.py --device cpu \
@@ -121,7 +121,7 @@ test_dsmil_tcga_lung_fold_1:
 test_dsmil_fold_1: test_dsmil_camelyon16_fold_1 test_dsmil_tcga_renal_fold_1 test_dsmil_tcga_lung_fold_1
 
 # ============= TEST DSMIL =============
-test_dsmil_fold_1: test_dsmil_camelyon16_fold_1  test_dsmil_tcga_lung_fold_1
+test_dtfd_fold_1: test_dtfd_camelyon16_fold_1  test_dtfd_tcga_lung_fold_1
  
 test_dtfd_camelyon16_fold_1:
 	python test_dtfd.py --device cpu \
