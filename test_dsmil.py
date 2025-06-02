@@ -38,9 +38,9 @@ def predict(model, test_dataset, device, dataset_name):
 
     for idx, data in enumerate(test_dataset):
         if dataset_name == 'camelyon16':
-            features, label = data
-        else:
-            features, label, _ = data
+            (features, label) = data
+        if dataset_name in ['tcga_renal', 'tcga_lung']:
+            (features, label, _) = data 
 
         slide_id = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\n[INFO] Processing {idx+1}/{len(test_dataset)}: {slide_id}")
