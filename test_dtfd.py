@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
     args.dataset_name = config['dataset_name']
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-
+    args.device = "cpu"
     if args.ckpt_path is None:
         args.ckpt_path = args.paths[f'for_ig_checkpoint_path_fold_{args.fold}']
         print(f"[INFO] Using checkpoint from config: {args.ckpt_path}")
