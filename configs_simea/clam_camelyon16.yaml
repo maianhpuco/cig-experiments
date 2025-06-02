@@ -1,6 +1,7 @@
 dataset_name: 'camelyon16'
 paths:
   pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
+  data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp" # some code use pt_files as data_dir
   save_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_result"
   result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/results" # where we save all the check point
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
@@ -16,6 +17,7 @@ paths:
   metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/metrics"
   predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_predictions"
   dataset_mean: "/home/mvu9/processing_datasets/processing_camelyon16/dataset_mean_variance" 
+  
 
 fold_number: 5 
 label_dict:
