@@ -76,10 +76,10 @@ def main(args):
     start_time = time.time() 
     for i in folds:
                         
-        args.result_dir = os.path.join(results_folder, f'fold_{i}')
+        args.results_dir = os.path.join(results_folder, f'fold_{i}')
         os.makedirs(results_folder, exist_ok=True)
         print("\n ++++++++++++++++++RESULT WILL BE SAVED IN FOLDER++++++++++++++++++++++++++++++")
-        print(args.result_dir )
+        print(args.results_dir )
         
         
         
