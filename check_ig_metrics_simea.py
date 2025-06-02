@@ -163,7 +163,7 @@ def main(args, config):
     baseline = baseline.squeeze(0) if baseline.dim() == 3 else baseline 
     
     print(f"> Baseline shape: {baseline.shape}")
-    baseline_pred = model(baseline))
+    baseline_pred = model(baseline)
     print(f"> Baseline prediction: {baseline_pred}")
 
     ig_methods = ['ig', 'cig', 'idg', 'eg']
