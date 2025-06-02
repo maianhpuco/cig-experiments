@@ -107,7 +107,7 @@ def main(args):
         print(f"[INFO] Val Set Size: {len(val_dataset)}")
         print(f"[INFO] Test Set Size: {len(test_dataset)}")
         print(f"[INFO] Train Set Size: {len(train_dataset)}")
-        return 
+        
     print("========= Start Prediction on Test Set ===========")
     all_preds, all_labels, all_slide_ids, all_logits, all_probs = predict(
         model=model,
