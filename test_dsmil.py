@@ -25,7 +25,7 @@ def load_dsmil_model(args, ckpt_path):
                                    dropout_v=args.dropout_node, nonlinear=args.non_linearity).cuda()
     model = mil.MILNet(i_classifier, b_classifier).cuda()
 
-    state_dict = torch.load(ckpt_path, map_location='cuda')
+    state_dict = torch.load(ckpt_path, map_location=args.device)
     model.load_state_dict(state_dict, strict=True)
     model.eval()
     print("[INFO] DSMIL model loaded and set to eval mode.")
