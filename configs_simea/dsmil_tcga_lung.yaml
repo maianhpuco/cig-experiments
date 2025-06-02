@@ -36,8 +36,8 @@ paths:
   predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_predictions"
   split_folder: "/home/mvu9/processing_datasets/processing_tcga_256/splits_csv_tcga_lung"
   data_dir:
-    luad: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
     lusc: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"
+    luad: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp" 
 
 # Data Directory Mapping
 data_dir_map:

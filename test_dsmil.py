@@ -96,20 +96,22 @@ def main(args):
     else:
         label_dict = args.label_dict if hasattr(args, "label_dict") else None
         split_folder = args.paths['split_folder']
-        
         data_dir_map = args.paths['data_dir']
-        
+
         train_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
         val_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
         test_csv_path = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
 
         train_dataset, val_dataset, test_dataset = return_splits_tcga(
-            train_csv_path, val_csv_path, test_csv_path,
-            data_dir_map=args.paths['data_dir'], label_dict=label_dict, seed=42, print_info=True
+            train_csv_path,
+            val_csv_path,
+            test_csv_path,
+            data_dir_map=data_dir_map,
+            label_dict=label_dict,
+            seed=42,
+            print_info=True
         )
-        print(f"[INFO] Val Set Size: {len(val_dataset)}")
-        print(f"[INFO] Test Set Size: {len(test_dataset)}")
-        print(f"[INFO] Train Set Size: {len(train_dataset)}")
+        print(f"[INFO] FOLD {fold_id} -> Train: {len(train_dataset)} | Val: {len(val_dataset)} | Test: {len(test_dataset)}")
     # for i in range(len(test_dataset)):
     for idx, data in enumerate(test_dataset):
         if args.dataset_name == 'camelyon16':
