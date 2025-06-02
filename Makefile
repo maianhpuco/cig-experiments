@@ -110,7 +110,7 @@ test_dsmil_camelyon16_fold_1:
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dsmil_results/20250528/fold_1_1.pth
 
 test_dsmil_tcga_renal_fold_1:
-	python test_dsmil.py \
+	python test_dsmil.py --device cpu \
 	--config configs_simea/dsmil_tcga_renal.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_results/20250528/fold_1_1.pth
 
