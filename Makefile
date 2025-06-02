@@ -88,11 +88,10 @@ train_dtfd_tcga_lung_5fold:
 
 # ============= TEST CLAM ============= 
 test_clam_camelyon16_fold_1:
-	python test_clam.py \
+	python test_clam.py --device cpu\
 	--config configs_simea/clam_camelyon16.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt
 	
-
 test_clam_tcga_renal_fold_1:
 	python test_clam.py \
 	--config configs_simea/clam_tcga_renal.yaml --fold 1 \
