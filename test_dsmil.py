@@ -14,11 +14,11 @@ sys.path.append(clf_path)
  
 from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon16
 from src.datasets.classification.tcga import return_splits_custom as return_splits_tcga
-
+sys.path.append(os.path.join("src/externals/dsmil-wsi"))
+import dsmil as mil 
 
 def load_dsmil_model(args, ckpt_path):
-    sys.path.append(os.path.join("src/externals/dsmil-wsi"))
-    import dsmil as mil 
+
  
     """
     Load a trained DSMIL model from a checkpoint file.
