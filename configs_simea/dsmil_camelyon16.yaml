@@ -39,3 +39,8 @@ paths:
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
   data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
   pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"  
+
+
+  # Feature Config
+num_classes: 2
+feats_size: 1024

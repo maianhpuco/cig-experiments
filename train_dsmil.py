@@ -271,43 +271,65 @@ def main(args):
     print(f"\n All folds complete. Results saved under: {all_save_paths}")
     print(f" Total run time: {elapsed:.2f} seconds ({elapsed/60:.2f} minutes)\n") 
     
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Train DSMIL on 20x patch features learned by SimCLR')
-    parser.add_argument('--num_classes', default=2, type=int, help='Number of output classes [2]')
-    parser.add_argument('--feats_size', default=1024, type=int, help='Dimension of the feature size [512]')
-    parser.add_argument('--lr', default=0.0001, type=float, help='Initial learning rate [0.0001]')
-    # parser.add_argument('--num_epochs', default=50, type=int, help='Number of total training epochs [100]')
-    # parser.add_argument('--stop_epochs', default=10, type=int, help='Skip remaining epochs if training has not improved after N epochs [10]')
-    parser.add_argument('--gpu_index', type=int, nargs='+', default=(0,), help='GPU ID(s) [0]')
-    parser.add_argument('--weight_decay', default=1e-3, type=float, help='Weight decay [1e-3]')
-    parser.add_argument('--dataset', default='TCGA-lung-default', type=str, help='Dataset folder name')
-    parser.add_argument('--split', default=0.2, type=float, help='Training/Validation split [0.2]')
-    parser.add_argument('--model', default='dsmil', type=str, help='MIL model [dsmil]')
-    parser.add_argument('--dropout_patch', default=0, type=float, help='Patch dropout rate [0]')
-    parser.add_argument('--dropout_node', default=0, type=float, help='Bag classifier dropout rate [0]')
-    parser.add_argument('--non_linearity', default=1, type=float, help='Additional nonlinear operation [0]')
-    parser.add_argument('--average', type=bool, default=False, help='Average the score of max-pooling and bag aggregating')
-    parser.add_argument('--eval_scheme', default='5-fold-cv', type=str, help='Evaluation scheme [5-fold-cv | 5-fold-cv-standalone-test | 5-time-train+valid+test ]')
-    parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
-    parser.add_argument('--k_end', default=1, type=int, help='End fold number')
-    parser.add_argument("--config", default="./configs_simea/dsmil_camelyon16.yaml", type=str)
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser(description='Train DSMIL on 20x patch features learned by SimCLR')
+    # parser.add_argument('--num_classes', default=2, type=int, help='Number of output classes [2]')
+    # parser.add_argument('--feats_size', default=1024, type=int, help='Dimension of the feature size [512]')
+    # parser.add_argument('--lr', default=0.0001, type=float, help='Initial learning rate [0.0001]')
+    # # parser.add_argument('--num_epochs', default=50, type=int, help='Number of total training epochs [100]')
+    # # parser.add_argument('--stop_epochs', default=10, type=int, help='Skip remaining epochs if training has not improved after N epochs [10]')
+    # parser.add_argument('--gpu_index', type=int, nargs='+', default=(0,), help='GPU ID(s) [0]')
+    # parser.add_argument('--weight_decay', default=1e-3, type=float, help='Weight decay [1e-3]')
+    # parser.add_argument('--dataset', default='TCGA-lung-default', type=str, help='Dataset folder name')
+    # parser.add_argument('--split', default=0.2, type=float, help='Training/Validation split [0.2]')
+    # parser.add_argument('--model', default='dsmil', type=str, help='MIL model [dsmil]')
+    # parser.add_argument('--dropout_patch', default=0, type=float, help='Patch dropout rate [0]')
+    # parser.add_argument('--dropout_node', default=0, type=float, help='Bag classifier dropout rate [0]')
+    # parser.add_argument('--non_linearity', default=1, type=float, help='Additional nonlinear operation [0]')
+    # parser.add_argument('--average', type=bool, default=False, help='Average the score of max-pooling and bag aggregating')
+    # parser.add_argument('--eval_scheme', default='5-fold-cv', type=str, help='Evaluation scheme [5-fold-cv | 5-fold-cv-standalone-test | 5-time-train+valid+test ]')
+    # parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
+    # parser.add_argument('--k_end', default=1, type=int, help='End fold number')
+    # parser.add_argument("--config", default="./configs_simea/dsmil_camelyon16.yaml", type=str)
     # parser.add_argument("--split_folder", default="/home/mvu9/processing_datasets/processing_camelyon16/splits_csv", type=str)
     # parser.add_argument("--data_dir", default="/home/mvu9/processing_datasets/processing_camelyon16/features_fp", type=str)
     # # parser.add_argument("--save_path", default="/home/mvu9/processing_datasets/processing_camelyon16/results", type=str)
     # parser.add_argument("--save_path", default="/home/mvu9/processing_datasets/processing_camelyon16/dsmil_camelyon16_results", type=str)
 
+    # args = parser.parse_args()
+    # print(args.eval_scheme)
+
+    # gpu_ids = tuple(args.gpu_index)
+    # os.environ['CUDA_VISIBLE_DEVICES']=','.join(str(x) for x in gpu_ids)
+
+    # config_path = args.config
+    # with open(config_path, 'r') as f:
+    #     config = yaml.safe_load(f)
+
+    # # Merge YAML config into args
+    # for key, value in config.items():
+    #     setattr(args, key, value)
+        
+    # main(args)
+    
+if __name__ == '__main__':
+    import yaml
+    parser = argparse.ArgumentParser(description='Train DSMIL using a full YAML config.')
+    parser.add_argument('--k_start', default=1, type=int, help='Start fold number')
+    parser.add_argument('--k_end', default=1, type=int, help='End fold number')
+    parser.add_argument('--config', type=str, required=True, help='Path to YAML configuration file.')
     args = parser.parse_args()
-    print(args.eval_scheme)
 
-    gpu_ids = tuple(args.gpu_index)
-    os.environ['CUDA_VISIBLE_DEVICES']=','.join(str(x) for x in gpu_ids)
-
-    config_path = args.config
-    with open(config_path, 'r') as f:
+    # Load full config from YAML
+    with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
-    # Merge YAML config into args
-    for key, value in config.items():
-        setattr(args, key, value)
-        
-    main(args)
+    # Convert config dictionary to an argparse.Namespace object
+    from types import SimpleNamespace
+    args = SimpleNamespace(**config)
+
+    # Set GPU
+    os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(map(str, args.gpu_index))
+
+    # Start training
+    main(args) 
