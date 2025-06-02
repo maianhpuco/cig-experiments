@@ -106,8 +106,37 @@ def main(args):
     save_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     output_df.to_csv(save_path, index=False)
     print(f"[INFO] Predictions saved to {save_path}")
+    
+    # Compute accuracy after all predictions 
+    
+    print("========= Compute Accuracy after finish ===========") 
+    from sklearn.metrics import accuracy_score, roc_auc_score
+ 
+    accuracy = accuracy_score(all_labels, all_preds)
+    print(f"[INFO] Accuracy: {accuracy:.4f}")
 
+    # Compute AUC (only if binary or one-vs-rest for multi-class)
+    try:
+        if len(set(all_labels)) == 2:
+            # Binary case: use prob for class 1
+            auc_score = roc_auc_score(all_labels, [p[1] for p in all_probs])
+        else:
+            # Multi-class: use one-vs-rest mode
+            auc_score = roc_auc_score(all_labels, all_probs, multi_class='ovr')
+        print(f"[INFO] AUC: {auc_score:.4f}")
+    except Exception as e:
+        print(f"[WARNING] Could not compute AUC: {e}") 
+# Save accuracy and AUC to CSV
+    metrics_df = pd.DataFrame([{
+        'fold': fold_id,
+        'accuracy': round(accuracy, 4),
+        'auc': round(auc_score, 4) if 'auc_score' in locals() else 'N/A'
+    }])
 
+    save_path = os.path.join(args.paths['predictions_dir'], f'acc_auc_{fold_id}.csv')
+    metrics_df.to_csv(save_path, index=False)
+    print(f"[INFO] Accuracy and AUC saved to {save_path}") 
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry_run', type=int, default=0)
