@@ -120,19 +120,19 @@ test_dsmil_tcga_lung_fold_1:
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results/20250528/fold_1_1.pth 	
  
 # ============= TEST DSMIL ============= 
-test_dfdt_camelyon16_fold_1:
-	python test_dfdt.py --device cpu \
-	--config configs_simea/dfdt_camelyon16.yaml --fold 1 \
+test_dtfd_camelyon16_fold_1:
+	python test_dtfd.py --device cpu \
+	--config configs_simea/dtfd_camelyon16.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dtfd_results/best_model.pth
 
-# test_dfdt_tcga_renal_fold_1:
-# 	python test_dfdt.py \
-# 	--config configs_simea/dfdt_tcga_renal.yaml --fold 1 \
-# 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dfdt_results/20250528/fold_1_1.pth
+# test_dtfd_tcga_renal_fold_1:
+# 	python test_dtfd.py \
+# 	--config configs_simea/dtfd_tcga_renal.yaml --fold 1 \
+# 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dtfd_results/20250528/fold_1_1.pth
 
-test_dfdt_tcga_lung_fold_1:
-	python test_dfdt.py --device cpu \
-	--config configs_simea/dfdt_tcga_lung.yaml --fold 1 \
+test_dtfd_tcga_lung_fold_1:
+	python test_dtfd.py --device cpu \
+	--config configs_simea/dtfd_tcga_lung.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results_1fold/best_model.pth
  
  
