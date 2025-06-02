@@ -22,7 +22,8 @@ def main(args):
     device = args.device
 
     print(f"[INFO] Loading model checkpoint from: {args.paths[f'for_ig_checkpoint_path_fold_{fold_id}']}")
-    model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device)
+    # model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device)
+    model = load_clam_model(args, args.ckpt_path, device)
     model.eval()
 
     print("========= Reading on Test Set ===========")
@@ -166,11 +167,11 @@ if __name__ == "__main__":
 
     os.makedirs(args.paths['predictions_dir'], exist_ok=True)
     if args.ckpt_path is not None:
-        checkpoint_path = args.ckpt_path
-        print(f"[INFO] Using checkpoint from --ckpt_path argument: {checkpoint_path}")
+        args.ckpt_path = args.ckpt_path
+        print(f"[INFO] Using checkpoint from --ckpt_path argument: {args.ckpt_path}")
     else:
-        checkpoint_path = args.paths[f'for_ig_checkpoint_path_fold_{args.fold}']
-        print(f"[INFO] Using checkpoint from config file: {checkpoint_path}") 
+        args.ckpt_path = args.paths[f'for_ig_checkpoint_path_fold_{args.fold}']
+        print(f"[INFO] Using checkpoint from config file: {args.ckpt_path}") 
         
     print(" > Start compute PREDICTION for dataset: ", args.dataset_name)
     main(args)
