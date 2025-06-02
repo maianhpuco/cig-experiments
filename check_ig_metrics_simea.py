@@ -148,7 +148,7 @@ def main(args, config):
     # For example, if features_data is [N, D], match shape
     
     stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
-    
+    print(f"> Sampled baseline features shape: {stacked_features_baseline.shape}")
     if features_data.dim() == 2:
         num_patches = features_data.shape[0]
         sampled_indices = np.random.choice(stacked_features_baseline.shape[0], size=num_patches, replace=True)
