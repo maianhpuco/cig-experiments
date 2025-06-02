@@ -136,7 +136,7 @@ def main(args):
     total_duration = time.time() - start_time
 
     print(f"\n ----> All folds completed in {total_duration:.2f} seconds ({total_duration / 60:.2f} minutes)") 
-    print(f" \n ---->  Check result saved in: ", )
+    # print(f" \n ---->  Check result saved in: ", )
     
 def seed_torch(seed=7):
     import random
