@@ -27,8 +27,6 @@ average: false  # Average the score of max-pooling and bag aggregating
 
 # Evaluation Configuration
 eval_scheme: "5-fold-cv"  # Options: 5-fold-cv | 5-fold-cv-standalone-test | 5-time-train+valid+test
-k_start: 1  # Start fold number
-k_end: 1  # End fold number
 
 # Config Path
 config: "./configs_simea/dsmil_camelyon16.yaml"
