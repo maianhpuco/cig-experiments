@@ -128,12 +128,12 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
 
     sorted_indices = np.argsort(-saliency_map)  # Descending order for top-k selection
 
-    for k in top_k_values):
+    for k in top_k_values:
         if k > num_patches:
             print(f"Skipping k={k} as it exceeds number of patches ({num_patches})")
             continue
 
-        if method == 0':  # SIC: Remove top-k patches
+        if method == 0:  # SIC: Remove top-k patches
             patch_mask = np.ones(num_patches, dtype=bool)
             patch_mask[sorted_indices[:k]] = False  # Remove top-k
             visible_fraction = (num_patches - k) / num_patches
@@ -153,19 +153,18 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         info = estimate_feature_information(neutral_features_current, reference=features)
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0).to(device)
         pred, _ = getPrediction(pred_input, model_wrapper, correct_class, method, device)
-
-        normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
-        normalized_info = np.clip(normalized_info, 0.0, 1.0)
-        normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred) if (original_pred - fully_neutral_pred) > 1e-6 else pred
-        normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
-        max_normalized_pred = max(max_normalized_pred, normalized_pred)
+        normalized_info = np.linspace(0, 1, len(info))
+        # normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
+        # normalized_info = np.clip(normalized_info, 0.0, 1.0)
+        # normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred) if (original_pred - fully_neutral_pred) > 1e-6 else pred
+        # normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
+        # max_normalized_pred = max(max_normalized_pred, normalized_pred)
 
         print(f"{'SIC' if method == 0 else 'AIC'} - Top-k {k}: Info: {info:.5f}, Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
-
-        if keep_monotonous:
-            entropy_pred_tuples.append((normalized_info, max_normalized_pred))
-        else:
-            entropy_pred_tuples.append((normalized_info, normalized_pred))
+        entropy_pred_tuples.append((normalized_info, max_normalized_pred))
+        
+        # else:
+        #     entropy_pred_tuples.append((normalized_info, normalized_pred))
 
         neutral_features.append(neutral_features_current)
         predictions.append(pred)
