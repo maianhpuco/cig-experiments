@@ -226,7 +226,7 @@ def compute_one_slide(args, basename):
                 "model": model,
                 "baseline_features": baseline,
                 "memmap_path": memmap_path,
-                "x_steps": 50,  # Increase for better IG accuracy
+                "x_steps": 5,  # Increase for better IG accuracy
                 "device": args.device,
                 "call_model_args": {"target_class_idx": pred_class},
                 "batch_size": 500
@@ -276,10 +276,10 @@ def compute_one_slide(args, basename):
 def main(args):
     # basenames = ['test_001', 'test_003']
     
-    basenames = ['test_001']
+    basenames = ['test_002']
     for basename in basenames:
         print(f"\n=== Processing slide: {basename} ===")
-        compute_one_slide(args, basename)
+        compute_one_slide(args, basenam2)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
