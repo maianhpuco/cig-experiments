@@ -295,7 +295,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
         max_normalized_pred = max(max_normalized_pred, normalized_pred)
 
-        print(f"{'SIC' if method == 0 else 'AIC'} - P : {len(patch_mask) }TH {threshold:.3f}: Info: {info:.5f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
+        print(f"{'SIC' if method == 0 else 'AIC'} - P : {patch_mask.sum()}TH {threshold:.3f}: Info: {info:.5f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
 
         if keep_monotonous:
             entropy_pred_tuples.append((normalized_info, max_normalized_pred))
