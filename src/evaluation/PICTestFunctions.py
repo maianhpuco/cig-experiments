@@ -125,9 +125,9 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     print(f"> PIC baseline stats: mean={baseline.mean():.6f}, std={baseline.std():.6f}")
 
     # Estimate information content
-    original_features_info = estimate_feature_information(features)
+    original_features_info = estimate_feature_information(features, reference=features)
     fully_neutral_features = create_neutral_features(features, random_mask, baseline)
-    fully_neutral_info = estimate_feature_information(fully_neutral_features)
+    fully_neutral_info = estimate_feature_information(fully_neutral_features, reference=features)
 
     # Original prediction
     input_features = torch.from_numpy(features).unsqueeze(0)
