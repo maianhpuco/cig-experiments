@@ -184,16 +184,24 @@ pr_metric:
 
 # Makefile for running different IG variants ===== on camelyon16 
 
-clam_ig:
+clam_ig_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
-clam_eg:
+
+clam_eg_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
-clam_idg: 
+
+clam_idg_camelyon16: 
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
-clam_cig:
+
+clam_cig_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
-clam_g:
+
+clam_g_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+
+group_basic_camelyon16: clam_ig_camelyon16 clam_g_camelyon16 clam_eg_camelyon16
+group_adv_camelyon16: clam_cig_camelyon16 clam_idg_camelyon16
+
 # clam_sig:
 # 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
 
