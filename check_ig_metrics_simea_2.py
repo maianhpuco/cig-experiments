@@ -232,7 +232,7 @@ def compute_one_slide(args, basename):
                 "batch_size": 500
             }
             try:
-                attribution_values = ig_mod0le.GetMask(**kwargs)
+                attribution_values = ig_module.GetMask(**kwargs)
                 saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
                 saliency_map = saliency_map / (saliency_map.max() + 1e-8)
                 saliency_maps[ig_name] = saliency_map
