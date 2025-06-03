@@ -260,6 +260,7 @@ def compute_one_slide(args, basename):
     
     
 def main(args):
+    import time 
     import pandas as pd
     fold_id = 1 
     args.fold = 1
@@ -271,6 +272,7 @@ def main(args):
     # basenames = ['test_001', 'test_002', 'test_004', 'test_008']
     args.pred_df = tumor_df 
     all_results = [] 
+    start = time.time()
     count_total= len(basenames)
     for basename in basenames:
         print(f"\n=== Processing slide: {basename}, {len(all_results) + 1}/{count_total} ===")
@@ -284,7 +286,7 @@ def main(args):
 
     print("\n=== Average AIC and SIC per IG Method ===")
     print(avg_results.to_string(index=False)) 
-    
+    print(f"\n> Total time taken: {time.time() - start:.2f} seconds")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
