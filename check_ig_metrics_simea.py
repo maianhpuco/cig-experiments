@@ -155,7 +155,7 @@ def main(args):
     _, modified_predicted_class = torch.max(modified_pred[0], dim=1)
 
     print("\n========== PREDICTION FOR MODIFIED BASELINE (5% real features) ==========")
-    print(f"> Replaced indices: {replace_indices.tolist()}")
+    print(f"> Replaced indices: {len(replace_indices.tolist())}")
     print(f"> Modified predicted class: {modified_predicted_class.item()}")
     print(f"> Modified logits: {modified_pred[0].detach().cpu().numpy()}")
 
