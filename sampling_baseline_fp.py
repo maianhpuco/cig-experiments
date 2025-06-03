@@ -88,8 +88,11 @@ def main(args):
     baseline_key = f'baseline_dir_fold_{args.fold}'
     save_dir = args.paths.get(baseline_key)
     os.makedirs(save_dir, exist_ok=True)
-
-    feature_cache = {ds.slide_ids[i]: ds.get_features_by_slide_id(ds.slide_ids[i]) for i, ds in enumerate(test_dataset)}
+    feature_cache = {
+        slide_id: test_dataset.get_features_by_slide_id(slide_id)
+        for slide_id in test_dataset.slide_ids
+    }
+    # feature_cache = {ds.slide_ids[i]: ds.get_features_by_slide_id(ds.slide_ids[i]) for i, ds in enumerate(test_dataset)}
     num_classes = len(args.label_dict)
 
     with ThreadPoolExecutor(max_workers=8) as executor:
