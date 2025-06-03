@@ -18,7 +18,7 @@ paths:
   metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/metrics"
   predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_predictions"
   dataset_mean: "/home/mvu9/processing_datasets/processing_camelyon16/dataset_mean_variance" 
-  
+  baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/clam/fold_1"  
 
 fold_number: 5 
 label_dict:
