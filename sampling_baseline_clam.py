@@ -161,8 +161,6 @@ if __name__ == "__main__":
     args.dataset_name = config['dataset_name']
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-    os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
-
     print(" > Start computing contrastive samples for dataset:", args.dataset_name)
     for fold_id in range(args.start_fold, args.end_fold + 1):
         args.fold = fold_id
