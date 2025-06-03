@@ -89,7 +89,10 @@ def main(args):
     best_epoch = -1
     test_auc = 0
 
+    print("args.k_start: ", args.k_start)
+    print("args.k_end: ", args.k_end)
     for iteration in range(args.k_start, args.k_end + 1):
+        print("iteration: ", iteration)
         train_path = os.path.join(args.split_folder, f'fold_{iteration}/train.csv')
         val_path = os.path.join(args.split_folder, f'fold_{iteration}/val.csv')
         test_path = os.path.join(args.split_folder, f'fold_{iteration}/test.csv')
