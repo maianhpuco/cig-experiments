@@ -188,7 +188,7 @@ def main(args):
     
     # # Normal class: more stable, only changes with full signal (thresholds near 1)
     normal_high = 1 - tumor_low[::-1]  # Flip to go toward 1
-    mid = np.linspace(0.1, 0.9, num=10) 
+    # mid = np.linspace(0.1, 0.9, num=10) 
     saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, mid, normal_high])))
  
     # Merge and ensure uniqueness + sorting
