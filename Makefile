@@ -139,7 +139,7 @@ baseline_clam_tcga_renal:
 	python sampling_baseline_clam.py --config configs_simea/clam_tcga_renal.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_lung:
 	python sampling_baseline_clam.py --config configs_simea/clam_tcga_lung.yaml --start_fold 1 --end_fold 1 
-baseline_clam_tcga: baseline_clam_tcga_renal baseline_clam_tcga_lung 
+all_baseline_clam_tcga: baseline_clam_tcga_renal baseline_clam_tcga_lung 
 # ============= PREDICT DSMIL =============
 baseline_dsmil_camelyon16:
 	python sampling_baseline.py --config configs_simea/dsmil_camelyon16.yaml --start_fold 1 --end_fold 1
@@ -147,15 +147,15 @@ baseline_dsmil_tcga_renal:
 	python sampling_baseline.py --config configs_simea/dsmil_tcga_renal.yaml --start_fold 1 --end_fold 1
 baseline_dsmil_tcga_lung:
 	python sampling_baseline.py --config configs_simea/dsmil_tcga_lung.yaml --start_fold 1 --end_fold 1 
-baseline_dsmil_tcga: baseline_dsmil_tcga_renal baseline_dsmil_tcga_lung 
+all_baseline_dsmil: baseline_dsmil_camelyon16 baseline_dsmil_tcga_renal baseline_dsmil_tcga_lung 
 # ============= PREDICT DTFD=============
-baseline_dsmil_camelyon16:
-	python sampling_baseline.py --config configs_simea/dsmil_camelyon16.yaml --start_fold 1 --end_fold 1
-baseline_dsmil_tcga_renal:
-	python sampling_baseline.py --config configs_simea/dsmil_tcga_renal.yaml --start_fold 1 --end_fold 1
-baseline_dsmil_tcga_lung:
-	python sampling_baseline.py --config configs_simea/dsmil_tcga_lung.yaml --start_fold 1 --end_fold 1 
-baseline_dsmil_tcga: baseline_dsmil_tcga_renal baseline_dsmil_tcga_lung 
+baseline_dtfd_camelyon16:
+	python sampling_baseline.py --config configs_simea/dtfd_camelyon16.yaml --start_fold 1 --end_fold 1
+baseline_dtfd_tcga_renal:
+	python sampling_baseline.py --config configs_simea/dtfd_tcga_renal.yaml --start_fold 1 --end_fold 1
+baseline_dtfd_tcga_lung:
+	python sampling_baseline.py --config configs_simea/dtfd_tcga_lung.yaml --start_fold 1 --end_fold 1 
+all_baseline_dtfd: baseline_dtfd_camelyon16 baseline_dsmil_tcga_renal baseline_dsmil_tcga_lung 
 
 
 # ========= predict ========= 
