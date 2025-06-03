@@ -293,6 +293,7 @@ def compute_one_slide(args, basename):
 def main(args):
     import pandas as pd
     fold_id = 1 
+    args.fold = 1
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     pred_df = pd.read_csv(pred_path)
     print(f"[INFO] Loaded predictions from fold {args.fold}: {pred_df.shape[0]} samples") 
