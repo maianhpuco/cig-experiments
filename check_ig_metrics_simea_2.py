@@ -122,28 +122,7 @@ def compute_one_slide(args, basename, model):
     _, baseline_predicted_class = torch.max(baseline_pred[0], dim=1) 
     print(f"> Baseline predicted class: {baseline_predicted_class.item()}")
     print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
-
-    print("========== SANITY CHECK : Compare Baseline and Features ==========")
-    cosine_similarity = torch.nn.functional.cosine_similarity(features, baseline, dim=1)
-    print(f"> Cosine similarity between features and baseline: {cosine_similarity.mean().item():.4f}")
     
-    num_patches = baseline.shape[0]
-    num_replace = max(1, int(num_patches * 0.0005))
-    replace_indices = torch.randperm(num_patches)[:num_replace]
-    baseline_modified = baseline.clone()
-    baseline_modified[replace_indices] = features[replace_indices]
-
-    modified_pred = model(baseline_modified)
-    _, modified_predicted_class = torch.max(modified_pred[0], dim=1)
-
-    print("\n========== PREDICTION FOR MODIFIED BASELINE (0.05% real features) ==========")
-    print(f"> Replaced indices: {len(replace_indices.tolist())}")
-    print(f"> Modified predicted class: {modified_predicted_class.item()}")
-    print(f"> Modified logits: {modified_pred[0].detach().cpu().numpy()}")
-
-    cosine_similarity_modified = torch.nn.functional.cosine_similarity(features, baseline_modified, dim=1)
-    print(f"> Cosine similarity (modified vs. features): {cosine_similarity_modified.mean().item():.4f}")
-
     print("========== COMPUTE IG METHODS ==========")
     ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod
     ig_methods = ['idg']
