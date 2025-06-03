@@ -4,17 +4,23 @@ import argparse
 import torch
 import pandas as pd
 
-
 def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label, sample_classes, max_slides=5):
+    # Get features for target slide
     target_feats = dataset.get_features_by_slide_id(target_slide_id)
     num_target_feats = target_feats.shape[0]
-    print(f"[INFO] Target slide {target_slide_id} has {num_target_feats} features")
+    
+    # Get predicted label of target slide
+    target_pred = pred_df.loc[pred_df['slide_id'] == target_slide_id, 'pred_label'].values
+    target_pred = target_pred[0] if len(target_pred) > 0 else 'N/A'
+    print(f"[INFO] Target slide: {target_slide_id} | Predicted Label: {target_pred} | #Features: {num_target_feats}")
 
+    # Filter potential contrastive slides
     sample_df = pred_df[pred_df['pred_label'].isin(sample_classes)].sample(frac=1, random_state=42)
 
     if len(sample_df) == 0:
         raise ValueError("No contrastive samples found.")
 
+    # Select up to `max_slides` contrastive slides
     sampled_features = []
     sampled_slides = sample_df.head(max_slides)
 
@@ -25,6 +31,8 @@ def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label,
     current_count = 0
     for i, (_, row) in enumerate(sampled_slides.iterrows()):
         slide_id = row['slide_id']
+        pred_label = row['pred_label']
+
         try:
             feats = dataset.get_features_by_slide_id(slide_id)
         except Exception as e:
@@ -38,7 +46,7 @@ def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label,
         sampled_features.append(feats[:take_n])
         current_count += take_n
 
-        print(f"[INFO] Sampled {take_n} from {slide_id}, running total: {current_count}")
+        print(f"[INFO] Selected contrastive slide: {slide_id} | Predicted Label: {pred_label} | Sampled: {take_n}")
 
     if len(sampled_features) == 0:
         raise RuntimeError("No contrastive features collected.")
