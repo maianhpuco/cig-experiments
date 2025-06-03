@@ -183,15 +183,15 @@ def compute_one_slide(args, basename):
     # normal_tail = np.array([0.9995, 0.9999]7
     # normal_thresholds = np.sort(np.unique(np.concatenate([normal_high, normal_tail])))
 
-    # tumor_thresholds, normal_thresholds
+    # tumor_thresholds, normal_threshold0
     # Tumor class: more sensitive to early info (thresholds near 0)
-    
+    _tumor_low = np.logspace(np.log10(0.000001), np.log10(0.02), num=7)
     tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
     mid = np.linspace(0.2, 0.8, num=3) 
     # # Normal class: more stable, only changes with full signal (thresholds near 1)
     normal_high = 1 - tumor_low[::-1]  # Flip to go toward 1
     # mid = np.linspace(0.1, 0.9, num=10) 
-    saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, mid, normal_high])))
+    saliency_thresholds = np.sort(np.unique(np.concatenate([_tumor_low, mid, normal_high])))
  
     # Merge and ensure uniqueness + sorting
     # saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, normal_high])))
