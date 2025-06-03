@@ -17,6 +17,7 @@ from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from PICTestFunctions import compute_pic_metric, generate_random_mask, ModelWrapper
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
+
 def load_ig_module(args):
     def get_module_by_name(name):
         if name == 'ig':
@@ -80,7 +81,7 @@ def parse_args_from_config(config):
     return args
 
 def main(args):
-    basename = 'test_067'
+    basename = 'test_129'
     fold_id = 1
     
     feature_path = os.path.join(args.paths['feature_files'], f"{basename}.pt")
