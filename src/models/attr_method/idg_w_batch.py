@@ -116,8 +116,8 @@ class IDG(CoreSaliency):
             prev_logit = None
             slope_cache = torch.zeros(x_steps, device=device)
 
-            # for step_idx, (alpha, step_size) in enumerate(zip(alphas, alpha_sizes)):
-            for step_idx, (alpha, step_size) in enumerate(tqdm(zip(alphas, alpha_sizes), total=x_steps, desc=f"Computing IDG (batch {batch_start}-{batch_end})", ncols=100)):
+            for step_idx, (alpha, step_size) in enumerate(zip(alphas, alpha_sizes)):
+            # for step_idx, (alpha, step_size) in enumerate(tqdm(zip(alphas, alpha_sizes), total=x_steps, desc=f"Computing IDG (batch {batch_start}-{batch_end})", ncols=100)):
                 x_step = (x_baseline_batch_batch + alpha * x_diff_batch).detach().requires_grad_(True)  # [1, batch_size, D]
                 with autocast('cuda'):  # Updated autocast
                     # Compute gradients
