@@ -89,6 +89,9 @@ def main(args):
     best_epoch = -1
     test_auc = 0
 
+    print("args.k_start: ", args.k_start)
+    print("args.k_end: ", args.k_end)
+
     for iteration in range(args.k_start, args.k_end + 1):
         train_path = os.path.join(args.split_folder, f'fold_{iteration}/train.csv')
         val_path = os.path.join(args.split_folder, f'fold_{iteration}/val.csv')
@@ -115,7 +118,8 @@ def main(args):
             f"training slides: {len(SlideNames_train)}, validation slides: {len(SlideNames_val)}, test slides: {len(SlideNames_test)}",
             log_file,
         )
-
+        
+        print("iteration: ", iteration)
         for ii in range(args.EPOCH):
 
             for param_group in optimizer_adam1.param_groups:
