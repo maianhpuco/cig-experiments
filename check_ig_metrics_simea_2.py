@@ -217,12 +217,12 @@ def main(args):
                 baseline=baseline.cpu().numpy(), min_pred_value=0.3,
                 keep_monotonous=False
             )
-            # aic_score = compute_pic_metric(
-            #     features.cpu().numpy(),pred_class, saliency_map, random_mask,
-            #     saliency_thresholds, 1, model, args.device,
-            #     baseline=baseline.cpu().numpy(), min_pred_value=0.3,
-            #     keep_monotonous=False
-            # )
+            aic_score = compute_pic_metric(
+                features.cpu().numpy(),pred_class, saliency_map, random_mask,
+                saliency_thresholds, 1, model, args.device,
+                baseline=baseline.cpu().numpy(), min_pred_value=0.3,
+                keep_monotonous=False
+            )
 
             results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
             print(f"  - SIC AUC: {sic_score.auc:.3f}\n  - AIC AUC: {aic_score.auc:.3f}")
@@ -246,7 +246,8 @@ if __name__ == "__main__":
     args_cmd = parser.parse_args()
 
     with open(args_cmd.config, 'r') as f:
-        config = yaml.safe_load(f)
-
+        config = yaml.safe_load(f)  
+    
     args = parse_args_from_config(config)
+    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     main(args)
