@@ -158,7 +158,7 @@ def compute_one_slide(args, basename):
 
     print("========== COMPUTE IG METHODS ==========")
     ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod
-    ig_methods = ['ig', 'random']
+    # ig_methods = ['ig', 'random']
     
     # Class-specific saliency thresholds
     # tumor_low = np.logspace(np.log10(0.0001), np.log10(0.05), num=12)
