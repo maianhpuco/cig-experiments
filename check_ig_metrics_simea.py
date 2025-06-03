@@ -97,7 +97,8 @@ def main(args):
         model_type=args.model_type,
         model_size=args.model_size
     )
-
+    print("========== PREDICTION FOR FEATURES ==========")
+    
     print(f"\n> Loading CLAM model from: {checkpoint_path}")
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
     model.eval()
@@ -116,9 +117,9 @@ def main(args):
         probs = torch.nn.functional.softmax(logits, dim=1)
         _, predicted_class = torch.max(logits, dim=1)
     pred_class = predicted_class.item()
-    
-    print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
 
+    print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
+    return 
     # Load saved baseline
     baseline_path = os.path.join(args.paths[f'baseline_dir_fold_{fold_id}'], f"{basename}.pt")
     if not os.path.isfile(baseline_path):
