@@ -201,10 +201,10 @@ clam_g:
 # 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
 
 # ----- Grouped Methods -----
-group_basic: #done, done , done 
+group_basic: clam_ig, clam_g, clam_eg 
 
 
-group_adv: #error_oomr, done  
+group_adv: clam_cig, clam_idg 
 
 
 group_square: #done  runing  
