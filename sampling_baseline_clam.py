@@ -4,7 +4,7 @@ import argparse
 import torch
 import pandas as pd
 
-def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label, sample_classes, max_slides=5):
+def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label, sample_classes, max_slides=30):
     # Get features for target slide
     target_feats = dataset.get_features_by_slide_id(target_slide_id)
     num_target_feats = target_feats.shape[0]
