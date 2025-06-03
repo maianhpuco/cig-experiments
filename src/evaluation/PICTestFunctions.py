@@ -244,7 +244,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     # Original prediction
     input_features = torch.from_numpy(features).unsqueeze(0).to(device)
     original_pred, correctClassIndex = getPrediction(input_features, model_wrapper, -1, method, device)
-    # print(f"{'SIC' if method == 0 else 'AIC'} - Original prediction: {original_pred:.6f} (Class: {correctClassIndex})")
+    print(f"{'SIC' if method == 0 else 'AIC'} - Original prediction: {original_pred:.6f} (Class: {correctClassIndex})")
 
     if original_pred < min_pred_value:
         raise ComputePicMetricError(f"Original prediction {original_pred} is below min_pred_value {min_pred_value}")
@@ -252,7 +252,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     # Fully neutral prediction
     fully_neutral_pred_features = torch.from_numpy(fully_neutral_features).unsqueeze(0).to(device)
     fully_neutral_pred, _ = getPrediction(fully_neutral_pred_features, model_wrapper, correctClassIndex, method, device)
-    # print(f"{'SIC' if method == 0 else 'AIC'} - Fully neutral prediction: {fully_neutral_pred:.6f}")
+    print(f"{'SIC' if method == 0 else 'AIC'} - Fully neutral prediction: {fully_neutral_pred:.6f}")
 
     neutral_features.append(fully_neutral_features)
     predictions.append(fully_neutral_pred)
