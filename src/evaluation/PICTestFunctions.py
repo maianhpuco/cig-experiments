@@ -274,9 +274,21 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         # print(f"Information content of neutral features: {info:.4f}")
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0).to(device)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
-     
-        normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
+        
+        def safe_logit(x):
+            eps = 1e-6
+            return np.log(x + eps)
+
+        log_info = safe_logit(info)
+        log_fully_neutral_info = safe_logit(fully_neutral_info)
+        log_original_info = safe_logit(original_features_info)
+
+        normalized_info = (log_info - log_fully_neutral_info) / (log_original_info - log_fully_neutral_info)
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
+                
+         
+        # normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
+        # normalized_info = np.clip(normalized_info, 0.0, 1.0)
         normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred) if (original_pred - fully_neutral_pred) > 1e-6 else pred
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
         max_normalized_pred = max(max_normalized_pred, normalized_pred)

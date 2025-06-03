@@ -79,7 +79,8 @@ def parse_args_from_config(config):
     args.device = args.device if hasattr(args, 'device') else ("cuda" if torch.cuda.is_available() else "cpu")
     return args
 
-def main(args):
+def compute_one_slide(args):
+
     basename = 'test_003'
     fold_id = 1
     
@@ -185,11 +186,11 @@ def main(args):
     # tumor_thresholds, normal_thresholds
     # Tumor class: more sensitive to early info (thresholds near 0)
     tumor_low = np.logspace(np.log10(0.0001), np.log10(0.05), num=20)
-    
+    mid = np.linspace(0.2, 0.8, num=5) 
     # # Normal class: more stable, only changes with full signal (thresholds near 1)
     normal_high = 1 - tumor_low[::-1]  # Flip to go toward 1
     # mid = np.linspace(0.1, 0.9, num=10) 
-    saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, normal_high])))
+    saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, mid, normal_high])))
  
     # Merge and ensure uniqueness + sorting
     # saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, normal_high])))
@@ -263,7 +264,7 @@ def main(args):
     print("\n=== Summary of PIC Scores ===")
     for k, v in results_all.items():
         if v:
-            print(f"{k.upper():<5} : SIC = {v['SIC']:.3f} | AIC = {v['AIC']:.3f}")
+            print(f"{k.upper():<5} : SIC = {v['SIC']:.6f} | AIC = {v['AIC']:.6f}")
         else:
             print(f"{k.upper():<5} : FAILED")
 
