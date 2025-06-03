@@ -226,13 +226,13 @@ def compute_one_slide(args, basename):
                 "model": model,
                 "baseline_features": baseline,
                 "memmap_path": memmap_path,
-                "x_steps": 5,  # Increase for better IG accuracy
+                "x_steps": 50,  # Increase for better IG accuracy
                 "device": args.device,
                 "call_model_args": {"target_class_idx": pred_class},
                 "batch_size": 500
             }
             try:
-                attribution_values = ig_module.GetMask(**kwargs)
+                attribution_values = ig_mod0le.GetMask(**kwargs)
                 saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
                 saliency_map = saliency_map / (saliency_map.max() + 1e-8)
                 saliency_maps[ig_name] = saliency_map
@@ -247,9 +247,9 @@ def compute_one_slide(args, basename):
             features.cpu().numpy(), saliency_map, random_mask,
             saliency_thresholds, 0, model, args.device,
             baseline=baseline.cpu().numpy(), min_pred_value=0.3,
-            keep_monotonous=False
+            keep_monotonous=Fals5
         )
-        aic_score = compute_pic_metric(top_k, 
+        aic_score = compute_pic_metric(top_k,a
             features.cpu().numpy(),saliency_map, random_mask,
             saliency_thresholds, 1, model, args.device,
             baseline=baseline.cpu().numpy(), min_pred_value=0.3,
@@ -257,7 +257,7 @@ def compute_one_slide(args, basename):
         )
 
         results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
-        print(f"  - SIC AUC: {sic_score.auc:.3f}\n  - AIC AUC: {aic_score.auc:.3f}")
+        print(f"  - SIC AUC: {sic_score.auc:.5f}\n  - AIC AUC: {aic_score.auc:.5f}")
 
     print("\n=== Summary of PIC Scores ===")
     for k, v in results_all.items():
