@@ -184,18 +184,20 @@ def main(args):
 
     # tumor_thresholds, normal_thresholds
     # Tumor class: more sensitive to early info (thresholds near 0)
-    tumor_low = np.logspace(np.log10(0.0001), np.log10(0.05), num=15)
-
-    # Normal class: more stable, only changes with full signal (thresholds near 1)
-    normal_high = 1 - np.logspace(np.log10(0.0001), np.log10(0.05), num=15)[::-1]  # Flip to go toward 1
-
+    tumor_low = np.logspace(np.log10(0.0001), np.log10(0.05), num=20)
+    
+    # # Normal class: more stable, only changes with full signal (thresholds near 1)
+    normal_high = 1 - tumor_low[::-1]  # Flip to go toward 1
+    mid = np.linspace(0.1, 0.9, num=10) 
+    saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, mid, normal_high])))
+ 
     # Merge and ensure uniqueness + sorting
-    saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, normal_high])))
+    # saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, normal_high])))
 
     # print(f"Saliency thresholds (symmetric log space):\n{saliency_thresholds}") 
         
     # saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_thresholds, normal_thresholds])))
-    print(f"Saliency thresholds: {saliency_thresholds}")
+    # print(f"Saliency thresholds: {saliency_thresholds}")
   
     # print(f"\n> Saliency thresholds (Class {'Tumor' if pred_class == 1 else 'Normal'}): {saliency_thresholds}")
     
