@@ -120,6 +120,8 @@ def main(args):
         _, predicted_class = torch.max(logits, dim=1)
     pred_class = predicted_class.item()
 
+    
+    
     print(f"\n> Prediction Complete\n  - Logits: {logits}\n  - Probabilities: {probs}\n  - Predicted class: {pred_class}")
     
     print("========== PREDICTION FOR BASELINE ==========") 
@@ -137,7 +139,10 @@ def main(args):
     print(f"> Baseline predicted class: {baseline_predicted_class.item()}")
     print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
     # print(f"> Baseline prediction: {baseline_pred}")
-    
+    print("========== Compare Baseline and Features ==========")
+    cosine_similarity = torch.nn.functional.cosine_similarity(features, baseline, dim=1)
+    print(f"> Cosine similarity between features and baseline: {cosine_similarity.mean().item():.4f}")
+    return 
     print("==========COMPUTE IG METHODS ==========")
     # IG methods
     ig_methods = ['ig', 'cig', 'idg', 'eg']
