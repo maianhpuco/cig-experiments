@@ -104,10 +104,19 @@ def main(args):
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{args.fold}.csv')
     if not os.path.isfile(pred_path):
         raise FileNotFoundError(f"Prediction file not found: {pred_path}")
-
+    
     pred_df = pd.read_csv(pred_path)
     print(f"[INFO] Loaded predictions from fold {args.fold}: {pred_df.shape[0]} samples")
-    
+
+
+    # Count number of samples per predicted label
+    class_counts = pred_df['pred_label'].value_counts().sort_index()
+    print(f"[INFO] Contrastive class counts:")
+    for label, count in class_counts.items():
+        print(f"  - Label {label}: {count} samples") 
+
+
+
     test_dataset = load_dataset(args, args.fold)
 
     baseline_key = f'baseline_dir_fold_{args.fold}'
