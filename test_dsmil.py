@@ -50,8 +50,8 @@ def predict(model, test_dataset, device, dataset_name):
         print(f"\n[INFO] Processing {idx+1}/{len(test_dataset)}: {slide_id}")
 
         features = features.to(device)
-        print("Feature shape:", features.shape)
-        print("Feature stats - min:", features.min().item(), "max:", features.max().item(), "mean:", features.mean().item())
+        #print("Feature shape:", features.shape)
+        #print("Feature stats - min:", features.min().item(), "max:", features.max().item(), "mean:", features.mean().item())
         with torch.no_grad():
             ins_pred, bag_pred, A, B = model(features)
             logits = bag_pred.squeeze()
@@ -59,9 +59,9 @@ def predict(model, test_dataset, device, dataset_name):
             pred = torch.argmax(probs).item()
 
         print(f"   - Prediction: {pred} | Ground Truth: {label}")
-        print("Instance predictions:", ins_pred)
-        print("Bag predictions:", bag_pred)
-        print("Attention weights:", A)
+        ##print("Instance predictions:", ins_pred)
+        ##print("Bag predictions:", bag_pred)
+        ##print("Attention weights:", A)
 
         all_preds.append(pred)
         all_labels.append(label)
@@ -69,6 +69,7 @@ def predict(model, test_dataset, device, dataset_name):
         all_logits.append(logits.cpu().numpy())
         all_probs.append(probs.cpu().numpy())
         all_feature_counts.append(features.shape[0])
+    print("All labels:", all_labels)
     return all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts
 
 def main(args):
