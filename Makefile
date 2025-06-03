@@ -395,7 +395,7 @@ check_score:
 	python check_score.py --config  configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient 
 
 simea_check_clam_ig:
-	python check_ig_metrics_simea_2.py --config configs_simea/clam_camelyon16.yaml 
+	python check_ig_metrics_simea_3.py --config configs_simea/clam_camelyon16.yaml 
 
 mean_std_camelyon16:
 	python compute_mean_std_folds.py \
