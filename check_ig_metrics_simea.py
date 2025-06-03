@@ -79,7 +79,7 @@ def parse_args_from_config(config):
     return args
 
 def main(args):
-    basename = 'tumor_028'
+    basename = 'test_067'
     fold_id = 1
     
     feature_path = os.path.join(args.paths['feature_files'], f"{basename}.pt")
