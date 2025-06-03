@@ -81,7 +81,7 @@ def parse_args_from_config(config):
     return args
 
 def main(args):
-    basename = 'test_129'
+    basename = 'test_001'
     fold_id = 1
     
     feature_path = os.path.join(args.paths['feature_files'], f"{basename}.pt")
