@@ -166,11 +166,12 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         print(f"{'SIC' if method == 0 else 'AIC'} - Threshold {threshold:.3f}: Prediction = {pred:.6f}. Info = {info:.4f}")
 
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
+        print(f"Normalized info: {normalized_info:.4f} (fully neutral: {fully_neutral_info:.4f}, original: {original_features_info:.4f})")
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
         normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred)
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
         max_normalized_pred = max(max_normalized_pred, normalized_pred)
-
+        print(f"Normalized prediction: {normalized_pred:.4f} (fully neutral: {fully_neutral_pred:.4f}, original: {original_pred:.4f})")
         if keep_monotonous:
             entropy_pred_tuples.append((normalized_info, max_normalized_pred))
         else:
@@ -178,11 +179,12 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
 
         neutral_features.append(neutral_features_current)
         predictions.append(pred)
-
+    print(f">> Max normalized prediction: {max_normalized_pred:.4f}")
     entropy_pred_tuples.append((0.0, 0.0))
     entropy_pred_tuples.append((1.0, 1.0))
 
     info_data, pred_data = zip(*entropy_pred_tuples)
+    print(f"Curve points: {list(zip(info_data, pred_data))}")
     interp_func = interpolate.interp1d(x=info_data, y=pred_data)
 
     curve_x = np.linspace(start=0.0, stop=1.0, num=num_data_points, endpoint=False)
