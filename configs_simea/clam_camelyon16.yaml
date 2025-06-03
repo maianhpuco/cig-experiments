@@ -20,6 +20,7 @@ paths:
 
   baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/baseline/baseline_clam/fold_1"  
   predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_predictions"
+  metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_metrics"
 
 fold_number: 5 
 label_dict:

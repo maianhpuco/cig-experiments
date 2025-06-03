@@ -209,7 +209,12 @@ def compute_one_slide(args, basename):
 
     results_all = {}
     saliency_maps = {}
+    # Get labels from pred_df
     
+    slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
+    pred_label = slide_row['pred_label'].iloc[0] if not slide_row.empty else pred_class
+    true_label = slide_row['true_label'].iloc[0] if 'true_label' in slide_row.columns else -1
+    results = []
     for ig_name in ig_methods:
         print(f"\n>> Running IG method: {ig_name}")
         if ig_name == 'random':
@@ -235,11 +240,17 @@ def compute_one_slide(args, basename):
                 attribution_values = ig_module.GetMask(**kwargs)
                 saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
                 saliency_map = saliency_map / (saliency_map.max() + 1e-8)
-                saliency_maps[ig_name] = saliency_map
                 print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
             except Exception as e:
                 print(f"  > Failed for {ig_name}: {e}")
-                results_all[ig_name] = None
+                results.append({
+                    "slide_id": basename,
+                    "pred_label": pred_label,
+                    "true_label": true_label,
+                    "IG": ig_name,
+                    "AIC": None,
+                    "SIC": None
+                })
                 continue
 
         
@@ -258,6 +269,14 @@ def compute_one_slide(args, basename):
 
         results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
         print(f"  - SIC AUC: {sic_score.auc:.5f}\n  - AIC AUC: {aic_score.auc:.5f}")
+        results.append({
+                "slide_id": basename,
+                "pred_label": pred_label,
+                "true_label": true_label,
+                "IG": ig_name,
+                "AIC": aic_score.auc,
+                "SIC": sic_score.auc
+            }) 
 
     print("\n=== Summary of PIC Scores ===")
     for k, v in results_all.items():
@@ -265,18 +284,36 @@ def compute_one_slide(args, basename):
             print(f"{k.upper():<5} : SIC = {v['SIC']:.6f} | AIC = {v['AIC']:.6f}")
         else:
             print(f"{k.upper():<5} : FAILED")
-
+            
+    return results 
     # output_file = os.path.join(memmap_path, "pic_result03ml")
     # print(f"> Results saved to: {output_file}")im
     
     
 def main(args):
-    # basenames = ['test_001', 'test_003']
-    
-    basenames = ['test_001', 'test_002', 'test_004', 'test_008']
+    import pandas as pd
+    fold_id = 1 
+    pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
+    pred_df = pd.read_csv(pred_path)
+    print(f"[INFO] Loaded predictions from fold {args.fold}: {pred_df.shape[0]} samples") 
+    tumor_df = pred_df[pred_df['pred_label'] == 1]
+    basenames = tumor_df['slide_id'].unique().tolist()
+    # basenames = ['test_001', 'test_002', 'test_004', 'test_008']
+    args.pred_df = tumor_df 
+    all_results = [] 
     for basename in basenames:
         print(f"\n=== Processing slide: {basename} ===")
-        compute_one_slide(args, basename)
+        all_results.append(compute_one_slide(args, basename))
+    
+    results_df = pd.DataFrame(all_results)
+    output_path = os.path.join(args.paths['metrics_dir'], f"pic_results_fold{fold_id}.csv")
+    results_df.to_csv(output_path, index=False)
+    print(f"\n> Results saved to: {output_path}") 
+    avg_results = results_df.groupby("IG")[["AIC", "SIC"]].mean().reset_index()
+
+    print("\n=== Average AIC and SIC per IG Method ===")
+    print(avg_results.to_string(index=False)) 
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
