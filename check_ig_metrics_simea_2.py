@@ -249,7 +249,7 @@ def compute_one_slide(args, basename):
             baseline=baseline.cpu().numpy(), min_pred_value=0.3,
             keep_monotonous=False
         )
-        aic_score = compute_pic_metric(top_k,a
+        aic_score = compute_pic_metric(top_k,
             features.cpu().numpy(),saliency_map, random_mask,
             saliency_thresholds, 1, model, args.device,
             baseline=baseline.cpu().numpy(), min_pred_value=0.3,
