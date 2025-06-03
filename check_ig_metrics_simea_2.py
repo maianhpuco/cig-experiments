@@ -157,6 +157,7 @@ def compute_one_slide(args, basename):
     print(f"> Cosine similarity (modified vs. features): {cosine_similarity_modified.mean().item():.4f}")
 
     print("========== COMPUTE IG METHODS ==========")
+    ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod
     ig_methods = ['ig', 'random']
     
     # Class-specific saliency thresholds
@@ -170,7 +171,6 @@ def compute_one_slide(args, basename):
     # normal_thresholds = np.sort(np.unique(np.concatenate([normal_low, normal_mid, normal_high])))
     
     # saliency_thresholds = tumor_thresholds if pred_class == 1 else normal_thresholds
-    import numpy as np
 
     # Reinitialize after reset
     # For tumor class (positive): want to capture early prediction change, so focus near 0
@@ -273,7 +273,7 @@ def compute_one_slide(args, basename):
 def main(args):
     # basenames = ['test_001', 'test_003']
     
-    basenames = ['test_002']
+    basenames = ['test_001']
     for basename in basenames:
         print(f"\n=== Processing slide: {basename} ===")
         compute_one_slide(args, basename)
