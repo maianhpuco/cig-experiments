@@ -165,7 +165,7 @@ def compute_one_slide(args, basename):
     normal_high = 1 - tumor_low[::-1]  # Flip to go toward 1
     # mid = np.linspace(0.1, 0.9, num=10) 
     saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
-    top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10])  # Top-k thresholds for evaluation
+    top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10, 30, 50, 100])  # Top-k thresholds for evaluation
 
     
     random_mask = generate_random_mask(features.shape[0], fraction=0.0)  # Disable random mask
@@ -202,13 +202,11 @@ def compute_one_slide(args, basename):
                 "batch_size": 500
             }
             # try:
-            print(f"baseline shape: {baseline.shape}")
+
             attribution_values = ig_module.GetMask(**kwargs)
             saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
             saliency_map = saliency_map / (saliency_map.max() + 1e-8)
-            print(f"  - Saliency map shape: {saliency_map.shape}")
-            return 
-            print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+            print(f"  - Saliency map shape: {saliency_map.shape} Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
             # except Exception as e:
             #     print(f"  > Failed for {ig_name}: {e}")
             #     results.append({
@@ -241,6 +239,9 @@ def compute_one_slide(args, basename):
                 "slide_id": basename,
                 "pred_label": pred_label,
                 "true_label": true_label,
+                "baseline_pred_label": baseline_predicted_class.item(),
+                "saliency_map_mean": saliency_map.mean(), 
+                "saliency_map_std": saliency_map.std(), 
                 "IG": ig_name,
                 "AIC": aic_score.auc,
                 "SIC": sic_score.auc
@@ -270,8 +271,9 @@ def main(args):
     # basenames = ['test_001', 'test_002', 'test_004', 'test_008']
     args.pred_df = tumor_df 
     all_results = [] 
+    count_total= len(basenames)
     for basename in basenames:
-        print(f"\n=== Processing slide: {basename} ===")
+        print(f"\n=== Processing slide: {basename}, {len(all_results) + 1}/{count_total} ===")
         all_results.append(compute_one_slide(args, basename))
     
     results_df = pd.DataFrame(all_results)
