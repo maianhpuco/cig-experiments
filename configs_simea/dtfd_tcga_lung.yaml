@@ -58,5 +58,6 @@ paths:
   data_dir:
     luad: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
     lusc: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"
+  baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/baseline_tcga_lung/baseline_dtfd/fold_1"  
 dataset_name: 'tcga_lung'
 label_dict: {'LUAD': 0, 'LUSC': 1}
