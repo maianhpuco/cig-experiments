@@ -175,12 +175,19 @@ def main(args):
     # import numpy as np
 
     # Use log scale from both ends and mirror
-    low = np.logspace(np.log10(0.00001), np.log10(0.05), num=10, endpoint=False)
-    high = 1.0 - low[::-1]  # Mirror around 0.5
-    saliency_thresholds = np.sort(np.concatenate([low, high]))
-    print(saliency_thresholds) 
-    saliency_thresholds = np.clip(saliency_thresholds, 0, 1)  # Ensure all values are within [0, 1]
+    # low = np.logspace(np.log10(0.00001), np.log10(0.05), num=10, endpoint=False)
+    # high = 1.0 - low[::-1]  # Mirror around 0.5
+    # saliency_thresholds = np.sort(np.concatenate([low, high]))
+    # print(saliency_thresholds) 
+    # saliency_thresholds = np.clip(saliency_thresholds, 0, 1)  # Ensure all values are within [0, 1]
+    # Low thresholds: for early tumor signal contribution
+    low = np.array([0.0001, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.04])
 
+    # High thresholds: for full suppression of tumor-like features in normal class
+    high = np.array([0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.999])
+
+    # Combine and sort
+    saliency_thresholds = np.sort(np.unique(np.concatenate([low, high]))) 
     print("> Saliency thresholds:", saliency_thresholds)
     
     # saliency_thresholds = np.linspace(0.005, 0.95, 10)
