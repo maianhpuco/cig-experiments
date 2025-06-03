@@ -277,7 +277,7 @@ def main(args):
     args.pred_df = tumor_df 
     all_results = [] 
     start = time.time()
-    basenames ['test_069']
+    basenames = ['test_069']
     count_total= len(basenames)
     for basename in basenames:
         print(f"\n=== Processing slide: {basename}, {len(all_results) + 1}/{count_total} ===")
