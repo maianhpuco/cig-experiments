@@ -241,5 +241,7 @@ if __name__ == "__main__":
     args_cmd = parser.parse_args()
     with open(args_cmd.config, 'r') as f:
         config = yaml.safe_load(f)
+    
     args = parse_args_from_config(config)
+    args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     main(args)
