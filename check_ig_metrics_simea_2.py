@@ -201,24 +201,24 @@ def compute_one_slide(args, basename):
                 "call_model_args": {"target_class_idx": pred_class},
                 "batch_size": 500
             }
-            try:
-                attribution_values = ig_module.GetMask(**kwargs)
-                saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
-                saliency_map = saliency_map / (saliency_map.max() + 1e-8)
-                print(f"  - Saliency map shape: {saliency_map.shape}")
-                return 
-                print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
-            except Exception as e:
-                print(f"  > Failed for {ig_name}: {e}")
-                results.append({
-                    "slide_id": basename,
-                    "pred_label": pred_label,
-                    "true_label": true_label,
-                    "IG": ig_name,
-                    "AIC": None,
-                    "SIC": None
-                })
-                continue
+            # try:
+            attribution_values = ig_module.GetMask(**kwargs)
+            saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
+            saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+            print(f"  - Saliency map shape: {saliency_map.shape}")
+            return 
+            print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+            # except Exception as e:
+            #     print(f"  > Failed for {ig_name}: {e}")
+            #     results.append({
+            #         "slide_id": basename,
+            #         "pred_label": pred_label,
+            #         "true_label": true_label,
+            #         "IG": ig_name,
+            #         "AIC": None,
+            #         "SIC": None
+            #     })
+            #     continue
 
         
         sic_score = compute_pic_metric(top_k, 
