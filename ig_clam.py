@@ -196,7 +196,7 @@ def main(args):
 
         if isinstance(attribution_values, torch.Tensor):
             attribution_values = attribution_values.detach().cpu().numpy()
-        print(f"- Score shape: {attribution_values.shape}")s
+        print(f"- Score shape: {attribution_values.shape}")
         np.save(save_path, attribution_values)
                 
         from utils_plot import min_max_scale  # if not already imported
