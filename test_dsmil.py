@@ -26,6 +26,10 @@ def load_dsmil_model(args, ckpt_path):
     model = mil.MILNet(i_classifier, b_classifier).cuda()
 
     state_dict = torch.load(ckpt_path, map_location=args.device)
+    print("Model architecture:", model)
+    print("State dict keys:", state_dict.keys())
+    print("Checkpoint keys:", state_dict.keys())
+    print("Checkpoint values:", {k: v.shape for k, v in state_dict.items()})
     model.load_state_dict(state_dict, strict=True)
     model.eval()
     print("[INFO] DSMIL model loaded and set to eval mode.")
@@ -46,13 +50,18 @@ def predict(model, test_dataset, device, dataset_name):
         print(f"\n[INFO] Processing {idx+1}/{len(test_dataset)}: {slide_id}")
 
         features = features.to(device)
+        print("Feature shape:", features.shape)
+        print("Feature stats - min:", features.min().item(), "max:", features.max().item(), "mean:", features.mean().item())
         with torch.no_grad():
-            ins_pred, bag_pred, _, _ = model(features)
+            ins_pred, bag_pred, A, B = model(features)
             logits = bag_pred.squeeze()
             probs = softmax(logits, dim=0)
             pred = torch.argmax(probs).item()
 
         print(f"   - Prediction: {pred} | Ground Truth: {label}")
+        print("Instance predictions:", ins_pred)
+        print("Bag predictions:", bag_pred)
+        print("Attention weights:", A)
 
         all_preds.append(pred)
         all_labels.append(label)
