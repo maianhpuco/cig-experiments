@@ -304,7 +304,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     # Sort tuples for interpolation
     sorted_tuples = sorted(entropy_pred_tuples, key=lambda x: x[0])
     info_data, pred_data = zip(*sorted_tuples)
-    print(f"Curve points: {list(zip(info_data, pred_data))}")
+    # print(f"Curve points: {list(zip(info_data, pred_data))}")
 
     interp_func = interpolate.interp1d(x=info_data, y=pred_data, fill_value=(0.0, 1.0), bounds_error=False)
 
