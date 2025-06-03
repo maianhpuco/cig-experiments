@@ -171,7 +171,7 @@ def main(args):
     # saliency_thresholds = np.linspace(0.01, 0.99, 10)
     # saliency_thresholds = np.logspace(-3, np.log10(0.6), num=12, base=10.0)
     # saliency_thresholds = np.logspace(-4, np.log10(0.5), num=15, base=10.0)
-    saliency_thresholds = np.array([0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.04])
+    saliency_thresholds = np.array([0.00005, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.04])
 
     saliency_thresholds = np.clip(saliency_thresholds, 0, 1)  # Ensure all values are within [0, 1]
 
