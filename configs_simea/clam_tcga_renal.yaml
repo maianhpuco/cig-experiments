@@ -13,6 +13,7 @@ paths:
   ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/tcga_renal"   
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_tcga_renal"
   slide_dir: '/home/mvu9/datasets/TCGA-datasets'
+  predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_predictions" 
   baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/baseline_tcga_renal/baseline_clam/fold_1"  
 
 
