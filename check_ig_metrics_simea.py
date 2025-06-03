@@ -172,12 +172,13 @@ def main(args):
     # saliency_thresholds = np.logspace(-3, np.log10(0.6), num=12, base=10.0)
     # saliency_thresholds = np.logspace(-4, np.log10(0.5), num=15, base=10.0)
     # saliency_thresholds = np.array([0.00005, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.04])
-    saliency_thresholds = np.array([
-        0.00001, 0.00002, 0.00005, 0.0001, 0.0002,
-        0.0005, 0.001, 0.0015, 0.002, 0.003,
-        0.004, 0.005, 0.0075, 0.01, 0.015,
-        0.02, 0.03, 0.04, 0.05, 0.075
-    ])
+    # import numpy as np
+
+    # Use log scale from both ends and mirror
+    low = np.logspace(np.log10(0.00001), np.log10(0.05), num=10, endpoint=False)
+    high = 1.0 - low[::-1]  # Mirror around 0.5
+    saliency_thresholds = np.sort(np.concatenate([low, high]))
+    print(saliency_thresholds) 
     saliency_thresholds = np.clip(saliency_thresholds, 0, 1)  # Ensure all values are within [0, 1]
 
     print("> Saliency thresholds:", saliency_thresholds)
