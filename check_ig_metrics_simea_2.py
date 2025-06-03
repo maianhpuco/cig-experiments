@@ -269,13 +269,13 @@ def compute_one_slide(args, basename):
         else:
             print(f"{k.upper():<5} : FAILED")
 
-    # output_file = os.path.join(memmap_path, "pic_results.yaml")
+    # output_file = os.path.join(memmap_path, "pic_result03ml")
     # print(f"> Results saved to: {output_file}")im
     
     
 def main(args):
     # basenames = ['test_001', 'test_003']
-    basenames = ['test_001']
+    basenames = ['test_003']
     for basename in basenames:
         print(f"\n=== Processing slide: {basename} ===")
         compute_one_slide(args, basename)
