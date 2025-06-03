@@ -188,32 +188,24 @@ clam_ig:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
 clam_eg:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
-
-# clam_idg:
-# 	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-# 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg --device cpu
-
+clam_idg: 
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
 clam_cig:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
-
 clam_g:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+# clam_sig:
+# 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
 
-clam_sig:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
-
-clam_osig:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
+# clam_osig:
+# 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
 
 # ----- Grouped Methods -----
 group_basic: #done, done , done 
-	make ig_clam_integrated_gradient
-	make ig_clam_vanilla_gradient
-	make ig_clam_expected_gradient
+
 
 group_adv: #error_oomr, done  
-	make ig_clam_integrated_decision_gradient
-	make ig_clam_contrastive_gradient 
+
 
 group_square: #done  runing  
 	make ig_clam_square_integrated_gradient
