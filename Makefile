@@ -146,7 +146,14 @@ baseline_clam_camelyon16:
 		--start_fold 1 \
 		--end_fold 1
 
-baseline_clam_camelyon16:
+baseline_clam_tcga_renal:
+	python sampling_baseline_clam.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--start_fold 1 \
+		--end_fold 1
+
+
+baseline_clam_tcga_lung:
 	python sampling_baseline_clam.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--start_fold 1 \
