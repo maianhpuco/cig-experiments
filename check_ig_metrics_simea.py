@@ -133,8 +133,9 @@ def main(args):
 
     baseline = baseline.squeeze(0) if baseline.dim() == 3 else baseline
     baseline_pred = model(baseline)
-    _, baseline_predicted_class = torch.max(logits, dim=1) 
+    _, baseline_predicted_class = torch.max(baseline_pred[0], dim=1) 
     print(f"> Baseline predicted class: {baseline_predicted_class.item()}")
+    print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
     print(f"> Baseline prediction: {baseline_pred}")
     
     return 
