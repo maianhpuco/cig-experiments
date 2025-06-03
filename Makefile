@@ -88,7 +88,7 @@ train_dtfd_tcga_lung_5fold:
 
 # ============= TEST CLAM ============= 
 test_clam_camelyon16_fold_1:
-	python test_clam.py --device cpu \
+	python test_clam.py \
 	--config configs_simea/clam_camelyon16.yaml --fold 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt
 
@@ -122,7 +122,7 @@ test_dsmil_tcga_lung_fold_1:
 # --ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results/20250528/fold_1_1.pth 	
 test_dsmil_fold_1: test_dsmil_camelyon16_fold_1 test_dsmil_tcga_renal_fold_1 test_dsmil_tcga_lung_fold_1
 
-# ============= TEST DSMIL =============
+# ============= TEST DTFD =============
 test_dtfd_camelyon16_fold_1:
 	python test_dtfd.py \
 	--config configs_simea/dtfd_camelyon16.yaml --fold 1 \
@@ -142,24 +142,11 @@ test_dtfd_fold_1: test_dtfd_camelyon16_fold_1  test_dtfd_tcga_renal_fold_1 test_
 
 # ============= PREDICT CLAM =============
 baseline_clam_camelyon16:
-	python sampling_baseline_clam.py \
-		--config configs_simea/clam_camelyon16.yaml \
-		--start_fold 1 \
-		--end_fold 1
-
+	python sampling_baseline_clam.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_renal:
-	python sampling_baseline_clam.py \
-		--config configs_simea/clam_tcga_renal.yaml \
-		--start_fold 1 \
-		--end_fold 1
-
-
+	python sampling_baseline_clam.py --config configs_simea/clam_tcga_renal.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_lung:
-	python sampling_baseline_clam.py \
-		--config configs_simea/clam_tcga_lung.yaml \
-		--start_fold 1 \
-		--end_fold 1
-
+	python sampling_baseline_clam.py --config configs_simea/clam_tcga_lung.yaml --start_fold 1 --end_fold 1 
 
 baseline_clam_tcga: baseline_clam_tcga_renal baseline_clam_tcga_lung 
 
