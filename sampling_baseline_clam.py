@@ -4,22 +4,27 @@ import argparse
 import torch
 import pandas as pd
 
+from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon16
 
-def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label, sample_classes):
+def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label, sample_classes, max_slides=5):
     target_feats = dataset.get_features_by_slide_id(target_slide_id)
     num_target_feats = target_feats.shape[0]
     print(f"[INFO] Target slide {target_slide_id} has {num_target_feats} features")
 
-    sample_df = pred_df[pred_df['pred_label'].isin(sample_classes)]
+    sample_df = pred_df[pred_df['pred_label'].isin(sample_classes)].sample(frac=1, random_state=42)
+
     if len(sample_df) == 0:
         raise ValueError("No contrastive samples found.")
 
-    sample_df = sample_df.sample(frac=1, random_state=42)
-
     sampled_features = []
-    current_count = 0
+    sampled_slides = sample_df.head(max_slides)
 
-    for _, row in sample_df.iterrows():
+    num_slides = len(sampled_slides)
+    feats_per_slide = num_target_feats // num_slides
+    remainder = num_target_feats % num_slides
+
+    current_count = 0
+    for i, (_, row) in enumerate(sampled_slides.iterrows()):
         slide_id = row['slide_id']
         try:
             feats = dataset.get_features_by_slide_id(slide_id)
@@ -28,14 +33,13 @@ def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label,
             continue
 
         feats = feats[torch.randperm(feats.shape[0])]
-        remaining = num_target_feats - current_count
-        take_n = min(remaining, feats.shape[0])
+
+        take_n = feats_per_slide + (1 if i < remainder else 0)
+        take_n = min(take_n, feats.shape[0])
         sampled_features.append(feats[:take_n])
         current_count += take_n
 
         print(f"[INFO] Sampled {take_n} from {slide_id}, running total: {current_count}")
-        if current_count >= num_target_feats:
-            break
 
     if len(sampled_features) == 0:
         raise RuntimeError("No contrastive features collected.")
@@ -43,51 +47,7 @@ def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label,
     sampled_feats = torch.cat(sampled_features, dim=0)
     print(f"[INFO] Final shape: {sampled_feats.shape}")
     return sampled_feats
-
-
-def load_dataset(args, fold_id):
-    if args.dataset_name == 'camelyon16':
-        from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon16
-
-        split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-        args.label_dict = {'normal': 0, 'tumor': 1}
-
-        _, _, test_dataset = return_splits_camelyon16(
-            csv_path=split_csv_path,
-            data_dir=args.paths['pt_files'],
-            label_dict=args.label_dict,
-            seed=42,
-            print_info=True
-        )
-        print(f"[INFO] Test Set Size: {len(test_dataset)}")
-        return test_dataset
-
-    elif args.dataset_name in ['tcga_renal', 'tcga_lung']:
-        from src.datasets.classification.tcga import return_splits_custom as return_splits_tcga
-
-        label_dict = args.label_dict if hasattr(args, "label_dict") else None
-        split_folder = args.paths['split_folder']
-        data_dir_map = args.paths['data_dir']
-
-        train_csv = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
-        val_csv = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
-        test_csv = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
-
-        _, _, test_dataset = return_splits_tcga(
-            train_csv_path=train_csv,
-            val_csv_path=val_csv,
-            test_csv_path=test_csv,
-            data_dir_map=data_dir_map,
-            label_dict=label_dict,
-            seed=42,
-            print_info=True
-        )
-        print(f"[INFO] FOLD {fold_id} -> Test Set Size: {len(test_dataset)}")
-        return test_dataset
-
-    else:
-        raise ValueError(f"Unsupported dataset: {args.dataset_name}")
-
+ 
 
 def main(args):
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{args.fold}.csv')
@@ -97,12 +57,21 @@ def main(args):
     pred_df = pd.read_csv(pred_path)
     print(f"[INFO] Loaded predictions from fold {args.fold}: {pred_df.shape[0]} samples")
 
-    test_dataset = load_dataset(args, args.fold)
+    train_csv = os.path.join(args.paths['split_folder'], f'fold_{args.fold}', 'train.csv')
+    val_csv = os.path.join(args.paths['split_folder'], f'fold_{args.fold}', 'val.csv')
+    test_csv = os.path.join(args.paths['split_folder'], f'fold_{args.fold}', 'test.csv')
 
-    baseline_key = f'baseline_dir_fold_{args.fold}'
-    if baseline_key not in args.paths:
-        raise KeyError(f"{baseline_key} not found in config paths.")
-    save_dir = args.paths[baseline_key]
+    _, _, test_dataset = return_splits_custom(
+        train_csv_path=train_csv,
+        val_csv_path=val_csv,
+        test_csv_path=test_csv,
+        data_dir_map=args.paths['data_dir'],
+        label_dict=args.label_dict,
+        print_info=True,
+        use_h5=args.use_h5
+    )
+
+    save_dir = args.paths[f'baseline_dir_fold_{args.fold}']
     os.makedirs(save_dir, exist_ok=True)
 
     num_classes = len(args.label_dict)
@@ -125,7 +94,6 @@ def main(args):
             save_path = os.path.join(save_dir, f"{slide_id}.pt")
             torch.save(sampled_feats, save_path)
             print(f"[INFO] Saved to: {save_path}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
