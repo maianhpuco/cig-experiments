@@ -197,21 +197,10 @@ class PicMetricResultBasic(NamedTuple):
 
 #     return PicMetricResultBasic(curve_x=curve_x, curve_y=curve_y, auc=auc)
 
-def compute_pic_metric(
-    features: np.ndarray,
-    intended_class: int,  # <-- Add this argument here
-    saliency_map: np.ndarray,
-    random_mask: np.ndarray, 
-    saliency_thresholds: Sequence[float],
-    method: int,
-    model,
-    device: str,
-    baseline: np.ndarray,
-    min_pred_value: float = 0.3,
-    keep_monotonous: bool = False,
-    num_data_points: int = 1000
-) -> PicMetricResultBasic:
-
+def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_mask: np.ndarray, 
+                      saliency_thresholds: Sequence[float], method: int, model, device: str,
+                      baseline: np.ndarray, min_pred_value: float = 0.3, 
+                      keep_monotonous: bool = False, num_data_points: int = 1000) -> PicMetricResultBasic:
     """
     Computes Performance Information Curve (SIC or AIC) for a single WSI feature set.
     
@@ -253,7 +242,7 @@ def compute_pic_metric(
 
     # Original prediction
     input_features = torch.from_numpy(features).unsqueeze(0).to(device)
-    original_pred, correctClassIndex = getPrediction(input_features, model_wrapper, intended_class, method, device)
+    original_pred, correctClassIndex = getPrediction(input_features, model_wrapper, -1, method, device)
     # print(f"{'SIC' if method == 0 else 'AIC'} - Original prediction: {original_pred:.6f} (Class: {correctClassIndex})")
 
     if original_pred < min_pred_value:
@@ -261,7 +250,7 @@ def compute_pic_metric(
 
     # Fully neutral prediction
     fully_neutral_pred_features = torch.from_numpy(fully_neutral_features).unsqueeze(0).to(device)
-    fully_neutral_pred, _ = getPrediction(fully_neutral_pred_features, model_wrapper, intended_class, method, device)
+    fully_neutral_pred, _ = getPrediction(fully_neutral_pred_features, model_wrapper, correctClassIndex, method, device)
     # print(f"{'SIC' if method == 0 else 'AIC'} - Fully neutral prediction: {fully_neutral_pred:.6f}")
 
     neutral_features.append(fully_neutral_features)
@@ -281,7 +270,7 @@ def compute_pic_metric(
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
         
         info = estimate_feature_information(neutral_features_current, reference=features)
-        # print(f"Information content of neutral features: {info:.4f}")
+        print(f"Information content of neutral features: {info:.4f}")
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0).to(device)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
         
