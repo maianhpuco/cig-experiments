@@ -128,11 +128,15 @@ def main(args):
     if not os.path.isfile(baseline_path):
         raise FileNotFoundError(f"Baseline file not found at: {baseline_path}")
     baseline = torch.load(baseline_path).to(args.device, dtype=torch.float32)
+      
     print(f"> Loaded baseline from: {baseline_path} | Shape: {baseline.shape}")
 
     baseline = baseline.squeeze(0) if baseline.dim() == 3 else baseline
     baseline_pred = model(baseline)
+    _, baseline_predicted_class = torch.max(logits, dim=1) 
+    print(f"> Baseline predicted class: {baseline_predicted_class.item()}")
     print(f"> Baseline prediction: {baseline_pred}")
+    
     return 
     print("==========COMPUTE IG METHODS ==========")
     # IG methods
