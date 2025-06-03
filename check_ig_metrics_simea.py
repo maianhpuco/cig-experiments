@@ -144,13 +144,14 @@ def main(args):
     # ig_methods = ['ig']
     saliency_thresholds = np.linspace(0.005, 0.95, 10)
     print(f"\n> Saliency thresholds: {saliency_thresholds}")
-    random_mask = generate_random_mask(features.shape[0], fraction=0.5)
+    random_mask = generate_random_mask(features.shape[0], fraction=0.01)
     print(f"\n> Number of patches: {features.shape[0]}")
     print(f"> Number of masked patches: {random_mask.sum()}")
 
     results_all = {}
     saliency_maps = {}
     for ig_name in ig_methods:
+        
         print(f"\n>> Running IG method: {ig_name}")
         args.ig_name = ig_name
         ig_module, call_model_function = load_ig_module(args)
