@@ -293,9 +293,9 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         predictions.append(pred)
         infos.append(info)  # Collect info for debugging
         
-    print(f'> info: {infos}')
-    print(f'> predictions: {predictions}')
-    print(f"Curve points original: {entropy_pred_tuples}") 
+    # print(f'> info: {infos}')
+    # print(f'> predictions: {predictions}')
+    # print(f"Curve points original: {entropy_pred_tuples}") 
     # print(f"Curve points: {original_curve_xy}")
      
     entropy_pred_tuples.append((0.0, 0.0))
