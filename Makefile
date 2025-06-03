@@ -118,7 +118,7 @@ test_dsmil_tcga_renal_fold_1:
 test_dsmil_tcga_lung_fold_1:
 	python test_dsmil.py \
 	--config configs_simea/dsmil_tcga_lung.yaml --fold 1 \
-	--ckpt_path /processing_datasets/processing_camelyon16/dtfd_results/best_model.pth 
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results/20250528/fold_1_1.pth 
 # --ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dsmil_tcga_lung_results/20250528/fold_1_1.pth 	
 test_dsmil_fold_1: test_dsmil_camelyon16_fold_1 test_dsmil_tcga_renal_fold_1 test_dsmil_tcga_lung_fold_1
 
