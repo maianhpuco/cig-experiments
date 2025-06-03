@@ -144,7 +144,7 @@ def main(args):
     print(f"> Cosine similarity between features and baseline: {cosine_similarity.mean().item():.4f}")
     # Replace 5% of baseline with actual features
     num_patches = baseline.shape[0]
-    num_replace = max(1, int(num_patches * 0.05))  # Ensure at least one patch is replaced
+    num_replace = max(1, int(num_patches * 0.0005))  # Ensure at least one patch is replaced
 
     replace_indices = torch.randperm(num_patches)[:num_replace]
     baseline_modified = baseline.clone()
@@ -166,8 +166,8 @@ def main(args):
     return 
     print("==========COMPUTE IG METHODS ==========")
     # IG methods
-    ig_methods = ['ig', 'cig', 'idg', 'eg']
-    # ig_methods = ['ig']
+    # ig_methods = ['ig', 'cig', 'idg', 'eg']
+    ig_methods = ['ig']
     saliency_thresholds = np.linspace(0.005, 0.95, 10)
     print(f"\n> Saliency thresholds: {saliency_thresholds}")
     random_mask = generate_random_mask(features.shape[0], fraction=0.01)
