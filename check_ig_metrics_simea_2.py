@@ -522,8 +522,11 @@ def main(args):
         print(f"\n=== Processing slide: {basename} ({idx + 1}/{len(basenames)}) ===")
         all_results.append(compute_one_slide(args, basename, model))
 
+    print(f"=============== Computed results for {len(all_results)} slides ========")
     results_df = pd.DataFrame(all_results)
-    output_path = os.path.join(args.paths['metrics_dir'], f"pic_results_fold{fold_id}.csv")
+    output_dir = os.path.join(args.paths['metrics_dir'])
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f"pic_results_fold{fold_id}.csv")
     results_df.to_csv(output_path, index=False)
 
     print(f"\n> Results saved to: {output_path}")
