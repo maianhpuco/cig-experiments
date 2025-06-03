@@ -90,7 +90,7 @@ train_dtfd_tcga_lung_5fold:
 test_clam_camelyon16_fold_1:
 	python test_clam.py --device cpu \
 	--config configs_simea/clam_camelyon16.yaml --fold 1 \
-	--ckpt_path /processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt
+	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt
 
 test_clam_tcga_renal_fold_1:
 	python test_clam.py \
@@ -107,7 +107,7 @@ test_clam_fold_1: test_clam_camelyon16_fold_1  test_clam_tcga_renal_fold_1 test_
 test_dsmil_camelyon16_fold_1:
 	python test_dsmil.py --device cpu \
 	--config configs_simea/dsmil_camelyon16.yaml --fold 1 \
-	--ckpt_path /processing_datasets/processing_camelyon16/dsmil_results/fold_1/fold_1_1.pth 
+	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dsmil_results/fold_1/fold_1_1.pth 
 # --ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/dsmil_results/20250528/fold_1_1.pth
 
 test_dsmil_tcga_renal_fold_1:
@@ -123,7 +123,6 @@ test_dsmil_tcga_lung_fold_1:
 test_dsmil_fold_1: test_dsmil_camelyon16_fold_1 test_dsmil_tcga_renal_fold_1 test_dsmil_tcga_lung_fold_1
 
 # ============= TEST DSMIL =============
- 
 test_dtfd_camelyon16_fold_1:
 	python test_dtfd.py --device cpu \
 	--config configs_simea/dtfd_camelyon16.yaml --fold 1 \
