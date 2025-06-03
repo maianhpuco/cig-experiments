@@ -180,13 +180,14 @@ def compute_one_slide(args, basename):
 
     # # For normal class (negative): prediction only shifts near complete info, so focus near 1
     # normal_high = np.logspace(np.log10(0.5), np.log10(0.999), num=15)
-    # normal_tail = np.array([0.9995, 0.9999])
+    # normal_tail = np.array([0.9995, 0.9999]7
     # normal_thresholds = np.sort(np.unique(np.concatenate([normal_high, normal_tail])))
 
     # tumor_thresholds, normal_thresholds
     # Tumor class: more sensitive to early info (thresholds near 0)
-    tumor_low = np.logspace(np.log10(0.0001), np.log10(0.05), num=20)
-    mid = np.linspace(0.2, 0.8, num=5) 
+    
+    tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
+    mid = np.linspace(0.2, 0.8, num=3) 
     # # Normal class: more stable, only changes with full signal (thresholds near 1)
     normal_high = 1 - tumor_low[::-1]  # Flip to go toward 1
     # mid = np.linspace(0.1, 0.9, num=10) 

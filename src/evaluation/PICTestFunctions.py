@@ -287,8 +287,8 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
                 
          
-        # normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
-        # normalized_info = np.clip(normalized_info, 0.0, 1.0)
+        normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
+        normalized_info = np.clip(normalized_info, 0.0, 1.0)
         normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred) if (original_pred - fully_neutral_pred) > 1e-6 else pred
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
         max_normalized_pred = max(max_normalized_pred, normalized_pred)
