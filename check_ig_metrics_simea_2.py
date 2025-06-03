@@ -273,7 +273,7 @@ def compute_one_slide(args, basename):
 def main(args):
     # basenames = ['test_001', 'test_003']
     
-    basenames = ['test_001']
+    basenames = ['test_003']
     for basename in basenames:
         print(f"\n=== Processing slide: {basename} ===")
         compute_one_slide(args, basename)
@@ -283,7 +283,7 @@ if __name__ == "__main__":
     args_cmd = parser.parse_args()
 
     with open(args_cmd.config, 'r') as f:
-        config = yaml.safe_load(f)
+        config = yaml.safe_load(f3
 
     args = parse_args_from_config(config)
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
