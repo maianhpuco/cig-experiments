@@ -160,6 +160,7 @@ baseline_clam_tcga_lung:
 		--end_fold 1
 
 
+baseline_clam_tcga: baseline_clam_tcga_renal baseline_clam_tcga_lung 
 
 # ========= predict ========= 
 predict_clam_camelyon16:
