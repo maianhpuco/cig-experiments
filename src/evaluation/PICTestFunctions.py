@@ -224,7 +224,8 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     neutral_features = []
     predictions = []
     entropy_pred_tuples = []
-
+    original_curve_xy = []
+    infos = [] 
     # Validate baseline shape
     if baseline.shape != features.shape:
         raise ValueError(f"Baseline shape {baseline.shape} must match features shape {features.shape}")
@@ -270,26 +271,33 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
         
         info = estimate_feature_information(neutral_features_current, reference=features)
-        print(f"Information content of neutral features: {info:.4f}")
+        # print(f"Information content of neutral features: {info:.4f}")
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0).to(device)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
-        
+     
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
         normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred) if (original_pred - fully_neutral_pred) > 1e-6 else pred
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
         max_normalized_pred = max(max_normalized_pred, normalized_pred)
 
-        print(f"{'SIC' if method == 0 else 'AIC'} - Threshold {threshold:.3f}: Prediction = {pred:.6f}, Normalized Info = {normalized_info:.4f}, Normalized Pred = {normalized_pred:.4f}")
+        print(f"{'SIC' if method == 0 else 'AIC'} - TH {threshold:.3f}: Info: {info:.3f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
 
         if keep_monotonous:
             entropy_pred_tuples.append((normalized_info, max_normalized_pred))
         else:
             entropy_pred_tuples.append((normalized_info, normalized_pred))
-
+        
+        original_curve_xy.append((info, pred))  
         neutral_features.append(neutral_features_current)
         predictions.append(pred)
-
+        infos.append(info)  # Collect info for debugging
+        
+    print(f'> info: {infos}')
+    print(f'> predictions: {predictions}')
+    print(f"Curve points original: {entropy_pred_tuples}") 
+    # print(f"Curve points: {original_curve_xy}")
+     
     entropy_pred_tuples.append((0.0, 0.0))
     entropy_pred_tuples.append((1.0, 1.0))
 
