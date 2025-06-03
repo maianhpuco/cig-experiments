@@ -74,7 +74,7 @@ def parse_args_from_config(config):
             args.paths = val
         else:
             setattr(args, key, val)
-    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    args.device = args.device if hasattr(args, 'device') else ("cuda" if torch.cuda.is_available() else "cpu")
     return args
 
 def compute_one_slide(args, basename):
@@ -239,9 +239,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
     args_cmd = parser.parse_args()
+
     with open(args_cmd.config, 'r') as f:
         config = yaml.safe_load(f)
-    
+
     args = parse_args_from_config(config)
-    args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+
     main(args)
