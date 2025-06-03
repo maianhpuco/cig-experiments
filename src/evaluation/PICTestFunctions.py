@@ -266,7 +266,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         if random_mask.sum() > 0:
             patch_mask = np.logical_or(patch_mask, random_mask)
         visible_fraction = patch_mask.sum() / len(patch_mask)
-        print(f">> Threshold {threshold:.3f} — {visible_fraction * 100:.2f}% patches visible")
+        # print(f">> Threshold {threshold:.3f} — {visible_fraction * 100:.2f}% patches visible")
 
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
         
