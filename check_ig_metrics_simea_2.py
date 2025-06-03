@@ -281,7 +281,7 @@ def main(args):
     count_total= len(basenames)
     for basename in basenames:
         print(f"\n=== Processing slide: {basename}, {len(all_results) + 1}/{count_total} ===")
-        all_results.append(compute_one_slide(args, basename))
+        all_results.append(compute_one_slide(args, basename, model))
     
     results_df = pd.DataFrame(all_results)
     output_path = os.path.join(args.paths['metrics_dir'], f"pic_results_fold{fold_id}.csv")
