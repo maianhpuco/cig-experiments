@@ -38,8 +38,10 @@ paths:
   data_dir:
     lusc: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"
     luad: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp" 
+  baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/baseline_tcga_lung/baseline_dsmil/fold_1"  
 
 # Data Directory Mapping
+
 data_dir_map:
   LUAD: "/home/mvu9/processing_datasets/processing_tcga_256/luad/features_fp"
   LUSC: "/home/mvu9/processing_datasets/processing_tcga_256/lusc/features_fp"

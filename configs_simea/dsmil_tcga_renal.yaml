@@ -39,6 +39,8 @@ paths:
     kich: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"
     kirc: "/home/mvu9/processing_datasets/processing_tcga_256/kirc/features_fp"
     kirp: "/home/mvu9/processing_datasets/processing_tcga_256/kirp/features_fp"
+  baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/baseline_tcga_renal/baseline_dsmil/fold_1"  
+
 # Data Directory Mapping
 data_dir_map:
   KICH: "/home/mvu9/processing_datasets/processing_tcga_256/kich/features_fp"

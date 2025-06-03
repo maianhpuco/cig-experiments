@@ -39,5 +39,4 @@ paths:
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv"
   data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
   pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"  
-
-
+  baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/baseline/baseline_dsmil/fold_1"  
