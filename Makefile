@@ -136,11 +136,11 @@ test_dtfd_fold_1: test_dtfd_camelyon16_fold_1  test_dtfd_tcga_renal_fold_1 test_
 baseline_clam_camelyon16_trainvaltest:
 	python sampling_baseline_trainvaltest.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1 
 baseline_clam_camelyon16:
-	python sampling_baseline_clam.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1
+	python sampling_baseline.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_renal:
-	python sampling_baseline_clam.py --config configs_simea/clam_tcga_renal.yaml --start_fold 1 --end_fold 1
+	python sampling_baseline.py --config configs_simea/clam_tcga_renal.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_lung:
-	python sampling_baseline_clam.py --config configs_simea/clam_tcga_lung.yaml --start_fold 1 --end_fold 1 
+	python sampling_baseline.py --config configs_simea/clam_tcga_lung.yaml --start_fold 1 --end_fold 1 
 all_baseline_clam_tcga: baseline_clam_tcga_renal baseline_clam_tcga_lung 
 # ============= PREDICT DSMIL =============
 baseline_dsmil_camelyon16:
