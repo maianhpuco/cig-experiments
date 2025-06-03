@@ -163,12 +163,18 @@ def main(args):
     cosine_similarity_modified = torch.nn.functional.cosine_similarity(features, baseline_modified, dim=1)
     print(f"> Cosine similarity (modified vs. features): {cosine_similarity_modified.mean().item():.4f}")
 
-    return 
+    
     print("==========COMPUTE IG METHODS ==========")
     # IG methods
     # ig_methods = ['ig', 'cig', 'idg', 'eg']
-    ig_methods = ['ig']
-    saliency_thresholds = np.linspace(0.005, 0.95, 10)
+    ig_methods = ['ig', 'random']  # For testing, only use IG and ranran
+    saliency_thresholds = np.linspace(0.01, 0.99, 10)
+    saliency_thresholds = np.logspace(-3, np.log10(0.6), num=12, base=10.0)
+    saliency_thresholds = np.clip(saliency_thresholds, 0, 1)  # Ensure all values are within [0, 1]
+
+    print("> Saliency thresholds:", saliency_thresholds)
+    
+    # saliency_thresholds = np.linspace(0.005, 0.95, 10)
     print(f"\n> Saliency thresholds: {saliency_thresholds}")
     random_mask = generate_random_mask(features.shape[0], fraction=0.01)
     print(f"\n> Number of patches: {features.shape[0]}")
@@ -176,36 +182,59 @@ def main(args):
 
     results_all = {}
     saliency_maps = {}
+    
     for ig_name in ig_methods:
-        
         print(f"\n>> Running IG method: {ig_name}")
-        args.ig_name = ig_name
-        ig_module, call_model_function = load_ig_module(args)
-        kwargs = {
-            "x_value": features_data,
-            "call_model_function": call_model_function,
-            "model": model,
-            "baseline_features": baseline,
-            "memmap_path": memmap_path,
-            "x_steps": 10,
-            "device": args.device,
-            "call_model_args": {"target_class_idx": pred_class},
-            "batch_size": 500
-        }
-        try:
-            attribution_values = ig_module.GetMask(**kwargs)
-            saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
+        if ig_name == 'random':
+            # Generate random saliency map
+            saliency_map = np.random.rand(features.shape[0])
             saliency_map = saliency_map / (saliency_map.max() + 1e-8)
             saliency_maps[ig_name] = saliency_map
-            print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+            print(f"  - Random saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
 
-            sic_score = compute_pic_metric(features.cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 0, model, args.device, baseline=baseline.cpu().numpy(), min_pred_value=0.3, keep_monotonous=False)
-            aic_score = compute_pic_metric(features.cpu().numpy(), saliency_map, random_mask, saliency_thresholds, 1, model, args.device, baseline=baseline.cpu().numpy(), min_pred_value=0.3, keep_monotonous=False)
+        else:
+            args.ig_name = ig_name
+            ig_module, call_model_function = load_ig_module(args)
+            kwargs = {
+                "x_value": features_data,
+                "call_model_function": call_model_function,
+                "model": model,
+                "baseline_features": baseline,
+                "memmap_path": memmap_path,
+                "x_steps": 10,
+                "device": args.device,
+                "call_model_args": {"target_class_idx": pred_class},
+                "batch_size": 500
+            }
+            try:
+                attribution_values = ig_module.GetMask(**kwargs)
+                saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
+                saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+                saliency_maps[ig_name] = saliency_map
+                print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+            except Exception as e:
+                print(f"  > Failed for {ig_name}: {e}")
+                results_all[ig_name] = None
+                continue
+
+        try:
+            sic_score = compute_pic_metric(
+                features.cpu().numpy(), saliency_map, random_mask,
+                saliency_thresholds, 0, model, args.device,
+                baseline=baseline.cpu().numpy(), min_pred_value=0.3,
+                keep_monotonous=False
+            )
+            aic_score = compute_pic_metric(
+                features.cpu().numpy(), saliency_map, random_mask,
+                saliency_thresholds, 1, model, args.device,
+                baseline=baseline.cpu().numpy(), min_pred_value=0.3,
+                keep_monotonous=False
+            )
 
             results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
             print(f"  - SIC AUC: {sic_score.auc:.3f}\n  - AIC AUC: {aic_score.auc:.3f}")
         except Exception as e:
-            print(f"  > Failed for {ig_name}: {e}")
+            print(f"  > Failed to compute PIC for {ig_name}: {e}")
             results_all[ig_name] = None
 
     # print("\n=== Saliency Map Correlations ===")
@@ -213,7 +242,7 @@ def main(args):
     #     for m2 in ig_methods:
     #         if m1 < m2 and m1 in saliency_maps and m2 in saliency_maps:
     #             corr, _ = pearsonr(saliency_maps[m1], saliency_maps[m2])
-    #             print(f"{m1.upper()} vs {m2.upper()}: Pearson correlation = {corr:.3f}")
+    #             print(f"{m1.upper()} vs {m2i.upper()}: Pearson correlation = {corr:.3f}")
 
     print("\n=== Summary of PIC Scores ===")
     for k, v in results_all.items():
