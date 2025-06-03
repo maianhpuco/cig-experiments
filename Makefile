@@ -133,6 +133,8 @@ test_dtfd_fold_1: test_dtfd_camelyon16_fold_1  test_dtfd_tcga_renal_fold_1 test_
 
 
 # ============= PREDICT CLAM =============
+baseline_clam_camelyon16_trainvaltest:
+	python sampling_baseline_trainvaltest.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1 
 baseline_clam_camelyon16:
 	python sampling_baseline_clam.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_renal:
