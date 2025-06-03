@@ -279,7 +279,7 @@ def main(args):
     basenames = ['test_002']
     for basename in basenames:
         print(f"\n=== Processing slide: {basename} ===")
-        compute_one_slide(args, basenam2)
+        compute_one_slide(args, basename)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
