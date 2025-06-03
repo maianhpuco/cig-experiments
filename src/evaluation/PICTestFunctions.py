@@ -116,7 +116,7 @@ class PicMetricResultBasic(NamedTuple):
 #     model_wrapper = ModelWrapper(model, model_type='clam')
 #     neutral_features = []
 #     predictions = []
-#     entropy_pred_tuples = []
+#     curve_normed_tuples = []
 
 #     # Validate baseline shape
 #     if baseline.shape != features.shape:
@@ -173,17 +173,17 @@ class PicMetricResultBasic(NamedTuple):
 #         max_normalized_pred = max(max_normalized_pred, normalized_pred)
 #         print(f"Normalized prediction: {normalized_pred:.4f} (fully neutral: {fully_neutral_pred:.4f}, original: {original_pred:.4f})")
 #         if keep_monotonous:
-#             entropy_pred_tuples.append((normalized_info, max_normalized_pred))
+#             curve_normed_tuples.append((normalized_info, max_normalized_pred))
 #         else:
-#             entropy_pred_tuples.append((normalized_info, normalized_pred))
+#             curve_normed_tuples.append((normalized_info, normalized_pred))
 
 #         neutral_features.append(neutral_features_current)
 #         predictions.append(pred)
 #     print(f">> Max normalized prediction: {max_normalized_pred:.4f}")
-#     entropy_pred_tuples.append((0.0, 0.0))
-#     entropy_pred_tuples.append((1.0, 1.0))
+#     curve_normed_tuples.append((0.0, 0.0))
+#     curve_normed_tuples.append((1.0, 1.0))
 
-#     info_data, pred_data = zip(*entropy_pred_tuples)
+#     info_data, pred_data = zip(*curve_normed_tuples)
 #     print(f"Curve points: {list(zip(info_data, pred_data))}")
 #     interp_func = interpolate.interp1d(x=info_data, y=pred_data)
 
@@ -197,7 +197,7 @@ class PicMetricResultBasic(NamedTuple):
 
 #     return PicMetricResultBasic(curve_x=curve_x, curve_y=curve_y, auc=auc)
 
-def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_mask: np.ndarray, 
+def compute_pic_metric(top_k: Sequence[float], features: np.ndarray, saliency_map: np.ndarray, random_mask: np.ndarray, 
                       saliency_thresholds: Sequence[float], method: int, model, device: str,
                       baseline: np.ndarray, min_pred_value: float = 0.3, 
                       keep_monotonous: bool = False, num_data_points: int = 1000) -> PicMetricResultBasic:
@@ -223,7 +223,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     model_wrapper = ModelWrapper(model, model_type='clam')
     neutral_features = []
     predictions = []
-    entropy_pred_tuples = []
+    curve_normed_tuples = []
     original_curve_xy = []
     infos = [] 
     # Validate baseline shape
@@ -258,11 +258,22 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     predictions.append(fully_neutral_pred)
 
     max_normalized_pred = 0.0
-
-    for threshold in saliency_thresholds:
-        quantile = np.quantile(saliency_map, 1 - threshold)
-        patch_mask = saliency_map >= quantile
-        
+    
+    normalized_infos = np.linspace(0, 1, num=len(top_k) + len(saliency_thresholds))
+ 
+    for i in range(len(top_k) + len(saliency_thresholds)):
+        if i < len(top_k):
+            # --- Top-k patch selection ---
+            k = top_k[i]
+            patch_mask = np.zeros_like(saliency_map, dtype=bool)
+            top_k_indices = np.argsort(saliency_map)[-k:]
+            patch_mask[top_k_indices] = True
+        else:
+            # --- Quantile threshold selection ---
+            threshold = saliency_thresholds[i - len(top_k)]
+            quantile = np.quantile(saliency_map, 1 - threshold)
+            patch_mask = saliency_map >= quantile 
+            
         # Use random_mask only if fraction > 0
         if random_mask.sum() > 0:
             patch_mask = np.logical_or(patch_mask, random_mask)
@@ -272,7 +283,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
 
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
         
-        info = estimate_feature_information(neutral_features_current, reference=features)
+        # info = estimate_feature_information(neutral_features_current, reference=features)
         # print(f"Information content of neutral features: {info:.4f}")
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0).to(device)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
@@ -288,35 +299,35 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         # normalized_info = (log_info - log_fully_neutral_info) / (log_original_info - log_fully_neutral_info)
         # normalized_info = np.clip(normalized_info, 0.0, 1.0)
                 
-         
-        normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
-        normalized_info = np.clip(normalized_info, 0.0, 1.0)
+        normalized_info= normalized_infos[i]  # Use precomputed normalized info for current norma
+        # normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
+        # normalized_info = np.clip(normalized_info, 0.0, 1.0)
         normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred) if (original_pred - fully_neutral_pred) > 1e-6 else pred
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
-        max_normalized_pred = max(max_normalized_pred, normalized_pred)
+        # max_normalized_pred = max(max_normalized_pred, normalized_pred)
 
         print(f"{'SIC' if method == 0 else 'AIC'} - P : {patch_mask.sum()}TH {threshold:.3f}: Info: {info:.5f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
 
         if keep_monotonous:
-            entropy_pred_tuples.append((normalized_info, max_normalized_pred))
+            curve_normed_tuples.append((normalized_info, max_normalized_pred))
         else:
-            entropy_pred_tuples.append((normalized_info, normalized_pred))
+            curve_normed_tuples.append((normalized_info, normalized_pred))
         
-        original_curve_xy.append((info, pred))  
+        # original_curve_xy.append((info, pred))  
         neutral_features.append(neutral_features_current)
         predictions.append(pred)
-        infos.append(info)  # Collect info for debugging
+        # infos.append(info)  # Collect info for debugging
         
     # print(f'> info: {infos}')
     # print(f'> predictions: {predictions}')
-    # print(f"Curve points original: {entropy_pred_tuples}") 
+    # print(f"Curve points original: {curve_normed_tuples}") 
     # print(f"Curve points: {original_curve_xy}")
      
-    entropy_pred_tuples.append((0.0, 0.0))
-    entropy_pred_tuples.append((1.0, 1.0))
+    curve_normed_tuples.append((0.0, 0.0))
+    curve_normed_tuples.append((1.0, 1.0))
 
     # Sort tuples for interpolation
-    sorted_tuples = sorted(entropy_pred_tuples, key=lambda x: x[0])
+    sorted_tuples = sorted(curve_normed_tuples, key=lambda x: x[0])
     info_data, pred_data = zip(*sorted_tuples)
     # print(f"Curve points: {list(zip(info_data, pred_data))}")
 
