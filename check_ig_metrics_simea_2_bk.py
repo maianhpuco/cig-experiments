@@ -158,7 +158,34 @@ def compute_one_slide(args, basename):
 
     print("========== COMPUTE IG METHODS ==========")
     ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod
-    ig_methods = ['idg']
+    # ig_methods = ['ig', 'random']
+    
+    # Class-specific saliency thresholds
+    # tumor_low = np.logspace(np.log10(0.0001), np.log10(0.05), num=12)
+    # tumor_high = np.array([0.1, 0.2, 0.4, 0.6, 0.8, 0.95])
+    # tumor_thresholds = np.sort(np.unique(np.concatenate([tumor_low, tumor_high])))
+    
+    # normal_low = np.logspace(np.log10(0.0001), np.log10(0.1), num=6)
+    # normal_mid = np.linspace(0.1, 0.5, num=8)
+    # normal_high = np.logspace(np.log10(0.5), np.log10(0.999), num=10)
+    # normal_thresholds = np.sort(np.unique(np.concatenate([normal_low, normal_mid, normal_high])))
+    
+    # saliency_thresholds = tumor_thresholds if pred_class == 1 else normal_thresholds
+
+    # Reinitialize after reset
+    # For tumor class (positive): want to capture early prediction change, so focus near 0
+    # tumor_low = np.logspace(np.log10(0.0001), np.log10(0.03), num=12)
+    # tumor_mid = np.array([0.05, 0.07, 0.09])
+    # tumor_thresholds = np.sort(np.unique(np.concatenate([tumor_low, tumor_mid])))
+
+    # # For normal class (negative): prediction only shifts near complete info, so focus near 1
+    # normal_high = np.logspace(np.log10(0.5), np.log10(0.999), num=15)
+    # normal_tail = np.array([0.9995, 0.9999]7
+    # normal_thresholds = np.sort(np.unique(np.concatenate([normal_high, normal_tail])))
+
+    # tumor_thresholds, normal_threshold0
+    # Tumor class: more sensitive to early info (thresholds near 0)
+    # _tumor_low = np.logspace(np.log10(0.000001), np.log10(0.02), num=7)
     tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
     mid = np.linspace(0.2, 0.8, num=3) 
     # # Normal class: more stable, only changes with full signal (thresholds near 1)
@@ -166,7 +193,15 @@ def compute_one_slide(args, basename):
     # mid = np.linspace(0.1, 0.9, num=10) 
     saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
     top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10])  # Top-k thresholds for evaluation
+    # Merge and ensure uniqueness + sorting
+    # saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, normal_high])))
 
+    # print(f"Saliency thresholds (symmetric log space):\n{saliency_thresholds}") 
+        
+    # saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_thresholds, normal_thresholds])))
+    # print(f"Saliency thresholds: {saliency_thresholds}")
+  
+    # print(f"\n> Saliency thresholds (Class {'Tumor' if pred_class == 1 else 'Normal'}): {saliency_thresholds}")
     
     random_mask = generate_random_mask(features.shape[0], fraction=0.0)  # Disable random mask
     print(f"\n> Number of patches: {features.shape[0]}")
@@ -205,8 +240,6 @@ def compute_one_slide(args, basename):
                 attribution_values = ig_module.GetMask(**kwargs)
                 saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
                 saliency_map = saliency_map / (saliency_map.max() + 1e-8)
-                print(f"  - Saliency map shape: {saliency_map.shape}")
-                return 
                 print(f"  - Saliency stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
             except Exception as e:
                 print(f"  > Failed for {ig_name}: {e}")
