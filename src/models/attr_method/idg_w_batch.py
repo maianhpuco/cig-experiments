@@ -86,7 +86,7 @@ class IDG(CoreSaliency):
 
         # Create temporary directory for intermediate results
         os.makedirs(memmap_path, exist_ok=True)
-
+        baseline_features = baseline_features.unsqueeze(0) if baseline_features.dim() == 2 else baseline_features  # Ensure shape [1, N, dim]
         # Device and format checks
         x_value = x_value.to(device, dtype=torch.float32)
         baseline_features = baseline_features.to(device, dtype=torch.float32)
