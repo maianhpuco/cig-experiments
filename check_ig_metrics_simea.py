@@ -109,6 +109,8 @@ def main(args):
     features = features.to(args.device, dtype=torch.float32)
     features = features.squeeze(0) if features.dim() == 3 else features
     features_data = features.unsqueeze(0) if features.dim() == 2 else features
+    
+    print(f"> Slide name: {basename}\n> Fold ID: {fold_id}")
     print(f"> Feature shape: {features.shape}")
 
     with torch.no_grad():
