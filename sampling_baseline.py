@@ -12,7 +12,7 @@ def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label,
     # Get predicted label of target slide
     target_pred = pred_df.loc[pred_df['slide_id'] == target_slide_id, 'pred_label'].values
     target_pred = target_pred[0] if len(target_pred) > 0 else 'N/A'
-    print(f"[INFO] Target slide: {target_slide_id} | Predicted Label: {target_pred} | #Features: {num_target_feats}")
+    # print(f"[INFO] Target slide: {target_slide_id} | Predicted Label: {target_pred} | #Features: {num_target_feats}")
 
     # Filter potential contrastive slides
     sample_df = pred_df[pred_df['pred_label'].isin(sample_classes)].sample(frac=1, random_state=42)
@@ -121,9 +121,12 @@ def main(args):
         other_classes = [c for c in range(num_classes) if c != target_class]
         slide_subset = pred_df[pred_df['pred_label'] == target_class]
 
-        for _, row in slide_subset.iterrows():
+        print(f"\n[INFO] ===== Processing Target Class: {target_class} ({len(slide_subset)} slides) =====")
+
+        for idx, (_, row) in enumerate(slide_subset.iterrows(), 1):
             slide_id = row['slide_id']
-            print(f"[INFO] Sampling contrastive features for slide {slide_id} (class {target_class})")
+            percent = (idx / len(slide_subset)) * 100
+            print(f"\n[INFO] ({percent:.1f}%) Sampling contrastive features for slide {slide_id} (class {target_class})")
 
             sampled_feats = sample_contrastive_features(
                 pred_df=pred_df,
@@ -135,7 +138,7 @@ def main(args):
 
             save_path = os.path.join(save_dir, f"{slide_id}.pt")
             torch.save(sampled_feats, save_path)
-            print(f"[INFO] Saved to: {save_path}")
+            print(f"[INFO] Saved to: {save_path}") 
 
 
 if __name__ == "__main__":
