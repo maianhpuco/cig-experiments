@@ -262,10 +262,12 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     for threshold in saliency_thresholds:
         quantile = np.quantile(saliency_map, 1 - threshold)
         patch_mask = saliency_map >= quantile
+        
         # Use random_mask only if fraction > 0
         if random_mask.sum() > 0:
             patch_mask = np.logical_or(patch_mask, random_mask)
-        visible_fraction = patch_mask.sum() / len(patch_mask)
+        
+        # visible_fraction = patch_mask.sum() / len(patch_mask)
         # print(f">> Threshold {threshold:.3f} — {visible_fraction * 100:.2f}% patches visible")
 
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
@@ -293,7 +295,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
         max_normalized_pred = max(max_normalized_pred, normalized_pred)
 
-        print(f"{'SIC' if method == 0 else 'AIC'} - TH {threshold:.3f}: Info: {info:.5f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
+        print(f"{'SIC' if method == 0 else 'AIC'} - P : {len(patch_mask) }TH {threshold:.3f}: Info: {info:.5f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
 
         if keep_monotonous:
             entropy_pred_tuples.append((normalized_info, max_normalized_pred))
