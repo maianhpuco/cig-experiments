@@ -79,9 +79,9 @@ def parse_args_from_config(config):
     args.device = args.device if hasattr(args, 'device') else ("cuda" if torch.cuda.is_available() else "cpu")
     return args
 
-def compute_one_slide(args):
+def compute_one_slide(args, basename):
 
-    basename = 'test_003'
+    # basename = 'test_003'
     fold_id = 1
     
     feature_path = os.path.join(args.paths['feature_files'], f"{basename}.pt")
@@ -268,9 +268,15 @@ def compute_one_slide(args):
         else:
             print(f"{k.upper():<5} : FAILED")
 
-    output_file = os.path.join(memmap_path, "pic_results.yaml")
-    print(f"> Results saved to: {output_file}")
-
+    # output_file = os.path.join(memmap_path, "pic_results.yaml")
+    # print(f"> Results saved to: {output_file}")im
+    
+    
+def main(args):
+    basenames = ['test_001', 'test_003']
+    for basename in basenames:
+        print(f"\n=== Processing slide: {basename} ===")
+        compute_one_slide(args, basename)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
