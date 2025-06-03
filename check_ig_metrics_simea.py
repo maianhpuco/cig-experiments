@@ -136,12 +136,12 @@ def main(args):
     _, baseline_predicted_class = torch.max(baseline_pred[0], dim=1) 
     print(f"> Baseline predicted class: {baseline_predicted_class.item()}")
     print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
-    print(f"> Baseline prediction: {baseline_pred}")
+    # print(f"> Baseline prediction: {baseline_pred}")
     
-    return 
     print("==========COMPUTE IG METHODS ==========")
     # IG methods
     ig_methods = ['ig', 'cig', 'idg', 'eg']
+    ig_methods = ['ig']
     saliency_thresholds = np.linspace(0.005, 0.75, 10)
     print(f"\n> Saliency thresholds: {saliency_thresholds}")
     random_mask = generate_random_mask(features.shape[0], fraction=0.01)
@@ -181,12 +181,12 @@ def main(args):
             print(f"  > Failed for {ig_name}: {e}")
             results_all[ig_name] = None
 
-    print("\n=== Saliency Map Correlations ===")
-    for m1 in ig_methods:
-        for m2 in ig_methods:
-            if m1 < m2 and m1 in saliency_maps and m2 in saliency_maps:
-                corr, _ = pearsonr(saliency_maps[m1], saliency_maps[m2])
-                print(f"{m1.upper()} vs {m2.upper()}: Pearson correlation = {corr:.3f}")
+    # print("\n=== Saliency Map Correlations ===")
+    # for m1 in ig_methods:
+    #     for m2 in ig_methods:
+    #         if m1 < m2 and m1 in saliency_maps and m2 in saliency_maps:
+    #             corr, _ = pearsonr(saliency_maps[m1], saliency_maps[m2])
+    #             print(f"{m1.upper()} vs {m2.upper()}: Pearson correlation = {corr:.3f}")
 
     print("\n=== Summary of PIC Scores ===")
     for k, v in results_all.items():
