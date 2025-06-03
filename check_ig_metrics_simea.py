@@ -79,8 +79,9 @@ def parse_args_from_config(config):
     return args
 
 def main(args):
-    basename = args.basename
-    fold_id = args.fold_id
+    basename = 'tumor_028'
+    fold_id = 1
+    
     feature_path = os.path.join(args.paths['feature_files'], f"{basename}.pt")
     checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'])
     memmap_path = os.path.join(args.paths['memmap_path'])
