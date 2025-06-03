@@ -141,7 +141,7 @@ def main(args):
     print("==========COMPUTE IG METHODS ==========")
     # IG methods
     ig_methods = ['ig', 'cig', 'idg', 'eg']
-    ig_methods = ['ig']
+    # ig_methods = ['ig']
     saliency_thresholds = np.linspace(0.005, 0.75, 10)
     print(f"\n> Saliency thresholds: {saliency_thresholds}")
     random_mask = generate_random_mask(features.shape[0], fraction=0.01)
