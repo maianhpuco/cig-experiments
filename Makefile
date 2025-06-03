@@ -183,21 +183,26 @@ pr_metric:
 # Makefile for running different IG variants ===== on TCGA-Renal
 
 # Makefile for running different IG variants ===== on camelyon16 
-
-ig_clam_integrated_gradient:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig 
-ig_clam_expected_gradient:
+''''
+clam_ig:
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
+clam_eg:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
-ig_clam_integrated_decision_gradient:
-	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg --device cpu
-ig_clam_contrastive_gradient:
+
+# clam_idg:
+# 	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+# 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg --device cpu
+
+clam_cig:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
-ig_clam_vanilla_gradient:
+
+clam_g:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
-ig_clam_square_integrated_gradient:
+
+clam_sig:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
-ig_clam_optim_square_integrated_gradient:
+
+clam_osig:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
 
 # ----- Grouped Methods -----

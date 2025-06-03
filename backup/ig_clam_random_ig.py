@@ -21,21 +21,20 @@ from attr_method._common import call_model_function
 from src.datasets.classification.tcga import return_splits_custom  
 from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon
 
-def get_baseline_features(fold_id, basename, features_size):
-    baseline_path = os.path.join(args.paths[f'baseline_dir_fold_{fold_id}'], f"{basename}.pt") 
-    baseline_path = os.path.join(args.paths[f'baseline_dir_fold_{fold_id}'], f"{basename}.pt")
-    if not os.path.isfile(baseline_path):
-        raise FileNotFoundError(f"Baseline file not found at: {baseline_path}")
-    baseline = torch.load(baseline_path).to(args.device, dtype=torch.float32)
-    baseline = baseline.squeeze(0) if baseline.dim() == 3 else baseline
+def sample_random_features(dataset, num_files=20):
+    indices = np.random.choice(len(dataset), num_files, replace=False)
+    feature_list = []
+    for idx in indices:
+        features, _, _ = dataset[idx]
+        features = features if isinstance(features, torch.Tensor) else torch.tensor(features, dtype=torch.float32)
+        if features.size(0) > 128:
+            features = features[:128]
+        feature_list.append(features)
+    padded = torch.nn.utils.rnn.pad_sequence(feature_list, batch_first=True)
+    flattened = padded.view(-1, padded.size(-1))
+    return flattened
 
-    # Resample baseline to match number of patches
-    if baseline.shape[0] != features_size:
-        print(f"[WARN] Baseline patch count ({baseline.shape[0]}) doesn't match features ({features_size}). Resampling baseline.")
-        indices = torch.randint(0, baseline.shape[0], (features_size,), device=baseline.device)
-        baseline = baseline[indices]  
-    return baseline 
- 
+
 def get_dummy_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--drop_out', type=float, default=0.25)
@@ -110,13 +109,14 @@ def main(args):
                 print(f"Predicted class: {prediction_class}") 
                 
                 features = features.to(args.device, dtype=torch.float32)
-                baseline  =  get_baseline_features(fold_id, basename, features.shape[0]).to(args.device, dtype=torch.float32)
-                
+                stacked_features_baseline = sample_random_features(test_dataset).to(args.device, dtype=torch.float32)
+
+                print(f"==> Attribution for class {class_idx}")
                 kwargs = {
                     "x_value": features,
                     "call_model_function": call_model_function,
                     "model": model,
-                    "baseline_features": baseline,
+                    "baseline_features": stacked_features_baseline,
                     "memmap_path": memmap_path,
                     "x_steps": 50,
                     "device": args.device,
@@ -151,6 +151,8 @@ def main(args):
                     
                 print(f"==> Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
+                
+
     elif args.dataset_name == 'camelyon16':
         for fold_id in range(1, 2):
             split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
@@ -171,15 +173,15 @@ def main(args):
                 print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
 
                 features = features.to(args.device, dtype=torch.float32)
-                baseline  =  get_baseline_features(fold_id, basename, features.shape[0]).to(args.device, dtype=torch.float32)
-                
+                stacked_features_baseline = sample_random_features(train_dataset).to(args.device, dtype=torch.float32)
+
                 for class_idx in range(args.n_classes):
                     print(f"==> Attribution for class {class_idx}")
                     kwargs = {
                         "x_value": features,
                         "call_model_function": call_model_function,
                         "model": model,
-                        "baseline_features": baseline,
+                        "baseline_features": stacked_features_baseline,
                         "memmap_path": memmap_path,
                         "x_steps": 50,
                         "device": args.device,
@@ -213,6 +215,7 @@ def main(args):
                     print(f"==> Saved scores for {args.dataset_name},  {fold_id} class {class_idx} at {save_path}")
 
                 
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
