@@ -3,11 +3,9 @@ import yaml
 import argparse
 import torch
 import pandas as pd
-from concurrent.futures import ThreadPoolExecutor
-from tqdm import tqdm
 
-def sample_contrastive_features(slide_id, target_label, sample_classes, pred_df, dataset, max_slides, feature_cache):
-    target_feats = feature_cache[slide_id]
+def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label, sample_classes, max_slides=30):
+    target_feats = dataset.get_features_by_slide_id(target_slide_id)
     num_target_feats = target_feats.shape[0]
 
     sample_df = pred_df[pred_df['pred_label'].isin(sample_classes)].sample(frac=1, random_state=42)
@@ -20,17 +18,19 @@ def sample_contrastive_features(slide_id, target_label, sample_classes, pred_df,
     feats_per_slide = num_target_feats // num_slides
     remainder = num_target_feats % num_slides
 
-    for i, row in enumerate(sampled_slides.itertuples(index=False)):
-        contrast_slide_id = row.slide_id
-        feats = feature_cache.get(contrast_slide_id)
-        if feats is None:
+    for i, (_, row) in enumerate(sampled_slides.iterrows()):
+        slide_id = row['slide_id']
+        try:
+            feats = dataset.get_features_by_slide_id(slide_id)
+        except Exception as e:
+            print(f"[WARNING] Could not load slide {slide_id}: {e}")
             continue
-
         feats = feats[torch.randperm(feats.shape[0])]
-        take_n = feats_per_slide + (1 if i < remainder else 0)
+        take_n = min(feats_per_slide + (1 if i < remainder else 0), feats.shape[0])
         sampled_features.append(feats[:take_n])
+        print(f"[INFO] Contrastive slide: {slide_id} | Sampled: {take_n}")
 
-    if not sampled_features:
+    if len(sampled_features) == 0:
         raise RuntimeError("No contrastive features collected.")
 
     return torch.cat(sampled_features, dim=0)
@@ -38,97 +38,78 @@ def sample_contrastive_features(slide_id, target_label, sample_classes, pred_df,
 def load_dataset(args, fold_id):
     if args.dataset_name == 'camelyon16':
         from src.datasets.classification.camelyon16 import return_splits_custom
-        split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
+        split_csv = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
         args.label_dict = {'normal': 0, 'tumor': 1}
         _, _, test_dataset = return_splits_custom(
-            csv_path=split_csv_path,
+            csv_path=split_csv,
             data_dir=args.paths['pt_files'],
             label_dict=args.label_dict,
             seed=42,
             print_info=True
         )
+        return test_dataset
+
     elif args.dataset_name in ['tcga_renal', 'tcga_lung']:
         from src.datasets.classification.tcga import return_splits_custom
-        split_folder = args.paths['split_folder']
-        data_dir_map = args.paths['data_dir']
-        train_csv = os.path.join(split_folder, f'fold_{fold_id}', 'train.csv')
-        val_csv = os.path.join(split_folder, f'fold_{fold_id}', 'val.csv')
-        test_csv = os.path.join(split_folder, f'fold_{fold_id}', 'test.csv')
+        label_dict = getattr(args, "label_dict", None)
+        fold_dir = os.path.join(args.paths['split_folder'], f'fold_{fold_id}')
         _, _, test_dataset = return_splits_custom(
-            train_csv, val_csv, test_csv,
-            data_dir_map=data_dir_map,
-            label_dict=args.label_dict,
+            train_csv_path=os.path.join(fold_dir, 'train.csv'),
+            val_csv_path=os.path.join(fold_dir, 'val.csv'),
+            test_csv_path=os.path.join(fold_dir, 'test.csv'),
+            data_dir_map=args.paths['data_dir'],
+            label_dict=label_dict,
             seed=42,
             print_info=True
         )
+        return test_dataset
+
     else:
         raise ValueError(f"Unsupported dataset: {args.dataset_name}")
-    return test_dataset
-
-def process_slide(slide_id, target_class, other_classes, pred_df, dataset, save_dir, feature_cache):
-    try:
-        sampled_feats = sample_contrastive_features(
-            slide_id, target_class, other_classes,
-            pred_df, dataset, max_slides=30,
-            feature_cache=feature_cache
-        )
-        save_path = os.path.join(save_dir, f"{slide_id}.pt")
-        torch.save(sampled_feats, save_path)
-        print(f"[SAVED] {slide_id} -> {save_path}")
-    except Exception as e:
-        print(f"[ERROR] Failed for {slide_id}: {e}")
 
 def main(args):
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{args.fold}.csv')
-    if not os.path.isfile(pred_path):
-        raise FileNotFoundError(f"Prediction file not found: {pred_path}")
     pred_df = pd.read_csv(pred_path)
+    print(f"[INFO] Loaded predictions: {len(pred_df)} samples")
 
     test_dataset = load_dataset(args, args.fold)
-    baseline_key = f'baseline_dir_fold_{args.fold}'
-    save_dir = args.paths.get(baseline_key)
-    os.makedirs(save_dir, exist_ok=True)
-    feature_cache = {
-        slide_id: test_dataset.get_features_by_slide_id(slide_id)
-        for slide_id in test_dataset.slide_ids
-    }
-    # feature_cache = {ds.slide_ids[i]: ds.get_features_by_slide_id(ds.slide_ids[i]) for i, ds in enumerate(test_dataset)}
-    num_classes = len(args.label_dict)
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        for target_class in range(num_classes):
-            other_classes = [c for c in range(num_classes) if c != target_class]
-            slide_subset = pred_df[pred_df['pred_label'] == target_class]
-            print(f"\n[CLASS {target_class}] {len(slide_subset)} slides")
-            for row in tqdm(slide_subset.itertuples(index=False), total=len(slide_subset)):
-                executor.submit(
-                    process_slide,
-                    row.slide_id, target_class, other_classes,
-                    pred_df, test_dataset, save_dir, feature_cache
-                )
+    save_dir = args.paths.get(f'baseline_dir_fold_{args.fold}')
+    if save_dir is None:
+        raise KeyError(f"baseline_dir_fold_{args.fold} not found in paths.")
+    os.makedirs(save_dir, exist_ok=True)
+
+    for target_class in range(len(args.label_dict)):
+        contrastive_classes = [c for c in range(len(args.label_dict)) if c != target_class]
+        slides = pred_df[pred_df['pred_label'] == target_class]
+
+        print(f"\n[INFO] Target class {target_class} — {len(slides)} slides")
+
+        for idx, (_, row) in enumerate(slides.iterrows(), 1):
+            slide_id = row['slide_id']
+            print(f"[{idx}/{len(slides)}] Slide: {slide_id}")
+            sampled_feats = sample_contrastive_features(
+                pred_df, test_dataset, slide_id, target_class, contrastive_classes
+            )
+            save_path = os.path.join(save_dir, f"{slide_id}.pt")
+            torch.save(sampled_feats, save_path)
+            print(f"[INFO] Saved: {save_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dry_run', type=int, default=0)
-    parser.add_argument('--config', default='configs_simea/clam_camelyon16.yaml')
-    parser.add_argument('--ig_name', default='integrated_gradient')
-    parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'])
+    parser.add_argument('--config', required=True)
+    parser.add_argument('--device', default=None, choices=['cuda', 'cpu'])
     parser.add_argument('--start_fold', type=int, default=1)
     parser.add_argument('--end_fold', type=int, default=1)
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
-    for key, val in config.items():
-        if key == 'paths':
-            args.paths = val
-        else:
-            setattr(args, key, val)
-
-    args.dataset_name = config['dataset_name']
+    for k, v in config.items():
+        setattr(args, k, v)
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-    print(" > Start computing contrastive samples for dataset:", args.dataset_name)
-    for fold_id in range(args.start_fold, args.end_fold + 1):
-        args.fold = fold_id
+    for fold in range(args.start_fold, args.end_fold + 1):
+        args.fold = fold
+        print(f"\n=== Fold {fold} ===")
         main(args)
