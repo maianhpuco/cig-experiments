@@ -275,6 +275,7 @@ def compute_one_slide(args, basename):
     
 def main(args):
     # basenames = ['test_001', 'test_003']
+    
     basenames = ['test_003']
     for basename in basenames:
         print(f"\n=== Processing slide: {basename} ===")
