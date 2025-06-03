@@ -40,9 +40,30 @@ def generate_random_mask(num_patches: int, fraction: float = 0.01) -> np.ndarray
     mask[indices] = True
     return mask
 
-def estimate_feature_information(features: np.ndarray) -> float:
-    return np.linalg.norm(features, ord=2, axis=1).mean()
-
+# def estimate_feature_information(features: np.ndarray) -> float:
+#     return np.linalg.norm(features, ord=2, axis=1).mean()
+def estimate_feature_information(features: np.ndarray, reference: Optional[np.ndarray] = None) -> float:
+    """
+    Estimate information content as the cosine similarity to a reference (usually the original features).
+    
+    Args:
+        features (np.ndarray): Neutral or masked features [N, D].
+        reference (np.ndarray, optional): Original full features [N, D]. If None, falls back to norm-based method.
+    
+    Returns:
+        float: Mean similarity score as proxy for retained information.
+    """
+    if reference is None:
+        # fallback: legacy L2 norm
+        return np.linalg.norm(features, ord=2, axis=1).mean()
+    
+    # Normalize features and reference for cosine similarity
+    norm_features = features / (np.linalg.norm(features, axis=1, keepdims=True) + 1e-8)
+    norm_ref = reference / (np.linalg.norm(reference, axis=1, keepdims=True) + 1e-8)
+    
+    cosine_sim = np.sum(norm_features * norm_ref, axis=1)  # dot product along dim=1
+    return cosine_sim.mean()
+ 
 class ComputePicMetricError(Exception):
     pass
 
@@ -137,7 +158,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
         
-        print(f"{'SIC' if method == 0 else 'AIC'} - Threshold {threshold:.3f}: Prediction = {pred:.6f}. Info = {info:.6f}")
+        print(f"{'SIC' if method == 0 else 'AIC'} - Threshold {threshold:.3f}: Prediction = {pred:.6f}. Info = {info:.4f}")
 
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
