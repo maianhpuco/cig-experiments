@@ -192,7 +192,7 @@ def compute_one_slide(args, basename):
     normal_high = 1 - tumor_low[::-1]  # Flip to go toward 1
     # mid = np.linspace(0.1, 0.9, num=10) 
     saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
-    top_k = np.array([1, 2, 3, 5, 10, 20, 50, 100])  # Top-k thresholds for evaluation
+    top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10])  # Top-k thresholds for evaluation
     # Merge and ensure uniqueness + sorting
     # saliency_thresholds = np.sort(np.unique(np.concatenate([tumor_low, normal_high])))
 
