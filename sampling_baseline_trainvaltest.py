@@ -56,6 +56,16 @@ def sample_contrastive_features(pred_df, dataset, target_slide_id, target_label,
     print(f"[INFO] Final shape: {sampled_feats.shape}")
     return sampled_feats
 
+class ConcatWSIDataset(torch.utils.data.ConcatDataset):
+    def get_features_by_slide_id(self, slide_id):
+        for dataset in self.datasets:
+            if hasattr(dataset, 'get_features_by_slide_id'):
+                try:
+                    return dataset.get_features_by_slide_id(slide_id)
+                except KeyError:
+                    continue
+        raise KeyError(f"Slide ID {slide_id} not found in any sub-dataset.")
+
 
 def load_dataset(args, fold_id):
     if args.dataset_name == 'camelyon16':
@@ -72,7 +82,7 @@ def load_dataset(args, fold_id):
             print_info=True
         )
         print(f"[INFO] Test Set Size: {len(test_dataset)}")
-        merged_dataset = ConcatDataset([train_dataset, val_dataset, test_dataset])
+        merged_dataset = ConcatWSIDataset([train_dataset, val_dataset, test_dataset])
         return merged_dataset
 
     elif args.dataset_name in ['tcga_renal', 'tcga_lung']:
@@ -96,7 +106,7 @@ def load_dataset(args, fold_id):
             print_info=True
         )
         print(f"[INFO] FOLD {fold_id} -> Test Set Size: {len(test_dataset)}")
-        merged_dataset = ConcatDataset([train_dataset, val_dataset, test_dataset])
+        merged_dataset = ConcatWSIDataset([train_dataset, val_dataset, test_dataset])
         return merged_dataset
 
     else:
