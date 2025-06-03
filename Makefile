@@ -183,7 +183,7 @@ pr_metric:
 # Makefile for running different IG variants ===== on TCGA-Renal
 
 # Makefile for running different IG variants ===== on camelyon16 
-''''
+
 clam_ig:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
 clam_eg:
