@@ -79,28 +79,16 @@ def parse_args_from_config(config):
     args.device = args.device if hasattr(args, 'device') else ("cuda" if torch.cuda.is_available() else "cpu")
     return args
 
-def compute_one_slide(args, basename):
+def compute_one_slide(args, basename, model):
 
     # basename = 'test_003'
     fold_id = 1
     
     feature_path = os.path.join(args.paths['feature_files'], f"{basename}.pt")
-    checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'])
     memmap_path = os.path.join(args.paths['memmap_path'])
     os.makedirs(memmap_path, exist_ok=True)
 
-    from argparse import Namespace
-    args_clam = Namespace(
-        drop_out=args.drop_out,
-        n_classes=args.n_classes,
-        embed_dim=args.embed_dim,
-        model_type=args.model_type,
-        model_size=args.model_size
-    )
-    
-    print(f"\n> Loading CLAM model from: {checkpoint_path}")
-    model = load_clam_model(args_clam, checkpoint_path, device=args.device)
-    model.eval()
+   
     print("========== PREDICTION FOR FEATURES ==========") 
     print(f"\n> Loading feature from: {feature_path}")
     data = torch.load(feature_path)
@@ -262,17 +250,34 @@ def compute_one_slide(args, basename):
 def main(args):
     import time 
     import pandas as pd
+    
+    checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'])
+
+    from argparse import Namespace
+    args_clam = Namespace(
+        drop_out=args.drop_out,
+        n_classes=args.n_classes,
+        embed_dim=args.embed_dim,
+        model_type=args.model_type,
+        model_size=args.model_size
+    )
+    
+    print(f"\n> Loading CLAM model from: {checkpoint_path}") 
+    model = load_clam_model(args_clam, checkpoint_path, device=args.device)
+    model.eval() 
     fold_id = 1 
     args.fold = 1
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     pred_df = pd.read_csv(pred_path)
     print(f"[INFO] Loaded predictions from fold {args.fold}: {pred_df.shape[0]} samples") 
     tumor_df = pred_df[pred_df['pred_label'] == 1]
+    
     basenames = tumor_df['slide_id'].unique().tolist()
     # basenames = ['test_001', 'test_002', 'test_004', 'test_008']
     args.pred_df = tumor_df 
     all_results = [] 
     start = time.time()
+    basenames ['test_069']
     count_total= len(basenames)
     for basename in basenames:
         print(f"\n=== Processing slide: {basename}, {len(all_results) + 1}/{count_total} ===")
