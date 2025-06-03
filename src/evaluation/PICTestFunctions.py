@@ -275,16 +275,16 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0).to(device)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
         
-        def safe_logit(x):
-            eps = 1e-6
-            return np.log(x + eps)
+        # def safe_logit(x):
+        #     eps = 1e-6
+        #     return np.log(x + eps)
 
-        log_info = safe_logit(info)
-        log_fully_neutral_info = safe_logit(fully_neutral_info)
-        log_original_info = safe_logit(original_features_info)
+        # log_info = safe_logit(info)
+        # log_fully_neutral_info = safe_logit(fully_neutral_info)
+        # log_original_info = safe_logit(original_features_info)
 
-        normalized_info = (log_info - log_fully_neutral_info) / (log_original_info - log_fully_neutral_info)
-        normalized_info = np.clip(normalized_info, 0.0, 1.0)
+        # normalized_info = (log_info - log_fully_neutral_info) / (log_original_info - log_fully_neutral_info)
+        # normalized_info = np.clip(normalized_info, 0.0, 1.0)
                 
          
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
@@ -293,7 +293,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
         max_normalized_pred = max(max_normalized_pred, normalized_pred)
 
-        print(f"{'SIC' if method == 0 else 'AIC'} - TH {threshold:.3f}: Info: {info:.3f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
+        print(f"{'SIC' if method == 0 else 'AIC'} - TH {threshold:.3f}: Info: {info:.5f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
 
         if keep_monotonous:
             entropy_pred_tuples.append((normalized_info, max_normalized_pred))
