@@ -155,15 +155,16 @@ def compute_one_slide(args, basename):
     ig_methods = ['ig', 'random']
     
     # Define top-k values
-    max_k = min(num_patches, 1000)  # Cap at 1000 or num_patches
-    tumor_small_k = np.unique(np.logspace(np.log10(1), np.log10(max_k * 0.1), num=10, dtype=int))  # Small k for tumor
-    tumor_large_k = np.array([int(max_k * p) for p in [0.2, 0.4, 0.6, 0.8, 0.95]])  # Larger k
-    normal_large_k = np.unique(np.logspace(np.log10(max_k * 0.5), np.log10(max_k), num=10, dtype=int))  # Large k for normal
-    normal_small_k = np.array([1, 5, 10, 20, 50])  # Small k
-    top_k_values = tumor_small_k + tumor_large_k if pred_class == 1 else normal_small_k + normal_large_k
-    top_k_values = np.sort(np.unique(np.concatenate([tumor_small_k, tumor_large_k, normal_small_k, normal_large_k])))  # Symmetric
-    print(f"\n> Top-k values (Class {'Tumor' if pred_class == 1 else 'Normal'}): {top_k_values}")
-    
+    # max_k = min(num_patches, 1000)  # Cap at 1000 or num_patches
+    # tumor_small_k = np.unique(np.logspace(np.log10(1), np.log10(max_k * 0.1), num=10, dtype=int))  # Small k for tumor
+    # tumor_large_k = np.array([int(max_k * p) for p in [0.2, 0.4, 0.6, 0.8, 0.95]])  # Larger k
+    # normal_large_k = np.unique(np.logspace(np.log10(max_k * 0.5), np.log10(max_k), num=10, dtype=int))  # Large k for normal
+    # normal_small_k = np.array([1, 5, 10, 20, 50])  # Small k
+
+    # top_k_values = tumor_small_k + tumor_large_k if pred_class == 1 else normal_small_k + normal_large_k
+    # top_k_values = np.sort(np.unique(np.concatenate([tumor_small_k, tumor_large_k, normal_small_k, normal_large_k])))  # Symmetric
+    # print(f"\n> Top-k values (Class {'Tumor' if pred_class == 1 else 'Normal'}): {top_k_values}")
+    top_k_values = np.array([1, 5, 10, 20, 50, 100, 200, 500, 1000])  # Symmetric for both classes 
     random_mask = generate_random_mask(num_patches, fraction=0.0)  # Disable random mask
     print(f"\n> Number of patches: {num_patches}")
     print(f"> Number of masked patches: {random_mask.sum()}")
