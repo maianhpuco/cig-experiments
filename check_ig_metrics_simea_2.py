@@ -202,6 +202,7 @@ def compute_one_slide(args, basename):
                 "batch_size": 500
             }
             # try:
+            print(f"baseline shape: {baseline.shape}")
             attribution_values = ig_module.GetMask(**kwargs)
             saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
             saliency_map = saliency_map / (saliency_map.max() + 1e-8)
@@ -220,7 +221,7 @@ def compute_one_slide(args, basename):
             #     })
             #     continue
 
-        
+
         sic_score = compute_pic_metric(top_k, 
             features.cpu().numpy(), saliency_map, random_mask,
             saliency_thresholds, 0, model, args.device,
