@@ -54,8 +54,9 @@ def estimate_feature_information(features: np.ndarray, reference: Optional[np.nd
         float: Mean similarity score as proxy for retained information.
     """
     if reference is None:
+        print("Warning: No reference provided for cosine similarity. Using L2 norm as fallback.")
         # fallback: legacy L2 norm
-        return np.linalg.norm(features, ord=2, axis=1).mean()
+        # return np.linalg.norm(features, ord=2, axis=1).mean()
     
     # Normalize features and reference for cosine similarity
     norm_features = features / (np.linalg.norm(features, axis=1, keepdims=True) + 1e-8)
@@ -151,9 +152,11 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
         patch_mask = saliency_map >= quantile
         ''' randomly masked patches (used for smoothing or as a reference) are also included in the patch mask. '''
         patch_mask = np.logical_or(patch_mask, random_mask)
+        
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
-
-        info = estimate_feature_information(neutral_features_current)
+        
+        info = estimate_feature_information(neutral_features_current, reference=features)
+        # info = estimate_feature_information(neutral_features_current)
         print("Information content of neutral features:", info) 
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
