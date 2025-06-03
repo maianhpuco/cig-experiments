@@ -146,7 +146,7 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
             patch_mask = np.logical_or(patch_mask, random_mask)
         else:
             visible_fraction = patch_mask.sum() / num_patches
-        print(f">> Top-k {k}/{num_patches} ({visible_fraction*100:.2f}% {'visible'removed' if method == 0 else 'added'})")
+        print(f">> Top-k {k}/{num_patches} ({visible_fraction*100:.2f}% {'visible' if method == 0 else 'added'})")
 
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
 
