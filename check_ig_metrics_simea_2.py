@@ -250,7 +250,8 @@ def compute_one_slide(args, basename, model):
 def main(args):
     import time 
     import pandas as pd
-    
+    fold_id = 1 
+    args.fold = 1
     checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'])
 
     from argparse import Namespace
@@ -265,8 +266,7 @@ def main(args):
     print(f"\n> Loading CLAM model from: {checkpoint_path}") 
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
     model.eval() 
-    fold_id = 1 
-    args.fold = 1
+
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     pred_df = pd.read_csv(pred_path)
     print(f"[INFO] Loaded predictions from fold {args.fold}: {pred_df.shape[0]} samples") 
