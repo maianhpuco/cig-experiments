@@ -49,7 +49,7 @@ class ComputePicMetricError(Exception):
 def getPrediction(input: torch.Tensor, model_wrapper: ModelWrapper, intendedClass: int, method: int, device: str) -> Tuple[float, int]:
     input = input.to(device)
     logits = model_wrapper.forward(input)
-    print(f"> Logits for method={'SIC' if method == 0 else 'AIC'}: {logits.detach().cpu().numpy()}")
+    print(f"> Logits for method={'SIC' if method == 0 else 'AIC'}: {logits.detach().cpu().numpy()}", end=' ')
 
     if intendedClass == -1:
         _, index = torch.max(logits, dim=1)
