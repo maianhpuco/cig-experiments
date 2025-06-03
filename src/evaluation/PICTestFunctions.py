@@ -128,14 +128,16 @@ def compute_pic_metric(features: np.ndarray, saliency_map: np.ndarray, random_ma
     for threshold in saliency_thresholds:
         quantile = np.quantile(saliency_map, 1 - threshold)
         patch_mask = saliency_map >= quantile
+        ''' randomly masked patches (used for smoothing or as a reference) are also included in the patch mask. '''
         patch_mask = np.logical_or(patch_mask, random_mask)
         neutral_features_current = create_neutral_features(features, patch_mask, baseline)
 
         info = estimate_feature_information(neutral_features_current)
+        print("Information content of neutral features:", info) 
         pred_input = torch.from_numpy(neutral_features_current).unsqueeze(0)
         pred, _ = getPrediction(pred_input, model_wrapper, correctClassIndex, method, device)
         
-        print(f"{'SIC' if method == 0 else 'AIC'} - Threshold {threshold:.3f}: Prediction = {pred:.6f}")
+        print(f"{'SIC' if method == 0 else 'AIC'} - Threshold {threshold:.3f}: Prediction = {pred:.6f}. Info = {info:.6f}")
 
         normalized_info = (info - fully_neutral_info) / (original_features_info - fully_neutral_info)
         normalized_info = np.clip(normalized_info, 0.0, 1.0)
