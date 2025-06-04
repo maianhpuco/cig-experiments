@@ -4,6 +4,10 @@ CKPT_CLAM_CAMELYON16 = /home/mvu9/processing_datasets/processing_camelyon16/clam
 CKPT_CLAM_TCGA_RENAL = /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
 CKPT_CLAM_TCGA_LUNG  = /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 
+CKPT_MLP_CAMELYON16 = /home/mvu9/processing_datasets/processing_camelyon16/mlp_results/fold_1/best_model.pth
+CKPT_MLP_TCGA_RENA = /home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_renal_results/fold_1/best_model.pth
+CKPT_MLP_TCGA_RENA = /home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_lung_results/fold_1/best_model.pth 
+
 # ============= TRAIN CLAM =============
 dryrun_train_clam_camelyon16:
 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 1
@@ -103,6 +107,24 @@ train_mlp_tcga_lung_1fold:
 	CUDA_VISIBLE_DEVICES=5 python train_mlp.py --config configs_simea/mlp_tcga_lung.yaml --k_start 1 --k_end 1 --max_epochs 200
 
 #======================================= TEST ================================== 
+# === MLP Test Targets ===
+test_mlp_camelyon16_fold_1:
+	CUDA_VISIBLE_DEVICES=7 python test_mlp.py \
+		--config configs_simea/mlp_camelyon16.yaml --fold 1 \
+		--ckpt_path $(CKPT_MLP_CAMELYON16)
+
+test_mlp_tcga_renal_fold_1:
+	CUDA_VISIBLE_DEVICES=8 python test_mlp.py \
+		--config configs_simea/mlp_tcga_renal.yaml --fold 1 \
+		--ckpt_path $(CKPT_MLP_TCGA_RENAL)
+
+test_mlp_tcga_lung_fold_1:
+	CUDA_VISIBLE_DEVICES=1 python test_mlp.py \
+		--config configs_simea/mlp_tcga_lung.yaml --fold 1 \
+		--ckpt_path $(CKPT_MLP_TCGA_LUNG)
+
+test_mlp_fold_1: test_mlp_camelyon16_fold_1 test_mlp_tcga_renal_fold_1 test_mlp_tcga_lung_fold_1
+ 
 
 # ============= TEST CLAM ============= 
 test_clam_camelyon16_fold_1:
