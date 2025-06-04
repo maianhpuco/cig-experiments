@@ -18,7 +18,7 @@ from mlp_classifier import load_model_mlp
 from mlp_trainer import train 
 
 # from trainer import seed_torch
-from utils.file_utils import save_pkl
+# from utils.file_utils import save_pkl
 
 from src.datasets.classification.tcga import return_splits_custom  as return_splits_tcga 
 from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon16 
