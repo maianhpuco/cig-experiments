@@ -662,17 +662,124 @@ pictopk_clam_random_tcga_lung:
 # === Group Rules ===
 group_basic_pictopk_tcga_lung: pictopk_clam_ig_tcga_lung pictopk_clam_g_tcga_lung pictopk_clam_eg_tcga_lung pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung pictopk_clam_random_tcga_lung 
 
-# group_adv_pictopk_tcga_lung: pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung  
-#tcga renal 
+# ====================================================== Metric TOP-K PIC MLP ===============
+# === PIC Top-K Targets for Camelyon16 (MLP) ===
+pictopk_mlp_ig_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name ig
+
+pictopk_mlp_eg_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name eg
+
+pictopk_mlp_idg_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name idg
+
+pictopk_mlp_cig_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name cig
+
+pictopk_mlp_g_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name g
+
+pictopk_mlp_random_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name random
+
+group_basic_pictopk_mlp_camelyon16: pictopk_mlp_ig_camelyon16 pictopk_mlp_g_camelyon16 pictopk_mlp_eg_camelyon16 pictopk_mlp_cig_camelyon16
+group_adv_pictopk_mlp_camelyon16: pictopk_mlp_cig_camelyon16 pictopk_mlp_idg_camelyon16
 
 
-# runing 
+# === PIC Top-K Targets for TCGA Renal (MLP) ===
+pictopk_mlp_ig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name ig
 
-# basic_pictopk_camelyon16 
-# adv_pictopk_camelyon16
+pictopk_mlp_eg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name eg
+
+pictopk_mlp_idg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name idg
+
+pictopk_mlp_cig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name cig
+
+pictopk_mlp_g_tcga_renal:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name g
+
+pictopk_mlp_random_tcga_renal:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name random
+
+group_basic_pictopk_mlp_tcga_renal: pictopk_mlp_ig_tcga_renal pictopk_mlp_g_tcga_renal pictopk_mlp_eg_tcga_renal pictopk_mlp_cig_tcga_renal pictopk_mlp_idg_tcga_renal
+group_random_pictopk_mlp_tcga: pictopk_mlp_random_camelyon16 pictopk_mlp_random_tcga_renal
 
 
-# basic_pic_camelyon16
-# adv_pic_camelyon16 
+# === PIC Top-K Targets for TCGA Lung (MLP) ===
+pictopk_mlp_ig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name ig
 
-# 
+pictopk_mlp_eg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name eg
+
+pictopk_mlp_idg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name idg
+
+pictopk_mlp_cig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name cig
+
+pictopk_mlp_g_tcga_lung:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name g
+
+pictopk_mlp_random_tcga_lung:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name random
+
+group_basic_pictopk_mlp_tcga_lung: pictopk_mlp_ig_tcga_lung pictopk_mlp_g_tcga_lung pictopk_mlp_eg_tcga_lung pictopk_mlp_cig_tcga_lung pictopk_mlp_idg_tcga_lung pictopk_mlp_random_tcga_lung
