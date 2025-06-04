@@ -90,18 +90,17 @@ train_dtfd_tcga_lung_5fold:
 # ============= TRAIN MLP =============
 dryrun_train_mlp_camelyon16:
 	python train_mlp.py --config configs_simea/mlp_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 1
-# train_clam_camelyon16_1fold:
-# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 1 --k_end 1
-# train_clam_camelyon16_23fold:
-# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 2 --k_end 3
-# train_clam_camelyon16_45fold:
-# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 4 --k_end 5
-# train_clam_camelyon16_4fold:
-# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 2 --k_end 5
-# train_clam_camelyon16_5fold:
-# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 1 --k_end 5
+# Full run on GPU 3 for camelyon16
+train_mlp_camelyon16_1fold:
+	CUDA_VISIBLE_DEVICES=3 python train_mlp.py --config configs_simea/mlp_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 200
 
- 
+# Full run on GPU 3 for TCGA-Renal
+train_mlp_tcga_renal_1fold:
+	CUDA_VISIBLE_DEVICES=4 python train_mlp.py --config configs_simea/mlp_tcga_renal.yaml --k_start 1 --k_end 1 --max_epochs 200
+
+# Full run on GPU 3 for TCGA-Lung
+train_mlp_tcga_lung_1fold:
+	CUDA_VISIBLE_DEVICES=5 python train_mlp.py --config configs_simea/mlp_tcga_lung.yaml --k_start 1 --k_end 1 --max_epochs 200
 
 #======================================= TEST ================================== 
 
