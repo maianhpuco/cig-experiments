@@ -783,3 +783,63 @@ pictopk_mlp_random_tcga_lung:
 		--ig_name random
 
 group_basic_pictopk_mlp_tcga_lung: pictopk_mlp_ig_tcga_lung pictopk_mlp_g_tcga_lung pictopk_mlp_eg_tcga_lung pictopk_mlp_cig_tcga_lung pictopk_mlp_idg_tcga_lung pictopk_mlp_random_tcga_lung
+# ====================================================== MLP ig method ===============
+#========== IG MLP CAMELYON16 Methods (CUDA 1) ============== 
+mlp_ig_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python ig_mlp.py --config configs_simea/mlp_camelyon16.yaml --ig_name ig --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_CAMELYON16)
+mlp_eg_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python ig_mlp.py --config configs_simea/mlp_camelyon16.yaml --ig_name eg --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_CAMELYON16)
+mlp_idg_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python ig_mlp.py --config configs_simea/mlp_camelyon16.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_CAMELYON16)
+mlp_cig_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python ig_mlp.py --config configs_simea/mlp_camelyon16.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_CAMELYON16)
+mlp_g_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python ig_mlp.py --config configs_simea/mlp_camelyon16.yaml --ig_name g --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_CAMELYON16)
+
+group_basic_mlp_camelyon16: mlp_ig_camelyon16 mlp_g_camelyon16 mlp_eg_camelyon16 mlp_cig_camelyon16 mlp_idg_camelyon16
+group_adv_mlp_camelyon16: mlp_cig_camelyon16 mlp_idg_camelyon16
+
+#========== IG MLP TCGA-RENAL Methods (CUDA 2) ============== 
+mlp_ig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python ig_mlp.py --config configs_simea/mlp_tcga_renal.yaml --ig_name ig --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_RENAL)
+mlp_eg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python ig_mlp.py --config configs_simea/mlp_tcga_renal.yaml --ig_name eg --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_RENAL)
+mlp_idg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python ig_mlp.py --config configs_simea/mlp_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_RENAL)
+mlp_cig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python ig_mlp.py --config configs_simea/mlp_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_RENAL)
+mlp_g_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python ig_mlp.py --config configs_simea/mlp_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_RENAL)
+
+group_basic_mlp_tcga_renal: mlp_ig_tcga_renal mlp_g_tcga_renal mlp_eg_tcga_renal mlp_cig_tcga_renal mlp_idg_tcga_renal
+group_adv_mlp_tcga_renal: mlp_cig_tcga_renal mlp_idg_tcga_renal
+
+#========== IG MLP TCGA-LUNG Methods (CUDA 3) ============== 
+mlp_ig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python ig_mlp.py --config configs_simea/mlp_tcga_lung.yaml --ig_name ig --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_LUNG)
+mlp_eg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python ig_mlp.py --config configs_simea/mlp_tcga_lung.yaml --ig_name eg --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_LUNG)
+mlp_idg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python ig_mlp.py --config configs_simea/mlp_tcga_lung.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_LUNG)
+mlp_cig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python ig_mlp.py --config configs_simea/mlp_tcga_lung.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_LUNG)
+mlp_g_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python ig_mlp.py --config configs_simea/mlp_tcga_lung.yaml --ig_name g --fold_start 1 --fold_end 1 \
+	--ckpt_path $(CKPT_MLP_TCGA_LUNG)
+
+group_basic_mlp_tcga_lung: mlp_ig_tcga_lung mlp_g_tcga_lung mlp_eg_tcga_lung mlp_cig_tcga_lung mlp_idg_tcga_lung
+group_adv_mlp_tcga_lung: mlp_cig_tcga_lung mlp_idg_tcga_lung
