@@ -183,7 +183,7 @@ pr_metric:
 # Makefile for running different IG variants ===== on TCGA-Renal
 
 # Makefile for running different IG variants ===== on camelyon16 
-
+#========== IG CLAM CAMELYON16 Methods ============== 
 clam_ig_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt 
@@ -202,12 +202,56 @@ clam_g_camelyon16:
 
 group_basic_camelyon16: clam_ig_camelyon16 clam_g_camelyon16 clam_eg_camelyon16
 group_adv_camelyon16: clam_cig_camelyon16 clam_idg_camelyon16
+#========== IG CLAM TCGA-RENAL Methods ============== 
+clam_ig_tcga_renal:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
 
-# clam_sig:
-# 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name square_integrated_gradient
+clam_eg_tcga_renal:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
 
-# clam_osig:
-# 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name optim_square_integrated_gradient
+clam_idg_tcga_renal:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+
+clam_cig_tcga_renal:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+
+clam_g_tcga_renal:
+	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+
+group_basic_tcga_renal: clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renal
+group_adv_tcga_renal: clam_cig_tcga_renal clam_idg_tcga_renal
+
+#========== IG CLAM TCGA-RENAL Methods ==============  
+clam_ig_tcga_lung:
+	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name ig --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+
+clam_eg_tcga_lung:
+	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name eg --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+
+clam_idg_tcga_lung:
+	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+
+clam_cig_tcga_lung:
+	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+
+clam_g_tcga_lung:
+	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name g --fold_start 1 --fold_end 1 \
+	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+
+group_basic_tcga_lung: clam_ig_tcga_lung clam_g_tcga_lung clam_eg_tcga_lung
+group_adv_tcga_lung: clam_cig_tcga_lung clam_idg_tcga_lung
+
+
+
 
 # ----- Grouped Methods -----
 group_basic: clam_ig, clam_g, clam_eg 
@@ -403,9 +447,12 @@ check_acc:
 check_score: 
 	python check_score.py --config  configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient 
 
-simea_check_clam_ig:
-	python check_ig_metrics_simea_2.py --config configs_simea/clam_camelyon16.yaml 
+check_pic:
+	python chek_pic.py --config configs_simea/clam_camelyon16.yaml 
 
+check_pic:
+	python chek_rise.py --config configs_simea/clam_camelyon16.yaml 
+ 
 mean_std_camelyon16:
 	python compute_mean_std_folds.py \
 	--config configs_simea/clam_camelyon16.yaml \
