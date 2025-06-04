@@ -100,7 +100,7 @@ def compute_one_slide(args, basename, model):
     print("========== LOAD PRECOMPUTED ATTRIBUTION ==========")
     ig_name = args.ig_name
     attribution_path = os.path.join(
-        args.paths['attribution_scores_folder'], f"fold_{fold_id}", ig_name, f"{basename}.npy"
+        args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", , f"{basename}.npy"
     )
     if not os.path.isfile(attribution_path):
         raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
