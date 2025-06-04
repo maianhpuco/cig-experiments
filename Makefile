@@ -207,10 +207,10 @@ clam_eg_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
 clam_idg_tcga_renal:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=1 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
 clam_cig_tcga_renal:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=1 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
 clam_g_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
