@@ -102,7 +102,7 @@ def compute_one_slide(args, basename, model):
     tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
     mid = np.linspace(0.2, 0.8, num=3)
     normal_high = 1 - tumor_low[::-1]
-    saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
+    # saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
     # top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10, 30, 50, 100])
     top_k = np.array(
         list(range(1, 11)) +           # 1 to 10
@@ -161,7 +161,7 @@ def main(args):
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     pred_df = pd.read_csv(pred_path)
     tumor_df = pred_df[pred_df['pred_label'] == 1]
-    basenames = ['test_003']  # For debugging, use a single slide
+    # basenames = ['test_003']  # For debugging, use a single slide
     basenames = tumor_df['slide_id'].unique().tolist()
     args.pred_df = tumor_df
 
