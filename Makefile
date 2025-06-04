@@ -87,6 +87,21 @@ train_dtfd_tcga_lung_5fold:
 	conda activate dtfd && \
 	python train_dtfd_tcga_lung.py --config configs_simea/dtfd_tcga_lung.yaml --EPOCH 200 --k_start 1 --k_end 5
 
+# ============= TRAIN MLP =============
+dryrun_train_mlp_camelyon16:
+	python train_mlp.py --config configs_simea/mlp_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 1
+# train_clam_camelyon16_1fold:
+# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 1 --k_end 1
+# train_clam_camelyon16_23fold:
+# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 2 --k_end 3
+# train_clam_camelyon16_45fold:
+# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 4 --k_end 5
+# train_clam_camelyon16_4fold:
+# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 2 --k_end 5
+# train_clam_camelyon16_5fold:
+# 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --max_epochs 200 --k_start 1 --k_end 5
+
+ 
 
 #======================================= TEST ================================== 
 
@@ -226,7 +241,7 @@ clam_cig_tcga_renal:
 clam_g_tcga_renal:
 	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
-	
+
 group_basic_tcga_renal: clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renal
 group_adv_tcga_renal: clam_cig_tcga_renal clam_idg_tcga_renal
 
