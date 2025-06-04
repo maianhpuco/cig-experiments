@@ -640,7 +640,7 @@ pictopk_clam_random_tcga_lung:
 		--ig_name random
 
 # === Group Rules ===
-group_basic_pictopk_tcga_lung: pictopk_clam_ig_tcga_lung pictopk_clam_g_tcga_lung pictopk_clam_eg_tcga_lung pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung 
+group_basic_pictopk_tcga_lung: pictopk_clam_ig_tcga_lung pictopk_clam_g_tcga_lung pictopk_clam_eg_tcga_lung pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung pictopk_clam_random_tcga_lung 
 
 # group_adv_pictopk_tcga_lung: pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung  
 #tcga renal 
