@@ -1,0 +1,38 @@
+dataset_name: 'camelyon16'
+paths:
+  pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
+  data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp" # some code use pt_files as data_dir
+  save_dir: "/home/mvu9/processing_datasets/processing_camelyon16/mlp_result"
+  # result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/results" # where we save all the check point
+  result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/mlp_results" #fold1/result_final_ep200 
+  split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
+  # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/result_2025-05-18/result_2025-05-18_22-23-56/s_1_checkpoint.pt"
+  # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/mlp_result/result_final_ep200/s_1_checkpoint.pt"
+  # attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/camelyon16"
+  attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores_no_class/camelyon16" 
+  ig_mlp_plot_folder: "/home/mvu9/cig_attributions/attr_scores_mlp_plot/camelyon16"  
+  memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_camelyon16"
+  slide_dir: "/home/mvu9/datasets/camelyon16/raw_data/camelyon16/images"
+  h5_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/h5_files" 
+  feature_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp/pt_files"  
+  metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/metrics"
+  dataset_mean: "/home/mvu9/processing_datasets/processing_camelyon16/dataset_mean_variance" 
+
+  baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/baseline/baseline_mlp/fold_1"  
+  predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/mlp_predictions"
+  metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/mlp_metrics"
+
+fold_number: 5 
+label_dict:
+  0: "normal"
+  1: "tumor" 
+
+seed: 1
+lr: 0.0001
+reg: 0.00001
+drop_out: 0.25
+model_size: small
+gate: true
+subtyping: false
+embed_dim: 1024 
+n_classes: 2
