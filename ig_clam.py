@@ -217,10 +217,10 @@ if __name__ == "__main__":
     parser.add_argument('--dry_run', type=int, default=0)
     parser.add_argument('--config', default='clam_camelyon16.yaml')
     parser.add_argument('--ig_name', default='integrated_gradient')
-    parser.add_argument('--fold', type=int, default=1, help='Fold index to evaluate')
+    parser.add_argument('--fold_start', type=int, default=1, help='Fold index to evaluate')
+    parser.add_argument('--fold_end', type=int, default=1, help='Fold index to evaluate')
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'], help='Device to run the model on')
     parser.add_argument('--ckpt_path', type=str, default=None, help='Optional checkpoint path override')
-    parser.add_argument('--ig_name', type=str, default='integrated_gradient', help='Name of the IG method to use')
 
     args = parser.parse_args()
 
