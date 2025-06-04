@@ -200,7 +200,7 @@ clam_g_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt 
 
-group_basic_camelyon16:  clam_ig_camelyon16 clam_g_camelyon16 clam_eg_camelyon16
+group_basic_camelyon16: clam_ig_camelyon16 clam_g_camelyon16 clam_eg_camelyon16
 group_adv_camelyon16: clam_cig_camelyon16 clam_idg_camelyon16
 #========== IG CLAM TCGA-RENAL Methods ============== 
 clam_ig_tcga_renal:
