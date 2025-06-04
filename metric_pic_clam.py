@@ -161,7 +161,7 @@ def main(args):
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     pred_df = pd.read_csv(pred_path)
     tumor_df = pred_df[pred_df['pred_label'] == 1]
-    basenames = ['test_001']  # For debugging, use a single slide
+    basenames = ['test_003']  # For debugging, use a single slide
     basenames = tumor_df['slide_id'].unique().tolist()
     args.pred_df = tumor_df
 
