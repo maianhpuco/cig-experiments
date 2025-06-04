@@ -449,10 +449,10 @@ check_score:
 	python check_score.py --config  configs_simea/clam_camelyon16.yaml --ig_name contrastive_gradient 
 
 check_pic:
-	python chek_pic.py --config configs_simea/clam_camelyon16.yaml 
+	python check_pic.py --config configs_simea/clam_camelyon16.yaml 
 
-check_pic:
-	python chek_rise.py --config configs_simea/clam_camelyon16.yaml 
+check_rise:
+	python check_rise.py --config configs_simea/clam_camelyon16.yaml 
  
 mean_std_camelyon16:
 	python compute_mean_std_folds.py \
