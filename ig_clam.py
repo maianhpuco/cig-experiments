@@ -43,6 +43,9 @@ def load_ig_module(args):
         if name == 'ig':
             from attr_method.ig import IG as AttrMethod
             print("Using Integrated Gradients (IG) method")
+        if name == 'g':
+            from attr_method.g import VanillaGradients as AttrMethod
+            print("Using Integrated Gradients (IG) method")
         elif name == 'cig':
             from attr_method.cig import CIG as AttrMethod
             print("Using Cumulative Integrated Gradients (CIG) method")
