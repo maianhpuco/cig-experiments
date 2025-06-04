@@ -89,7 +89,7 @@ train_dtfd_tcga_lung_5fold:
 
 # ============= TRAIN MLP =============
 dryrun_train_mlp_camelyon16:
-	python train_mlp.py --config configs_simea/mlp_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 1
+	python train_mlp.py --config configs_simea/mlp_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 3
 # Full run on GPU 3 for camelyon16
 train_mlp_camelyon16_1fold:
 	CUDA_VISIBLE_DEVICES=3 python train_mlp.py --config configs_simea/mlp_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 200
