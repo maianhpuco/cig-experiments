@@ -177,7 +177,7 @@ def main(args):
         pred_class = predicted_class.item()
         print(f"Predicted class: {pred_class}")
 
-        baseline  =  get_baseline_features(fold_id, basename, features.shape[0]) #.to(args.device, dtype=torch.float32)
+        baseline  =  get_baseline_features(fold_id, basename, features.shape[-1]).to(args.device, dtype=torch.float32)
                 
         kwargs = {
             "x_value": features,
