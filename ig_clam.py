@@ -163,6 +163,7 @@ def main(args):
             
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
+        print(f"  >  Features shape: {features.shape}")
         features = features.to(args.device, dtype=torch.float32)        
         with torch.no_grad():
             model_wrapper = ModelWrapper(model, model_type='clam')
