@@ -478,19 +478,19 @@ group_adv_pic_camelyon16: pic_clam_cig_camelyon16 pic_clam_idg_camelyon16
 
 
 rise_clam_ig_camelyon16:
-	CUDA_VISIBLE_DEVICES=7 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=6 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
 
 rise_clam_eg_camelyon16:
-	CUDA_VISIBLE_DEVICES=7 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
+	CUDA_VISIBLE_DEVICES=6 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
 
 rise_clam_idg_camelyon16:
-	CUDA_VISIBLE_DEVICES=8 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=7 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
 
 rise_clam_cig_camelyon16:
-	CUDA_VISIBLE_DEVICES=8 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=7 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
 
 rise_clam_g_camelyon16:
-	CUDA_VISIBLE_DEVICES=7 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=6 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
 
 group_basic_rise_camelyon16: rise_clam_ig_camelyon16 rise_clam_g_camelyon16 rise_clam_eg_camelyon16 rise_clam_cig_camelyon16
 group_adv_rise_camelyon16: rise_clam_cig_camelyon16 rise_clam_idg_camelyon16
