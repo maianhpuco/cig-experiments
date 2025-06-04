@@ -40,6 +40,7 @@ class ModelWrapper:
 
 def load_ig_module(args):
     def get_module_by_name(name):
+        print(f"Loading IG method: {name}")
         if name == 'ig':
             from attr_method.ig import IG as AttrMethod
             print("Using Integrated Gradients (IG) method")
