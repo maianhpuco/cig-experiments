@@ -142,6 +142,8 @@ def get_baseline_features(fold_id, basename, features_size):
         print(f"[WARN] Baseline patch count ({baseline.shape[0]}) doesn't match features ({features_size}). Resampling baseline.")
         indices = torch.randint(0, baseline.shape[0], (features_size,), device=baseline.device)
         baseline = baseline[indices]  
+    if baseline.shape[0] <100:
+        print(f"[WARN] Baseline patch count ({baseline.shape[0]}) is less than 100. This may affect results.") 
     return baseline
 
 
@@ -168,7 +170,7 @@ def main(args):
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
         print(f"  >  Features shape: {features.shape}")
-        # features = features.to(args.device, dtype=torch.float32)        
+        features = features.to(args.device, dtype=torch.float32)        
         with torch.no_grad():
             model_wrapper = ModelWrapper(model, model_type='clam')
             logits = model_wrapper.forward(features)
