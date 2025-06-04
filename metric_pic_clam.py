@@ -152,7 +152,7 @@ def main(args):
     model = load_clam_model(args_clam, checkpoint_path, device=args.device)
     model.eval()
 
-    pred_path = os.path.join(args.paths['predictions_dir'], f'topk_pc_test_preds_fold{fold_id}.csv')
+    pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     pred_df = pd.read_csv(pred_path)
     tumor_df = pred_df[pred_df['pred_label'] == 1]
 
@@ -170,7 +170,7 @@ def main(args):
     results_df = pd.DataFrame(all_results)
     output_dir = os.path.join(args.paths['metrics_dir'])
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, f"pic_results_fold{fold_id}.csv")
+    output_path = os.path.join(output_dir, f"topknpc_pic_results_fold{fold_id}.csv")
     results_df.to_csv(output_path, index=False)
 
     print(f"\n> Results saved to: {output_path}")
