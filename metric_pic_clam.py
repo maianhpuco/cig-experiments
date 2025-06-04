@@ -83,57 +83,58 @@ def compute_one_slide(args, basename, model):
     print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
 
     print("========== LOAD PRECOMPUTED ATTRIBUTION ==========")
-    ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod  
-    for ig_name in ig_methods:
-        print(f"\n> Processing IG method: {ig_name}")
-        attribution_path = os.path.join(
-            args.paths['attribution_scores_folder'], f"fold_{fold_id}", ig_name, f"{basename}.npy"
-        )
-        if not os.path.isfile(attribution_path):
-            raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
-        attribution_values = np.load(attribution_path)
+    ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod 
+    ig_name = args.ig_name  
+    # for ig_name in ig_methods:
+    print(f"\n> Processing IG method: {ig_name}")
+    attribution_path = os.path.join(
+        args.paths['attribution_scores_folder'], f"fold_{fold_id}", ig_name, f"{basename}.npy"
+    )
+    if not os.path.isfile(attribution_path):
+        raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
+    attribution_values = np.load(attribution_path)
 
-        saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
-        saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+    saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
+    saliency_map = saliency_map / (saliency_map.max() + 1e-8)
 
-        print(f"  - Saliency map shape: {saliency_map.shape} Stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+    print(f"  - Saliency map shape: {saliency_map.shape} Stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
 
-        tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
-        mid = np.linspace(0.2, 0.8, num=3)
-        normal_high = 1 - tumor_low[::-1]
-        saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
-        top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10, 30, 50, 100])
+    tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
+    mid = np.linspace(0.2, 0.8, num=3)
+    normal_high = 1 - tumor_low[::-1]
+    saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
+    top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10, 30, 50, 100])
 
-        random_mask = generate_random_mask(features.shape[0], fraction=0.0)
+    random_mask = generate_random_mask(features.shape[0], fraction=0.0)
 
-        slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
-        pred_label = slide_row['pred_label'].iloc[0] if not slide_row.empty else pred_class
-        true_label = slide_row['true_label'].iloc[0] if 'true_label' in slide_row.columns else -1
+    slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
+    pred_label = slide_row['pred_label'].iloc[0] if not slide_row.empty else pred_class
+    true_label = slide_row['true_label'].iloc[0] if 'true_label' in slide_row.columns else -1
 
-        sic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
-                                    saliency_thresholds, 0, model, args.device,
-                                    baseline=baseline.cpu().numpy(), min_pred_value=0.3,
-                                    keep_monotonous=False)
-        aic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
-                                    saliency_thresholds, 1, model, args.device,
-                                    baseline=baseline.cpu().numpy(), min_pred_value=0.3,
-                                    keep_monotonous=False)
+    sic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
+                                saliency_thresholds, 0, model, args.device,
+                                baseline=baseline.cpu().numpy(), min_pred_value=0.3,
+                                keep_monotonous=False)
+    aic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
+                                saliency_thresholds, 1, model, args.device,
+                                baseline=baseline.cpu().numpy(), min_pred_value=0.3,
+                                keep_monotonous=False)
 
-        result = {
-            "slide_id": basename,
-            "pred_label": pred_label,
-            "true_label": true_label,
-            "baseline_pred_label": baseline_predicted_class.item(),
-            "saliency_map_mean": saliency_map.mean(),
-            "saliency_map_std": saliency_map.std(),
-            "IG": ig_name,
-            "AIC": aic_score.auc,
-            "SIC": sic_score.auc
-        }
-        
+    result = {
+        "slide_id": basename,
+        "pred_label": pred_label,
+        "true_label": true_label,
+        "baseline_pred_label": baseline_predicted_class.item(),
+        "saliency_map_mean": saliency_map.mean(),
+        "saliency_map_std": saliency_map.std(),
+        "IG": ig_name,
+        "AIC": aic_score.auc,
+        "SIC": sic_score.auc
+    }
+    
 
-        print(f"\n> Result: {result}")
-        return result
+    print(f"\n> Result: {result}")
+    return result
 
 
 def main(args):
@@ -168,9 +169,9 @@ def main(args):
         all_results.append(compute_one_slide(args, basename, model))
 
     results_df = pd.DataFrame(all_results)
-    output_dir = os.path.join(args.paths['metrics_dir'])
+    output_dir = os.path.join(args.paths['metrics_dir'], f"{args.ig_name}")
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, f"topknpc_pic_results_fold{fold_id}.csv")
+    output_path = os.path.join(output_dir, f"topknpc_pic_results_fold_{fold_id}.csv")
     results_df.to_csv(output_path, index=False)
 
     print(f"\n> Results saved to: {output_path}")
@@ -183,6 +184,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
+    parser.add_argument('--ig_name', type=str, required=True) 
     args_cmd = parser.parse_args()
 
     with open(args_cmd.config, 'r') as f:

@@ -81,59 +81,61 @@ def compute_one_slide(args, basename, model):
     print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
 
     print("========== LOAD PRECOMPUTED ATTRIBUTION ==========")
-    ig_name = "ig"
-    attribution_path = os.path.join(
-        args.paths['attribution_scores_folder'], f"fold_{fold_id}", ig_name, f"{basename}.npy"
-    )
-    if not os.path.isfile(attribution_path):
-        raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
-    attribution_values = np.load(attribution_path)
+    # ig_name = "ig"
+    ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod  
+    for ig_name in ig_methods: 
+        attribution_path = os.path.join(
+            args.paths['attribution_scores_folder'], f"fold_{fold_id}", ig_name, f"{basename}.npy"
+        )
+        if not os.path.isfile(attribution_path):
+            raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
+        attribution_values = np.load(attribution_path)
 
-    saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
-    saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+        saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
+        saliency_map = saliency_map / (saliency_map.max() + 1e-8)
 
-    print(f"  - Saliency map shape: {saliency_map.shape} Stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+        print(f"  - Saliency map shape: {saliency_map.shape} Stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
 
-    # Define substrate functions for RISE
-    def mean_substrate_fn(feature_tensor):
-        mean_features = feature_tensor.mean(dim=1, keepdim=True).expand_as(feature_tensor)
-        return mean_features
+        # Define substrate functions for RISE
+        def mean_substrate_fn(feature_tensor):
+            mean_features = feature_tensor.mean(dim=1, keepdim=True).expand_as(feature_tensor)
+            return mean_features
 
-    def zero_substrate_fn(feature_tensor):
-        return torch.zeros_like(feature_tensor)
+        def zero_substrate_fn(feature_tensor):
+            return torch.zeros_like(feature_tensor)
 
-    # Compute RISE metrics
-    print("========== COMPUTE RISE METRICS ==========")
-    num_patches = features.shape[0]
-    step = max(1, num_patches // 100)  # Adjust step size based on number of patches
+        # Compute RISE metrics
+        print("========== COMPUTE RISE METRICS ==========")
+        num_patches = features.shape[0]
+        step = max(1, num_patches // 100)  # Adjust step size based on number of patches
 
-    deletion_metric = CausalMetric(model, num_patches, mode='del', step=step, substrate_fn=zero_substrate_fn)
-    insertion_metric = CausalMetric(model, num_patches, mode='ins', step=step, substrate_fn=zero_substrate_fn)
+        deletion_metric = CausalMetric(model, num_patches, mode='del', step=step, substrate_fn=zero_substrate_fn)
+        insertion_metric = CausalMetric(model, num_patches, mode='ins', step=step, substrate_fn=zero_substrate_fn)
 
-    n_steps_del, scores_del = deletion_metric.single_run(features_data, saliency_map, args.device)
-    n_steps_ins, scores_ins = insertion_metric.single_run(features_data, saliency_map, args.device)
+        n_steps_del, scores_del = deletion_metric.single_run(features_data, saliency_map, args.device)
+        n_steps_ins, scores_ins = insertion_metric.single_run(features_data, saliency_map, args.device)
 
-    sic_score = auc(scores_del) if n_steps_del > 0 else 0.0
-    aic_score = auc(scores_ins) if n_steps_ins > 0 else 0.0
+        sic_score = auc(scores_del) if n_steps_del > 0 else 0.0
+        aic_score = auc(scores_ins) if n_steps_ins > 0 else 0.0
 
-    slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
-    pred_label = slide_row['pred_label'].iloc[0] if not slide_row.empty else pred_class
-    true_label = slide_row['true_label'].iloc[0] if 'true_label' in slide_row.columns else -1
+        slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
+        pred_label = slide_row['pred_label'].iloc[0] if not slide_row.empty else pred_class
+        true_label = slide_row['true_label'].iloc[0] if 'true_label' in slide_row.columns else -1
 
-    result = {
-        "slide_id": basename,
-        "pred_label": pred_label,
-        "true_label": true_label,
-        "baseline_pred_label": baseline_predicted_class.item(),
-        "saliency_map_mean": saliency_map.mean(),
-        "saliency_map_std": saliency_map.std(),
-        "IG": ig_name,
-        "AIC": aic_score,
-        "SIC": sic_score
-    }
+        result = {
+            "slide_id": basename,
+            "pred_label": pred_label,
+            "true_label": true_label,
+            "baseline_pred_label": baseline_predicted_class.item(),
+            "saliency_map_mean": saliency_map.mean(),
+            "saliency_map_std": saliency_map.std(),
+            "IG": ig_name,
+            "AIC": aic_score,
+            "SIC": sic_score
+        }
 
-    print(f"\n> Result: {result}")
-    return result
+        print(f"\n> Result: {result}")
+        return result
 
 def main(args):
     fold_id = args.fold = 1
@@ -157,7 +159,7 @@ def main(args):
 
     basenames = tumor_df['slide_id'].unique().tolist()
     args.pred_df = tumor_df
-    basenames= ['test_001']
+    # basenames= ['test_001']
     
     print(f"[INFO] Loaded {len(tumor_df)} tumor slides from predictions")
 
