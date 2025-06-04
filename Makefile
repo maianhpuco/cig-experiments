@@ -619,37 +619,37 @@ pictopk_clam_random_tcga: pictopk_clam_random_tcga_renal pictopk_clam_random_tcg
 
 # === PIC Top-K Commands for TCGA Lung ===
 pictopk_clam_ig_tcga_lung:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=8 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name ig
 
 pictopk_clam_eg_tcga_lung:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=8 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name eg
 
 pictopk_clam_idg_tcga_lung:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=8 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name idg
 
 pictopk_clam_cig_tcga_lung:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=8 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name cig
 
 pictopk_clam_g_tcga_lung:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=8 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name g
 
 pictopk_clam_g_tcga_lung:
-	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=8 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name random
