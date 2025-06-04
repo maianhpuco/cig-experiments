@@ -237,10 +237,10 @@ clam_eg_tcga_lung:
 	CUDA_VISIBLE_DEVICES=2  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name eg --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 clam_idg_tcga_lung:
-	CUDA_VISIBLE_DEVICES=3  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=2  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name idg --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 clam_cig_tcga_lung:
-	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=2 python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name cig --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 clam_g_tcga_lung:
 	CUDA_VISIBLE_DEVICES=2  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name g --fold_start 1 --fold_end 1 \
