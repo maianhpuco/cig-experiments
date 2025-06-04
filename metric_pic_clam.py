@@ -103,8 +103,13 @@ def compute_one_slide(args, basename, model):
     mid = np.linspace(0.2, 0.8, num=3)
     normal_high = 1 - tumor_low[::-1]
     saliency_thresholds = np.sort(np.unique(np.concatenate([mid, normal_high])))
-    top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10, 30, 50, 100])
-
+    # top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10, 30, 50, 100])
+    top_k = np.array(
+        list(range(1, 11)) +           # 1 to 10
+        list(range(15, 55, 5)) +       # 15, 20, 25, ..., 50
+        list(range(60, 110, 10)) +     # 60, 70, ..., 100
+        [150, 200, 300, 400, 500]      # Extra high values (if patch count allows)
+    ) 
     random_mask = generate_random_mask(features.shape[0], fraction=0.0)
 
     slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
