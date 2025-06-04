@@ -97,8 +97,9 @@ def main(args):
     args.n_classes = args.n_classes
     label_dict = args.label_dict 
     args.results_dir = args.paths['result_dir']
-    os.makedirs(args.results_dir, exist_ok=True)
+    
     checkpoint_dir = os.path.join(args.results_dir, f'fold_{args.fold}') 
+    os.makedirs(checkpoint_dir, exist_ok=True) 
     all_test_auc, all_val_auc, all_test_acc, all_val_acc = [], [], [], []
 
     
