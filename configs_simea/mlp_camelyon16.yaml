@@ -36,3 +36,5 @@ gate: true
 subtyping: false
 embed_dim: 1024 
 n_classes: 2
+early_stopping: true
+patience: 20 
