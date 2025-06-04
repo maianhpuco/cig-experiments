@@ -1,4 +1,10 @@
 
+# === Checkpoint Paths ===
+CKPT_CLAM_CAMELYON16 = /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt
+CKPT_CLAM_TCGA_RENAL = /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+CKPT_CLAM_TCGA_LUNG  = /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+ 
+
 # ============= TRAIN CLAM =============
 dryrun_train_clam_camelyon16:
 	python train_clam.py --config configs_simea/clam_camelyon16.yaml --k_start 1 --k_end 1 --max_epochs 1
@@ -23,7 +29,6 @@ train_clam_tcga_lung_1fold:
 train_clam_tcga_lung_5fold:
 	python train_clam_tcga_lung.py --config configs_simea/clam_tcga_lung.yaml --max_epochs 200 --k_start 1 --k_end 5
 	
-
 
 # ============= DSMIL =============
 train_dsmil_camelyon16_1fold:
@@ -84,22 +89,26 @@ train_dtfd_tcga_lung_5fold:
 	python train_dtfd_tcga_lung.py --config configs_simea/dtfd_tcga_lung.yaml --EPOCH 200 --k_start 1 --k_end 5
 
 
-#======================================= test ================================== 
+#======================================= TEST ================================== 
 
 # ============= TEST CLAM ============= 
 test_clam_camelyon16_fold_1:
-	python test_clam.py \
+	CUDA_VISIBLE_DEVICES=1 python test_clam.py \
 	--config configs_simea/clam_camelyon16.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_CAMELYON16)
+
 test_clam_tcga_renal_fold_1:
-	python test_clam.py \
+	CUDA_VISIBLE_DEVICES=1 python test_clam.py \
 	--config configs_simea/clam_tcga_renal.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
+
 test_clam_tcga_lung_fold_1:
-	python test_clam.py \
+	CUDA_VISIBLE_DEVICES=1 python test_clam.py \
 	--config configs_simea/clam_tcga_lung.yaml --fold 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
-test_clam_fold_1: test_clam_camelyon16_fold_1  test_clam_tcga_renal_fold_1 test_clam_tcga_lung_fold_1
+	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
+
+test_clam_fold_1: test_clam_camelyon16_fold_1 test_clam_tcga_renal_fold_1 test_clam_tcga_lung_fold_1
+ 
 # ============= TEST DSMIL ============= 
 test_dsmil_camelyon16_fold_1:
 	python test_dsmil.py \
