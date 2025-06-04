@@ -464,13 +464,14 @@ pic_clam_eg_camelyon16:
 	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
 
 pic_clam_idg_camelyon16:
-	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
 
 pic_clam_cig_camelyon16:
-	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
 
 pic_clam_g_camelyon16:
 	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+
 group_basic_pic_camelyon16: pic_clam_ig_camelyon16 pic_clam_g_camelyon16 pic_clam_eg_camelyon16 pic_clam_cig_camelyon16
 group_adv_pic_camelyon16: pic_clam_cig_camelyon16 pic_clam_idg_camelyon16
  
