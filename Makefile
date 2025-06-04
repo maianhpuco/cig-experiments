@@ -597,7 +597,7 @@ pictopk_clam_random_tcga_renal:
 
 # === Group Rules ===
 group_basic_pictopk_tcga_renal: pictopk_clam_ig_tcga_renal pictopk_clam_g_tcga_renal pictopk_clam_eg_tcga_renal pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
-pictopk_clam_random_tcga: pictopk_clam_random_camelyon16 pictopk_clam_random_tcga_renal pictopk_clam_random_tcga_lung 
+pictopk_clam_random_tcga: pictopk_clam_random_camelyon16 pictopk_clam_random_tcga_renal  
 
 # group_adv_pictopk_tcga_renal: pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
 
