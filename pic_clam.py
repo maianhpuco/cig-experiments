@@ -21,56 +21,8 @@ sys.path.extend([
 ])
 
 from clam import load_clam_model
-from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 from PICTestFunctions import compute_pic_metric, generate_random_mask, ModelWrapper
 
-def load_ig_module(args):
-    def get_module_by_name(name):
-        if name == 'ig':
-            from attr_method.ig import IG as AttrMethod
-            print("Using Integrated Gradients (IG) method")
-        elif name == 'cig':
-            from attr_method.cig import CIG as AttrMethod
-            print("Using Cumulative Integrated Gradients (CIG) method")
-        elif name == 'idg':
-            from attr_method.idg_w_batch import IDG as AttrMethod
-            print("Using Integrated Decision Gradients (IDG) method with batch support")
-        elif name == 'eg':
-            from attr_method.eg import EG as AttrMethod
-            print("Using Expected Gradients (EG) method")
-        else:
-            raise ValueError(f"Unsupported IG method: {name}")
-        return AttrMethod()
-
-    def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-        device = next(model.parameters()).device
-        was_batched = inputs.dim() == 3
-        inputs = inputs.to(device).clone().detach().requires_grad_(True)
-        if was_batched:
-            inputs = inputs.squeeze(0)
-
-        model.eval()
-        model_wrapper = ModelWrapper(model, model_type='clam')
-        logits = model_wrapper.forward(inputs)
-
-        if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
-            class_idx = call_model_args.get("target_class_idx", 0)
-            target = logits[:, class_idx]
-            grads = torch.autograd.grad(
-                outputs=target,
-                inputs=inputs,
-                grad_outputs=torch.ones_like(target),
-                retain_graph=False,
-                create_graph=False
-            )[0]
-            grads_np = grads.detach().cpu().numpy()
-            if was_batched or grads_np.ndim == 2:
-                grads_np = np.expand_dims(grads_np, axis=0)
-            return {INPUT_OUTPUT_GRADIENTS: grads_np}
-
-        return logits
-
-    return get_module_by_name(args.ig_name), call_model_function
 
 def parse_args_from_config(config):
     class ConfigArgs:
@@ -84,6 +36,7 @@ def parse_args_from_config(config):
             setattr(args, key, val)
     args.device = getattr(args, 'device', "cuda" if torch.cuda.is_available() else "cpu")
     return args
+
 
 def compute_one_slide(args, basename, model):
     fold_id = args.fold
@@ -129,10 +82,21 @@ def compute_one_slide(args, basename, model):
     print(f"> Baseline predicted class: {baseline_predicted_class.item()}")
     print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
 
-    print("========== COMPUTE IG METHODS ==========")
+    print("========== LOAD PRECOMPUTED ATTRIBUTION ==========")
 
-    ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod 
-    ig_methods = ["idg"]
+    ig_name = "idg"
+    attribution_path = os.path.join(
+        args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", f"{basename}.npy"
+    )
+    if not os.path.isfile(attribution_path):
+        raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
+    attribution_values = np.load(attribution_path)
+
+    saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
+    saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+
+    print(f"  - Saliency map shape: {saliency_map.shape} Stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+
     tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
     mid = np.linspace(0.2, 0.8, num=3)
     normal_high = 1 - tumor_low[::-1]
@@ -140,63 +104,35 @@ def compute_one_slide(args, basename, model):
     top_k = np.array([1, 2, 3, 5, 6, 7, 8, 9, 10, 30, 50, 100])
 
     random_mask = generate_random_mask(features.shape[0], fraction=0.0)
-    print(f"\n> Number of patches: {features.shape[0]}")
-    print(f"> Number of masked patches: {random_mask.sum()}")
 
-    results_all = {}
-    results = []
     slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
     pred_label = slide_row['pred_label'].iloc[0] if not slide_row.empty else pred_class
     true_label = slide_row['true_label'].iloc[0] if 'true_label' in slide_row.columns else -1
 
-    for ig_name in ig_methods:
-        print(f"\n>> Running IG method: {ig_name}")
-        args.ig_name = ig_name
-        ig_module, call_model_function = load_ig_module(args)
-        kwargs = {
-            "x_value": features_data,
-            "call_model_function": call_model_function,
-            "model": model,
-            "baseline_features": baseline,
-            "memmap_path": memmap_path,
-            "x_steps": 50,
-            "device": args.device,
-            "call_model_args": {"target_class_idx": pred_class},
-            "batch_size": 500
-        }
-        attribution_values = ig_module.GetMask(**kwargs)
-        saliency_map = np.abs(np.mean(np.abs(attribution_values), axis=-1)).squeeze()
-        saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+    sic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
+                                   saliency_thresholds, 0, model, args.device,
+                                   baseline=baseline.cpu().numpy(), min_pred_value=0.3,
+                                   keep_monotonous=False)
+    aic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
+                                   saliency_thresholds, 1, model, args.device,
+                                   baseline=baseline.cpu().numpy(), min_pred_value=0.3,
+                                   keep_monotonous=False)
 
-        print(f"  - Saliency map shape: {saliency_map.shape} Stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
+    result = {
+        "slide_id": basename,
+        "pred_label": pred_label,
+        "true_label": true_label,
+        "baseline_pred_label": baseline_predicted_class.item(),
+        "saliency_map_mean": saliency_map.mean(),
+        "saliency_map_std": saliency_map.std(),
+        "IG": ig_name,
+        "AIC": aic_score.auc,
+        "SIC": sic_score.auc
+    }
 
-        sic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
-                                       saliency_thresholds, 0, model, args.device,
-                                       baseline=baseline.cpu().numpy(), min_pred_value=0.3,
-                                       keep_monotonous=False)
-        aic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
-                                       saliency_thresholds, 1, model, args.device,
-                                       baseline=baseline.cpu().numpy(), min_pred_value=0.3,
-                                       keep_monotonous=False)
+    print(f"\n> Result: {result}")
+    return result
 
-        results_all[ig_name] = {"SIC": sic_score.auc, "AIC": aic_score.auc}
-        results.append({
-            "slide_id": basename,
-            "pred_label": pred_label,
-            "true_label": true_label,
-            "baseline_pred_label": baseline_predicted_class.item(),
-            "saliency_map_mean": saliency_map.mean(),
-            "saliency_map_std": saliency_map.std(),
-            "IG": ig_name,
-            "AIC": aic_score.auc,
-            "SIC": sic_score.auc
-        })
-
-    print("\n=== Summary of PIC Scores ===")
-    for k, v in results_all.items():
-        print(f"{k.upper():<5} : SIC = {v['SIC']:.6f} | AIC = {v['AIC']:.6f}")
-
-    return results
 
 def main(args):
     fold_id = args.fold = 1
@@ -219,9 +155,7 @@ def main(args):
     tumor_df = pred_df[pred_df['pred_label'] == 1]
 
     basenames = tumor_df['slide_id'].unique().tolist()
-
     args.pred_df = tumor_df
-    basenames = ['test_001']
 
     print(f"[INFO] Loaded {len(tumor_df)} tumor slides from predictions")
 
@@ -231,7 +165,6 @@ def main(args):
         print(f"\n=== Processing slide: {basename} ({idx + 1}/{len(basenames)}) ===")
         all_results.append(compute_one_slide(args, basename, model))
 
-    print(f"=============== Computed results for {len(all_results)} slides ========")
     results_df = pd.DataFrame(all_results)
     output_dir = os.path.join(args.paths['metrics_dir'])
     os.makedirs(output_dir, exist_ok=True)
@@ -243,6 +176,7 @@ def main(args):
     print("\n=== Average AIC and SIC per IG Method ===")
     print(avg_results.to_string(index=False))
     print(f"\n> Total time taken: {time.time() - start:.2f} seconds")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
