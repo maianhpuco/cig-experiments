@@ -42,7 +42,7 @@ def load_dataset(args):
         split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
         label_dict = {'normal': 0, 'tumor': 1}
 
-        _, _, test_dataset = return_splits_camelyon16(
+        train_dataset, val_dataset, test_dataset = return_splits_camelyon16(
             csv_path=split_csv_path,
             data_dir=args.paths['pt_files'],
             label_dict=label_dict,
