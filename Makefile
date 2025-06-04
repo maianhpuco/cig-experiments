@@ -590,10 +590,15 @@ pictopk_clam_g_tcga_renal:
 		--config configs_simea/clam_tcga_renal.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
 		--ig_name g
+pictopk_clam_random_tcga_renal:
+	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
+		--ig_name random
 
 # === Group Rules ===
 group_basic_pictopk_tcga_renal: pictopk_clam_ig_tcga_renal pictopk_clam_g_tcga_renal pictopk_clam_eg_tcga_renal pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
-
+pictopk_clam_random_tcga: pictopk_clam_random_tcga_renal pictopk_clam_random_tcga_lung 
 # group_adv_pictopk_tcga_renal: pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
 
 
@@ -628,6 +633,11 @@ pictopk_clam_g_tcga_lung:
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name g
 
+pictopk_clam_g_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
+		--ig_name random
 # === Group Rules ===
 group_basic_pictopk_tcga_lung: pictopk_clam_ig_tcga_lung pictopk_clam_g_tcga_lung pictopk_clam_eg_tcga_lung pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung 
 
