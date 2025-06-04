@@ -220,19 +220,19 @@ group_adv_tcga_renal: clam_cig_tcga_renal clam_idg_tcga_renal
 
 # ========== IG CLAM TCGA-RENAL Methods ==============  
 clam_ig_tcga_lung:
-	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name ig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=2 python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name ig --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 clam_eg_tcga_lung:
-	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name eg --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=2  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name eg --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 clam_idg_tcga_lung:
-	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=3  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name idg --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 clam_cig_tcga_lung:
-	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name cig --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 clam_g_tcga_lung:
-	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name g --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=2  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name g --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 group_basic_tcga_lung: clam_ig_tcga_lung clam_g_tcga_lung clam_eg_tcga_lung
 group_adv_tcga_lung: clam_cig_tcga_lung clam_idg_tcga_lung
@@ -255,27 +255,27 @@ group_square: #done  runing
 
 
 # ==== TCGA-RENAL Methods ====
-ig_clam_tcga_renal_integrated_gradient:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient
+# ig_clam_tcga_renal_integrated_gradient:
+# 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_gradient
 
-ig_clam_tcga_renal_expected_gradient:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name expected_gradient
+# ig_clam_tcga_renal_expected_gradient:
+# 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name expected_gradient
 
-ig_clam_tcga_renal_integrated_decision_gradient:
-	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_decision_gradient --device cpu
+# ig_clam_tcga_renal_integrated_decision_gradient:
+# 	PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+# 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name integrated_decision_gradient --device cpu
 
-ig_clam_tcga_renal_contrastive_gradient:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name contrastive_gradient
+# ig_clam_tcga_renal_contrastive_gradient:
+# 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name contrastive_gradient
 
-ig_clam_tcga_renal_vanilla_gradient:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name vanilla_gradient
+# ig_clam_tcga_renal_vanilla_gradient:
+# 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name vanilla_gradient
 
-ig_clam_tcga_renal_square_integrated_gradient:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name square_integrated_gradient
+# ig_clam_tcga_renal_square_integrated_gradient:
+# 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name square_integrated_gradient
 
-ig_clam_tcga_renal_optim_square_integrated_gradient:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient --device cpu
+# ig_clam_tcga_renal_optim_square_integrated_gradient:
+# 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name optim_square_integrated_gradient --device cpu
 
 # Grouped commands for batch runs
 # group_tcga_basic:
