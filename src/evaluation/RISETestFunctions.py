@@ -2,7 +2,6 @@ import torch
 import numpy as np
 from typing import Callable
 
-
 def auc(arr):
     """Returns normalized Area Under Curve of the array."""
     return (arr.sum() - arr[0] / 2 - arr[-1] / 2) / (arr.shape[0] - 1)
@@ -18,13 +17,17 @@ class ModelWrapper:
         Forward pass for the model, handling both single and batched inputs.
         
         Args:
-            input: Tensor of shape [N, D] or [B, N, D] where B is batch size, N is number of patches, D is feature dimension.
+            input: Tensor of shape [1, N, D], [N, D], or [B, N, D] where B is batch size, 
+                   N is number of patches, D is feature dimension.
         
         Returns:
             logits: Tensor of shape [B, C] where C is number of classes, or [C] for single input.
         """
         if self.model_type != 'clam':
             return self.model(input)
+
+        # Ensure input is on the correct device
+        input = input.to(next(self.model.parameters()).device)
 
         # Handle batched input [B, N, D]
         if input.dim() == 3:
@@ -35,15 +38,17 @@ class ModelWrapper:
                 instance_per_slide = [single_input.shape[0]]
                 output = self.model(single_input, instance_per_slide)
                 logits = output[0] if isinstance(output, tuple) else output
-                logits_list.append(logits)
+                logits_list.append(logits.squeeze(0) if logits.dim() == 2 else logits)
             return torch.stack(logits_list)  # Shape [B, C]
         
-        # Handle single input [N, D]
+        # Handle single input [1, N, D] or [N, D]
+        if input.dim() == 3 and input.shape[0] == 1:
+            input = input.squeeze(0)  # Shape [N, D]
         if input.dim() == 2:
             instance_per_slide = [input.shape[0]]
             output = self.model(input, instance_per_slide)
             logits = output[0] if isinstance(output, tuple) else output
-            return logits
+            return logits.squeeze(0) if logits.dim() == 2 else logits
         
         raise ValueError(f"Unsupported input shape: {input.shape}")
 
@@ -92,10 +97,13 @@ class CausalMetric:
         self.model.model.eval()  # Ensure the underlying model is in eval mode
         with torch.no_grad():
             original_pred = self.model.forward(feature_tensor.to(device))
-            _, index = torch.max(original_pred, 1)
-            target_class = index[0]
-            percentage = torch.nn.functional.softmax(original_pred, dim=1)[0]
-            original_pred_score = percentage[target_class].item()
+            # Ensure original_pred is 2D [1, C]
+            if original_pred.dim() == 1:
+                original_pred = original_pred.unsqueeze(0)
+            _, index = torch.max(original_pred, dim=1)
+            target_class = index.item()  # Ensure scalar index
+            percentage = torch.nn.functional.softmax(original_pred, dim=1)
+            original_pred_score = percentage[0, target_class].item()
 
         scores = np.zeros(n_steps + 1)
 
@@ -109,8 +117,10 @@ class CausalMetric:
             finish = feature_tensor.clone()
             with torch.no_grad():
                 neutral_pred = self.model.forward(start.to(device))
-                percentage = torch.nn.functional.softmax(neutral_pred, dim=1)[0]
-                scores[0] = percentage[target_class].item()
+                if neutral_pred.dim() == 1:
+                    neutral_pred = neutral_pred.unsqueeze(0)
+                percentage = torch.nn.functional.softmax(neutral_pred, dim=1)
+                scores[0] = percentage[0, target_class].item()
 
         # Sort patches by saliency, ensuring positive strides
         salient_order = np.flip(np.argsort(saliency_map, axis=0), axis=0).copy()
