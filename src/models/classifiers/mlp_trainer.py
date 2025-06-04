@@ -62,7 +62,7 @@ def load_model_mlp(args, checkpoint_path=None):
     
     return model, device
  
-def train(datasets, args):
+def train(checkpoint_dir, datasets, args):
     """
     Train the Bag_Classifier model for one fold.
     
@@ -85,7 +85,7 @@ def train(datasets, args):
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=4)
     
     # Initialize model and optimizer
-    model, device = load_model_mlp(args, checkpoint_path=args.ckpt_path)
+    model, device = load_model_mlp(args, checkpoint_path=checkpoint_dir)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.reg)
     criterion = nn.CrossEntropyLoss()
     

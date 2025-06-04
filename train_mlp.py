@@ -96,33 +96,32 @@ def main(args):
     args.dataset_name = args.dataset_name
     args.n_classes = args.n_classes
     label_dict = args.label_dict 
-
     args.results_dir = args.paths['result_dir']
     os.makedirs(args.results_dir, exist_ok=True)
-
+    checkpoint_dir = os.path.join(args.results_dir, f'fold_{args.fold}') 
     all_test_auc, all_val_auc, all_test_acc, all_val_acc = [], [], [], []
 
-    fold_dir = os.path.join(args.results_dir, f'fold_{args.fold}')
-    os.makedirs(fold_dir, exist_ok=True)
     
-    print(f"\n[INFO] Starting fold {args.fold}, saving results to: {fold_dir}")
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    
+    print(f"\n[INFO] Starting fold {args.fold}, saving results to: {checkpoint_dir}")
     
     seed_torch(args.seed)
-    args.results_dir = fold_dir
+    args.results_dir = checkpoint_dir
     train_dataset, val_dataset, test_dataset = load_dataset(args) 
     
     print(f"Train: {len(train_dataset)} | Val: {len(val_dataset)} | Test: {len(test_dataset)}")
     
     datasets = (train_dataset, val_dataset, test_dataset)
-
-    results, test_auc, val_auc, test_acc, val_acc = train(datasets, args)
+    checkpoint_dir = args. 
+    results, test_auc, val_auc, test_acc, val_acc = train(checkpoint_dir, datasets, args)
 
     all_test_auc.append(test_auc)
     all_val_auc.append(val_auc)
     all_test_acc.append(test_acc)
     all_val_acc.append(val_acc)
 
-    save_pkl(os.path.join(fold_dir, f'split_{args.fold}_results.pkl'), results)
+    save_pkl(os.path.join(checkpoint_dir, f'split_{args.fold}_results.pkl'), results)
 
     summary_df = pd.DataFrame({
         'folds': fold,
