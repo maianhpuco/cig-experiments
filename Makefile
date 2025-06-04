@@ -532,7 +532,7 @@ pictopk_clam_cig_tcga_renal:
 pictopk_clam_g_tcga_renal:
 	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name g
 
-group_basic_pictopk_tcga_renal: pictopk_clam_ig_tcga_renal pictopk_clam_g_tcga_renal pictopk_clam_eg_tcga_renal pictopk_clam_cig_tcga_renal
+group_basic_pictopk_tcga_renal: pictopk_clam_ig_tcga_renal pictopk_clam_g_tcga_renal pictopk_clam_eg_tcga_renal 
 group_adv_pictopk_tcga_renal: pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
 
 #tcga renal 
