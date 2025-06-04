@@ -435,7 +435,7 @@ check_pic:
 	python check_pic.py --config configs_simea/clam_camelyon16.yaml 
 
 pic_clam:
-	python pic_clam.py --config configs_simea/clam_camelyon16.yaml 
+	python metric_pic_clam.py --config configs_simea/clam_camelyon16.yaml 
  
 check_rise:
 	python check_rise.py --config configs_simea/clam_camelyon16.yaml 
