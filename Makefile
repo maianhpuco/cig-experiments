@@ -441,7 +441,9 @@ pic_clam_topk:
   
 check_rise:
 	python check_rise.py --config configs_simea/clam_camelyon16.yaml 
- 
+rise_clam:
+	python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml 
+   
 mean_std_camelyon16:
 	python compute_mean_std_folds.py \
 	--config configs_simea/clam_camelyon16.yaml \
