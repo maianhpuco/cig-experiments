@@ -535,24 +535,6 @@ group_basic_pic_camelyon16: pic_clam_ig_camelyon16 pic_clam_g_camelyon16 pic_cla
 group_adv_pic_camelyon16: pic_clam_cig_camelyon16 pic_clam_idg_camelyon16
 
 
-
-rise_clam_ig_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
-
-rise_clam_eg_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
-
-rise_clam_idg_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
-
-rise_clam_cig_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
-
-rise_clam_g_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_rise_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g
-
-group_basic_rise_camelyon16: rise_clam_ig_camelyon16 rise_clam_g_camelyon16 rise_clam_eg_camelyon16 rise_clam_cig_camelyon16  rise_clam_cig_camelyon16 rise_clam_idg_camelyon16
-
 # group_adv_rise_camelyon16: rise_clam_cig_camelyon16 rise_clam_idg_camelyon16
 
 #====== Metric TOP-K PIC CAMELYON16 =============== 
@@ -570,6 +552,8 @@ pictopk_clam_cig_camelyon16:
 
 pictopk_clam_g_camelyon16:
 	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+pictopk_clam_random_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name random
 
 group_basic_pictopk_camelyon16: pictopk_clam_ig_camelyon16 pictopk_clam_g_camelyon16 pictopk_clam_eg_camelyon16 pictopk_clam_cig_camelyon16
 group_adv_pictopk_camelyon16: pictopk_clam_cig_camelyon16 pictopk_clam_idg_camelyon16
@@ -606,14 +590,15 @@ pictopk_clam_g_tcga_renal:
 		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
 		--ig_name g
 pictopk_clam_random_tcga_renal:
-	CUDA_VISIBLE_DEVICES=7 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_renal.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
 		--ig_name random
 
 # === Group Rules ===
 group_basic_pictopk_tcga_renal: pictopk_clam_ig_tcga_renal pictopk_clam_g_tcga_renal pictopk_clam_eg_tcga_renal pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
-pictopk_clam_random_tcga: pictopk_clam_random_tcga_renal pictopk_clam_random_tcga_lung 
+pictopk_clam_random_tcga: pictopk_clam_random_camelyon16 pictopk_clam_random_tcga_renal pictopk_clam_random_tcga_lung 
+
 # group_adv_pictopk_tcga_renal: pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
 
 
@@ -648,11 +633,12 @@ pictopk_clam_g_tcga_lung:
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name g
 
-pictopk_clam_g_tcga_lung:
+pictopk_clam_random_tcga_lung:
 	CUDA_VISIBLE_DEVICES=8 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name random
+
 # === Group Rules ===
 group_basic_pictopk_tcga_lung: pictopk_clam_ig_tcga_lung pictopk_clam_g_tcga_lung pictopk_clam_eg_tcga_lung pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung 
 
