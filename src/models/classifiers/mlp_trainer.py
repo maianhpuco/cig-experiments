@@ -125,7 +125,7 @@ def train(checkpoint_dir, datasets, args):
                 raise ValueError("Unexpected batch format")
 
             data, label = data.to(device), label.to(device)
-            print(f"label: {label}, shape: {label.shape}, n_classes: {args.n_classes}") 
+            # print(f"label: {label}, shape: {label.shape}, n_classes: {args.n_classes}") 
             optimizer.zero_grad()
             logits = model(data)
             label = label.long()
