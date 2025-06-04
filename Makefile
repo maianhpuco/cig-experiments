@@ -209,6 +209,19 @@ baseline_dtfd_tcga_lung:
 	python sampling_baseline.py --config configs_simea/dtfd_tcga_lung.yaml --start_fold 1 --end_fold 1 
 all_baseline_dtfd: baseline_dtfd_camelyon16 baseline_dsmil_tcga_renal baseline_dsmil_tcga_lung 
 
+#=================BASELINE MLP============ 
+baseline_mlp_camelyon16:
+	python sampling_baseline.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1
+baseline_mlp_tcga_renal:
+	python sampling_baseline.py --config configs_simea/clam_tcga_renal.yaml --start_fold 1 --end_fold 1
+baseline_mlp_tcga_lung:
+	python sampling_baseline.py --config configs_simea/clam_tcga_lung.yaml --start_fold 1 --end_fold 1 
+
+
+
+
+
+
 # ========= predict ========= 
 predict_clam_camelyon16:
 	python predict_clam.py --config configs_simea/clam_camelyon16.yaml --fold_start 1 --fold_end 1
