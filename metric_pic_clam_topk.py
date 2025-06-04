@@ -166,7 +166,7 @@ def main(args):
     basenames = pred_df['slide_id'].unique().tolist()
     args.pred_df = pred_df
 
-    print(f"[INFO] Loaded {len(tumor_df)} tumor slides")
+    print(f"[INFO] Loaded {len(pred_df)} slides")
 
     all_results = []
     start = time.time()
