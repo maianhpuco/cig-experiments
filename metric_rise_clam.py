@@ -21,7 +21,7 @@ sys.path.extend([
 
 from clam import load_clam_model
 from PICTestFunctions import ModelWrapper
-from RISETestFunctions import CausalMetric
+from RISETestFunctions import CausalMetric, auc
 
 def parse_args_from_config(config):
     class ConfigArgs:
@@ -81,7 +81,7 @@ def compute_one_slide(args, basename, model):
     print(f"> Baseline logits: {baseline_pred[0].detach().cpu().numpy()}")
 
     print("========== LOAD PRECOMPUTED ATTRIBUTION ==========")
-    ig_name = "idg"
+    ig_name = "ig"
     attribution_path = os.path.join(
         args.paths['attribution_scores_folder'], f"fold_{fold_id}", ig_name, f"{basename}.npy"
     )
@@ -157,7 +157,8 @@ def main(args):
 
     basenames = tumor_df['slide_id'].unique().tolist()
     args.pred_df = tumor_df
-
+    basenames= ['test_001']
+    
     print(f"[INFO] Loaded {len(tumor_df)} tumor slides from predictions")
 
     all_results = []

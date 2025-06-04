@@ -87,8 +87,8 @@ class CausalMetric:
                 percentage = torch.nn.functional.softmax(neutral_pred, dim=1)[0]
                 scores[0] = percentage[target_class].item()
 
-        # Sort patches by saliency
-        salient_order = np.flip(np.argsort(saliency_map, axis=0), axis=0)
+        # Sort patches by saliency, ensuring positive strides
+        salient_order = np.flip(np.argsort(saliency_map, axis=0), axis=0).copy()
 
         total_steps = 1
         num_batches = n_steps // batch_size
