@@ -225,7 +225,7 @@ clam_g_tcga_renal:
 
 group_basic_tcga_renal: clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renal
 group_adv_tcga_renal: clam_cig_tcga_renal clam_idg_tcga_renal
-
+group_all_tcga_renal:  group_basic_tcga_renal group_adv_tcga_renal 
 #========== IG CLAM TCGA-RENAL Methods ==============  
 clam_ig_tcga_lung:
 	python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name ig --fold_start 1 --fold_end 1 \
