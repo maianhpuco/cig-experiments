@@ -197,7 +197,7 @@ def main(args):
         attribution_values = ig_module.GetMask(**kwargs)
         
         save_dir = os.path.join(
-            args.paths['attribution_scores_folder'], f'{args.ig_name}') 
+            args.paths['attribution_scores_folder'], f'{args.ig_name}', 'fold_{args.fold}') 
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{basename}.npy") 
 
