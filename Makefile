@@ -5,7 +5,7 @@ CKPT_CLAM_TCGA_RENAL = /home/mvu9/processing_datasets/processing_tcga_256/clam_t
 CKPT_CLAM_TCGA_LUNG  = /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
 
 CKPT_MLP_CAMELYON16 = /home/mvu9/processing_datasets/processing_camelyon16/mlp_results/fold_1/best_model.pth
-CKPT_MLP_TCGA_RENAl = /home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_renal_results/fold_1/best_model.pth
+CKPT_MLP_TCGA_RENAL = /home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_renal_results/fold_1/best_model.pth
 CKPT_MLP_TCGA_LUNG = /home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_lung_results/fold_1/best_model.pth 
 
 # ============= TRAIN CLAM =============
