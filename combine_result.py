@@ -3,7 +3,7 @@ import pandas as pd
 import glob
 
 # Define the parent directory containing subdirectories for each method
-base_dir = "/processing_datasets/processing_camelyon16/clam_metrics"
+base_dir = "/home/mvu9/processing_datasets/processing_camelyon16/clam_metrics"
 
 # Pattern to match all result CSVs
 
