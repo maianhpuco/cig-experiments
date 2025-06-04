@@ -131,11 +131,10 @@ test_dtfd_tcga_lung_fold_1:
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/dtfd_tcga_lung_results_1fold/best_model.pth
 test_dtfd_fold_1: test_dtfd_camelyon16_fold_1  test_dtfd_tcga_renal_fold_1 test_dtfd_tcga_lung_fold_1
 
-
+# ==================================PREDICTION ======================================
 # ============= PREDICT CLAM =============
 baseline_clam_camelyon16_fp: 
 	python sampling_baseline_fp.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1 
-
 baseline_clam_camelyon16_trainvaltest:
 	python sampling_baseline_trainvaltest.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1 
 baseline_clam_camelyon16:
@@ -206,26 +205,21 @@ group_adv_camelyon16: clam_cig_camelyon16 clam_idg_camelyon16
 clam_ig_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
-
 clam_eg_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
-
 clam_idg_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
-
 clam_cig_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
-
 clam_g_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
-
 group_basic_tcga_renal: clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renal
 group_adv_tcga_renal: clam_cig_tcga_renal clam_idg_tcga_renal
-group_all_tcga_renal:  clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renalclam_cig_tcga_renal clam_idg_tcga_renal
+# group_all_tcga_renal:  clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renal 
 
 # ========== IG CLAM TCGA-RENAL Methods ==============  
 clam_ig_tcga_lung:
