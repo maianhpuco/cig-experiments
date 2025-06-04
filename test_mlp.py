@@ -10,7 +10,7 @@ import sys
 sys.path.append(os.path.join("src/models"))
 sys.path.append(os.path.join("src/models/classifiers"))
 
-from mlp_classifier import load_model_mlp
+from mlp_trainer import load_model_mlp
 from src.datasets.load_dataset import load_dataset  # <-- Your external dataset loader
 
 from sklearn.metrics import accuracy_score, roc_auc_score
