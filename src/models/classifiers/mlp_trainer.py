@@ -20,7 +20,7 @@ clf_path = os.path.abspath(os.path.join("src/models/classifiers"))
 sys.path.append(clf_path)
 
 # Assuming the model classes (Bag_Classifier, Attn_Net, Attn_Net_Gated) are in a file called `models.py`
-from mil_classifier import MLP_Classifier
+from mlp_classifier import MLP_Classifier
 
 def load_model_mlp(args, checkpoint_path=None):
     """
