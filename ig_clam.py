@@ -242,5 +242,5 @@ if __name__ == "__main__":
 
     print(" > Start compute IG for dataset: ", args.dataset_name)
     for fold_id in range(args.fold_start, args.fold_end + 1):  # Assuming folds are 1 to 5
-        args.fold = fold_id + 1  # Assuming fold_id is 1 for this example
+        args.fold = fold_id # Assuming fold_id is 1 for this example
         main(args)
