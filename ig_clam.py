@@ -161,6 +161,7 @@ def main(args):
         if args.dataset_name in ['tcga_renal', 'tcga_lung']:
             (features, label, _) = data
             
+        features = features.unsqueeze(0) if features.dim() == 2 else features    
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\nProcessing file {idx + 1}/{len(test_dataset)}: {basename}")
         print(f"  >  Features shape: {features.shape}")
