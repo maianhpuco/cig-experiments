@@ -6,11 +6,13 @@ import glob
 base_dir = "/processing_datasets/processing_camelyon16/clam_metrics"
 
 # Pattern to match all result CSVs
-csv_files = glob.glob(os.path.join(base_dir, "*", "topk_pic_results_fold_1.csv"))
 
+csv_files = glob.glob(os.path.join(base_dir, "*", "topk_pic_results_fold_1.csv"))
+print(csv_files)
 # Load and concatenate all CSVs
 all_dfs = []
 for file in csv_files:
+    print(f"processing {file}")
     df = pd.read_csv(file)
     df['method'] = df['IG'].str.lower()  # Normalize method name
     all_dfs.append(df)
