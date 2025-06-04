@@ -20,3 +20,4 @@ combined_df = pd.concat(all_dfs, ignore_index=True)
 # Group by method and compute mean and std for AIC and SIC
 summary = combined_df.groupby('method')[['AIC', 'SIC']].agg(['mean', 'std']).reset_index()
 
+print(summary)
