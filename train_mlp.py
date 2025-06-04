@@ -8,7 +8,8 @@ import torch
 import sys
 import time
 from datetime import datetime
-
+import pickle
+import os 
 # Add model path
 sys.path.append(os.path.abspath(os.path.join("src/models/classifiers")))
 
@@ -74,8 +75,22 @@ def load_dataset(args):
     print(f"[INFO] FOLD {fold_id} -> Train: {len(train_dataset)} | Val: {len(val_dataset)} | Test: {len(test_dataset)}") 
     
     return train_dataset, val_dataset, test_dataset 
-             
-              
+
+
+
+def save_pkl(filename, data):
+    """
+    Save a Python object to a .pkl file.
+
+    Args:
+        filename (str): Path to the output .pkl file.
+        data (Any): Python object to save.
+    """
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f)
+    print(f"[INFO] Saved to: {filename}")
+     
 def main(args):
 
     args.dataset_name = args.dataset_name
@@ -107,7 +122,7 @@ def main(args):
     all_test_acc.append(test_acc)
     all_val_acc.append(val_acc)
 
-    save_pkl(os.path.join(fold_dir, f'split_{i}_results.pkl'), results)
+    save_pkl(os.path.join(fold_dir, f'split_{args.fold}_results.pkl'), results)
 
     summary_df = pd.DataFrame({
         'folds': fold,
