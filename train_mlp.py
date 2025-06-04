@@ -94,7 +94,6 @@ def save_pkl(filename, data):
 def main(args):
 
     args.dataset_name = args.dataset_name
-    args.n_classes = args.n_classes
     label_dict = args.label_dict 
     args.results_dir = args.paths['result_dir']
     
