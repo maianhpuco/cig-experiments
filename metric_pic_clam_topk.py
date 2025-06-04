@@ -150,8 +150,10 @@ def compute_one_slide(args, basename, model):
 
 def main(args):
     fold_id = args.fold = 1
-    checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'])
-
+    # checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'])
+    checkpoint_path = args.ckpt_path
+    print(f"Loading checkpoint from: {checkpoint_path}")
+    
     args_clam = argparse.Namespace(
         drop_out=args.drop_out,
         n_classes=args.n_classes,
