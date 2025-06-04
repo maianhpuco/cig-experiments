@@ -44,7 +44,7 @@ def compute_one_slide(args, basename, model):
 
     if args.dataset_name == 'camelyon16':
         feature_path = os.path.join(args.paths['feature_files'], f"{basename}.pt")
-    elif args.dataset_name == 'tcga_renal':
+    elif args.dataset_name in ['tcga_renal', 'tcga_lung']:
         slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
         true_label = int(slide_row['true_label'].iloc[0]) if not slide_row.empty else -1
         reverse_label_dict = {v: k for k, v in args.label_dict.items()}
