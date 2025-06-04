@@ -15,7 +15,7 @@ paths:
   slide_dir: '/home/mvu9/datasets/TCGA-datasets'
   predictions_dir: "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_predictions" 
   baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/baseline_tcga_lung/baseline_clam/fold_1"  
-
+  metrics_dir: "/home/mvu9/processing_datasets/processing_tcga_256/tcga_lung_metrics" 
   
 patterns: 
   h5_files: "/home/mvu9/processing_datasets/processing_tcga_256/*/features_fp/h5_files" 
