@@ -14,7 +14,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join("src/models/classifiers")))
 
 # Imports
-from mlp_classifier import load_model_mlp
+# from mlp_classifier import load_model_mlp
 from mlp_trainer import train 
 
 # from trainer import seed_torch
@@ -113,7 +113,7 @@ def main(args):
     print(f"Train: {len(train_dataset)} | Val: {len(val_dataset)} | Test: {len(test_dataset)}")
     
     datasets = (train_dataset, val_dataset, test_dataset)
-    checkpoint_dir = args. 
+    
     results, test_auc, val_auc, test_acc, val_acc = train(checkpoint_dir, datasets, args)
 
     all_test_auc.append(test_auc)
