@@ -132,6 +132,7 @@ def compute_one_slide(args, basename, model):
     print("========== COMPUTE IG METHODS ==========")
 
     ig_methods = ['ig', 'cig', 'idg', 'eg', 'random']  # List of IG methods to evmethod 
+    ig_methods = ["idg"]
     tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)
     mid = np.linspace(0.2, 0.8, num=3)
     normal_high = 1 - tumor_low[::-1]
