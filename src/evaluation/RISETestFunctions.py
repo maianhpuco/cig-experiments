@@ -108,6 +108,7 @@ class CausalMetric:
                 total_steps += 1
 
             with torch.no_grad():
+                print(features_batch.shape, start.shape, finish.shape)
                 output = self.model.forward(features_batch.to(device))
                 percentage = torch.nn.functional.softmax(output, dim=1)
                 scores[total_steps - batch:total_steps] = percentage[:, target_class].cpu().numpy()
