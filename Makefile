@@ -577,19 +577,19 @@ group_adv_pictopk_camelyon16: pictopk_clam_cig_camelyon16 pictopk_clam_idg_camel
 
 #====== Metric TOP-K PIC TCGA RENAL =============== 
 pictopk_clam_ig_tcga_renal:
-	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=7 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig
 
 pictopk_clam_eg_tcga_renal:
-	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg
+	CUDA_VISIBLE_DEVICES=7 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg
 
 pictopk_clam_idg_tcga_renal:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=7 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg
 
 pictopk_clam_cig_tcga_renal:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=7 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig
 
 pictopk_clam_g_tcga_renal:
-	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=7 python metric_pic_clam_topk.py --config configs_simea/clam_tcga_renal.yaml --ig_name g
 
 group_basic_pictopk_tcga_renal: pictopk_clam_ig_tcga_renal pictopk_clam_g_tcga_renal pictopk_clam_eg_tcga_renal pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal 
 group_adv_pictopk_tcga_renal: pictopk_clam_cig_tcga_renal pictopk_clam_idg_tcga_renal
