@@ -7,7 +7,6 @@ import argparse
 import numpy as np
 import pandas as pd
 import warnings
-from rise_metric import CausalMetric, auc
 
 # Suppress future warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
