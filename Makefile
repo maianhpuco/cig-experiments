@@ -212,20 +212,21 @@ group_adv_camelyon16: clam_cig_camelyon16 clam_idg_camelyon16
 
 #========== IG CLAM TCGA-RENAL Methods ============== 
 clam_ig_tcga_renal:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_eg_tcga_renal:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_idg_tcga_renal:
-	CUDA_VISIBLE_DEVICES=1 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_cig_tcga_renal:
-	CUDA_VISIBLE_DEVICES=1 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_g_tcga_renal:
-	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
+	
 group_basic_tcga_renal: clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renal
 group_adv_tcga_renal: clam_cig_tcga_renal clam_idg_tcga_renal
 
