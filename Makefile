@@ -538,23 +538,43 @@ group_adv_pic_camelyon16: pic_clam_cig_camelyon16 pic_clam_idg_camelyon16
 # group_adv_rise_camelyon16: rise_clam_cig_camelyon16 rise_clam_idg_camelyon16
 
 #====== Metric TOP-K PIC CAMELYON16 =============== 
+# === PIC Top-K Targets for Camelyon16 ===
 pictopk_clam_ig_camelyon16:
-	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name ig
 
 pictopk_clam_eg_camelyon16:
-	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
+	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name eg
 
 pictopk_clam_idg_camelyon16:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name idg
 
 pictopk_clam_cig_camelyon16:
-	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=5 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name cig
 
 pictopk_clam_g_camelyon16:
-	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name g
-pictopk_clam_random_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_pic_clam_topk.py --config configs_simea/clam_camelyon16.yaml --ig_name random
+	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name g
 
+pictopk_clam_random_camelyon16:
+	CUDA_VISIBLE_DEVICES=1 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name random
+		
 group_basic_pictopk_camelyon16: pictopk_clam_ig_camelyon16 pictopk_clam_g_camelyon16 pictopk_clam_eg_camelyon16 pictopk_clam_cig_camelyon16
 group_adv_pictopk_camelyon16: pictopk_clam_cig_camelyon16 pictopk_clam_idg_camelyon16
 
