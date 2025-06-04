@@ -155,7 +155,10 @@ def main(args):
     if os.path.exists(memmap_path):
         shutil.rmtree(memmap_path)
     os.makedirs(memmap_path, exist_ok=True)
-    checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{args.fold}']) 
+    
+    # checkpoint_path = os.path.join(args.paths[f'for_ig_checkpoint_path_fold_{args.fold}']) 
+    checkpoint_path = args.ckpt_path  
+    
     print("--------num classes", args.n_classes)
     model = load_clam_model(args, checkpoint_path, device=args.device) 
      

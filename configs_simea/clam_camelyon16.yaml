@@ -7,7 +7,7 @@ paths:
   result_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_results" #fold1/result_final_ep200 
   split_folder: "/home/mvu9/processing_datasets/processing_camelyon16/splits_csv" 
   # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/result_2025-05-18/result_2025-05-18_22-23-56/s_1_checkpoint.pt"
-  for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt"
+  # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/clam_result/result_final_ep200/s_1_checkpoint.pt"
   # attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/camelyon16"
   attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores_no_class/camelyon16" 
   ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/camelyon16"  
