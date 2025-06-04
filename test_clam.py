@@ -21,7 +21,7 @@ def main(args):
     fold_id = args.fold
     device = args.device
 
-    print(f"[INFO] Loading model checkpoint from: {args.paths[f'for_ig_checkpoint_path_fold_{fold_id}']}")
+    # print(f"[INFO] Loading model checkpoint from: {args.paths[f'for_ig_checkpoint_path_fold_{fold_id}']}")
     # model = load_clam_model(args, args.paths[f'for_ig_checkpoint_path_fold_{fold_id}'], device)
     model = load_clam_model(args, args.ckpt_path, device)
     model.eval()

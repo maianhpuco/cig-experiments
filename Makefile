@@ -3,7 +3,6 @@
 CKPT_CLAM_CAMELYON16 = /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt
 CKPT_CLAM_TCGA_RENAL = /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
 CKPT_CLAM_TCGA_LUNG  = /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
- 
 
 # ============= TRAIN CLAM =============
 dryrun_train_clam_camelyon16:
@@ -143,17 +142,20 @@ test_dtfd_fold_1: test_dtfd_camelyon16_fold_1  test_dtfd_tcga_renal_fold_1 test_
 
 # ==================================PREDICTION ======================================
 # ============= PREDICT CLAM =============
-baseline_clam_camelyon16_fp: 
-	python sampling_baseline_fp.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1 
+# baseline_clam_camelyon16_fp: 
+# 	python sampling_baseline_fp.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1 
 baseline_clam_camelyon16_trainvaltest:
 	python sampling_baseline_trainvaltest.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1 
+
 baseline_clam_camelyon16:
 	python sampling_baseline.py --config configs_simea/clam_camelyon16.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_renal:
 	python sampling_baseline.py --config configs_simea/clam_tcga_renal.yaml --start_fold 1 --end_fold 1
 baseline_clam_tcga_lung:
 	python sampling_baseline.py --config configs_simea/clam_tcga_lung.yaml --start_fold 1 --end_fold 1 
+
 all_baseline_clam_tcga: baseline_clam_tcga_renal baseline_clam_tcga_lung 
+
 # ============= PREDICT DSMIL =============
 baseline_dsmil_camelyon16:
 	python sampling_baseline.py --config configs_simea/dsmil_camelyon16.yaml --start_fold 1 --end_fold 1
@@ -191,19 +193,19 @@ pr_metric:
 #========== IG CLAM CAMELYON16 Methods ============== 
 clam_ig_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt 
+	--ckpt_path $(CKPT_CLAM_CAMELYON16) 
 clam_eg_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt  
+	--ckpt_path $(CKPT_CLAM_CAMELYON16)  
 clam_idg_camelyon16: 
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt  
+	--ckpt_path $(CKPT_CLAM_CAMELYON16)  
 clam_cig_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt  
+	--ckpt_path $(CKPT_CLAM_CAMELYON16)  
 clam_g_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt 
+	--ckpt_path $(CKPT_CLAM_CAMELYON16) 
 
 group_basic_camelyon16: clam_ig_camelyon16 clam_g_camelyon16 clam_eg_camelyon16 clam_cig_camelyon16
 group_adv_camelyon16: clam_cig_camelyon16 clam_idg_camelyon16
@@ -211,45 +213,43 @@ group_adv_camelyon16: clam_cig_camelyon16 clam_idg_camelyon16
 #========== IG CLAM TCGA-RENAL Methods ============== 
 clam_ig_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_eg_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_idg_tcga_renal:
 	CUDA_VISIBLE_DEVICES=1 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_cig_tcga_renal:
 	CUDA_VISIBLE_DEVICES=1 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_g_tcga_renal:
 	python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 group_basic_tcga_renal: clam_ig_tcga_renal clam_g_tcga_renal clam_eg_tcga_renal
 group_adv_tcga_renal: clam_cig_tcga_renal clam_idg_tcga_renal
 
 # ========== IG CLAM TCGA-RENAL Methods ==============  
 clam_ig_tcga_lung:
 	CUDA_VISIBLE_DEVICES=2 python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name ig --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 clam_eg_tcga_lung:
 	CUDA_VISIBLE_DEVICES=2  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name eg --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 clam_idg_tcga_lung:
 	CUDA_VISIBLE_DEVICES=3  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name idg --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 clam_cig_tcga_lung:
 	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name cig --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 clam_g_tcga_lung:
 	CUDA_VISIBLE_DEVICES=2  python ig_clam.py --config configs_simea/clam_tcga_lung.yaml --ig_name g --fold_start 1 --fold_end 1 \
-	--ckpt_path /home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt
+	--ckpt_path $(CKPT_CLAM_TCGA_LUNG)
 group_basic_tcga_lung: clam_ig_tcga_lung clam_g_tcga_lung clam_eg_tcga_lung
 group_adv_tcga_lung: clam_cig_tcga_lung clam_idg_tcga_lung
 
 # ----- Grouped Methods -----
 group_basic: clam_ig, clam_g, clam_eg 
-
-
 group_adv: clam_cig, clam_idg 
 
 
