@@ -47,7 +47,8 @@ def compute_one_slide(args, basename, model):
     elif args.dataset_name == 'tcga_renal':
         slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
         true_label = int(slide_row['true_label'].iloc[0]) if not slide_row.empty else -1
-        reverse_label_dict =  {(v, k) for k, v in args.label_dict.items()}  
+        reverse_label_dict = {v: k for k, v in args.label_dict.items()}
+ 
         print("label dict", reverse_label_dict) 
         if true_label == -1:
             raise ValueError(f"True label not found for slide {basename}")
