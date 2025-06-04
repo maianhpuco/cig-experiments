@@ -16,12 +16,23 @@ sys.path.append(os.path.abspath(os.path.join("src/models/classifiers")))
 from mlp_classifier import load_model_mlp
 from mlp_trainer import train 
 
-from trainer import seed_torch
+# from trainer import seed_torch
 from utils.file_utils import save_pkl
 
 from src.datasets.classification.tcga import return_splits_custom  as return_splits_tcga 
 from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon16 
 
+def seed_torch(seed=7):
+    import random
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
 
 def load_dataset(args):
     fold_id = args.fold 
