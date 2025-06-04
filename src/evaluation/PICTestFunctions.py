@@ -113,6 +113,10 @@ def compute_pic_metric(top_k: Sequence[float], features: np.ndarray, saliency_ma
     Returns:
         PicMetricResultBasic containing the curve and AUC.
     """
+    if saliency_thresholds is None:
+        saliency_thresholds = []
+        print("[INFO] No saliency thresholds provided — skipping quantile-based patch selection.")
+ 
     model_wrapper = ModelWrapper(model, model_type='clam')
     neutral_features = []
     predictions = []
