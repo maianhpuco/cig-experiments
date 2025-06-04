@@ -197,6 +197,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
     parser.add_argument('--ig_name', type=str, required=True)
+    parser.add_argument('--ckpt_path', type=str, required=True) 
     args_cmd = parser.parse_args()
 
     with open(args_cmd.config, 'r') as f:
