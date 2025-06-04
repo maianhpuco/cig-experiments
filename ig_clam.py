@@ -168,7 +168,7 @@ def main(args):
         features = features.to(args.device, dtype=torch.float32)        
         with torch.no_grad():
             model_wrapper = ModelWrapper(model, model_type='clam')
-            logits = model_wrapper.forward(features.unsqueeze(0))
+            logits = model_wrapper.forward(features)
             probs = torch.nn.functional.softmax(logits, dim=1)
             _, predicted_class = torch.max(logits, dim=1)
         pred_class = predicted_class.item()
