@@ -86,7 +86,7 @@ def compute_one_slide(args, basename, model):
 
     ig_name = "idg"
     attribution_path = os.path.join(
-        args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", f"{basename}.npy"
+        args.paths['attribution_scores_folder'], f"fold_{fold_id}", ig_name, f"{basename}.npy"
     )
     if not os.path.isfile(attribution_path):
         raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
