@@ -53,7 +53,7 @@ def compute_one_slide(args, basename, model):
         if true_label == -1:
             raise ValueError(f"True label not found for slide {basename}")
         subtype = reverse_label_dict[true_label].lower()
-        feature_path = os.path.join(args.paths['data_dir'][subtype], f"{basename}.pt")
+        feature_path = os.path.join(args.paths['data_dir'][subtype], f"pt_files/{basename}.pt")
     else:
         raise ValueError(f"Unknown dataset: {args.dataset_name}")
 
