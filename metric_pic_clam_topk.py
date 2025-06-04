@@ -199,3 +199,5 @@ if __name__ == "__main__":
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     args.ig_name = args_cmd.ig_name 
     main(args)
+
+# mv attr_scores/tgca_renal/ig attr_scores_no_class/tcga_renal/ig
