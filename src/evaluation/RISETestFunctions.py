@@ -6,6 +6,22 @@ def auc(arr):
     """Returns normalized Area Under Curve of the array."""
     return (arr.sum() - arr[0] / 2 - arr[-1] / 2) / (arr.shape[0] - 1)
 
+class ModelWrapper:
+    """Wraps a model to standardize forward calls for different model types."""
+    def __init__(self, model, model_type: str = 'clam'):
+        self.model = model
+        self.model_type = model_type.lower()
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        if input.dim() == 3:
+            input = input.squeeze(0)
+        if self.model_type == 'clam':
+            output = self.model(input, [input.shape[0]])
+            logits = output[0] if isinstance(output, tuple) else output
+        else:
+            logits = self.model(input)
+        return logits
+
 class CausalMetric:
     def __init__(self, model, num_patches: int, mode: str, step: int, substrate_fn: Callable):
         """
@@ -19,7 +35,7 @@ class CausalMetric:
             substrate_fn: Function mapping original features to baseline features.
         """
         assert mode in ['del', 'ins']
-        self.model = model
+        self.model = ModelWrapper(model, model_type='clam')  # Wrap the model
         self.num_patches = num_patches
         self.mode = mode
         self.step = step
@@ -47,10 +63,10 @@ class CausalMetric:
             print(f"Batch size cannot be greater than number of steps: {n_steps}")
             return 0, []
 
-        # Get original prediction
-        self.model.eval()
+        # Get original prediction using ModelWrapper
+        self.model.model.eval()  # Ensure the underlying model is in eval mode
         with torch.no_grad():
-            original_pred = self.model(feature_tensor.to(device))
+            original_pred = self.model.forward(feature_tensor.to(device))
             _, index = torch.max(original_pred, 1)
             target_class = index[0]
             percentage = torch.nn.functional.softmax(original_pred, dim=1)[0]
@@ -67,7 +83,7 @@ class CausalMetric:
             start = self.substrate_fn(feature_tensor)
             finish = feature_tensor.clone()
             with torch.no_grad():
-                neutral_pred = self.model(start.to(device))
+                neutral_pred = self.model.forward(start.to(device))
                 percentage = torch.nn.functional.softmax(neutral_pred, dim=1)[0]
                 scores[0] = percentage[target_class].item()
 
@@ -92,7 +108,7 @@ class CausalMetric:
                 total_steps += 1
 
             with torch.no_grad():
-                output = self.model(features_batch.to(device))
+                output = self.model.forward(features_batch.to(device))
                 percentage = torch.nn.functional.softmax(output, dim=1)
                 scores[total_steps - batch:total_steps] = percentage[:, target_class].cpu().numpy()
 
