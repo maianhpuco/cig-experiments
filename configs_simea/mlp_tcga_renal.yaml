@@ -24,8 +24,7 @@ patterns:
 
 label_dict: {'KIRP': 0, 'KIRC': 1, 'KICH': 2}
 embed_dim: 1024
-
-n_classes: 3
+n_classes: 3 
 seed: 1
 lr: 0.0001
 reg: 0.00001
@@ -34,6 +33,6 @@ model_size: small
 gate: true
 subtyping: false
 embed_dim: 1024 
-n_classes: 2
+
 early_stopping: true
 patience: 20 
