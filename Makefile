@@ -188,7 +188,7 @@ clam_ig_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name ig --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt 
 clam_eg_camelyon16:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg --fold_start 1 --fold_end 1 \ 
+	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name eg --fold_start 1 --fold_end 1 \
 	--ckpt_path /home/mvu9/processing_datasets/processing_camelyon16/clam_results/fold_1/s_1_checkpoint.pt  
 clam_idg_camelyon16: 
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg --fold_start 1 --fold_end 1 \
