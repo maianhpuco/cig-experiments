@@ -222,7 +222,7 @@ def main(args):
 
 
     args.pred_df = tumor_df
-    basenames = ['test_069']
+    basenames = ['test_001']
 
     print(f"[INFO] Loaded {len(tumor_df)} tumor slides from predictions")
 
