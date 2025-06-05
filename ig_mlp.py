@@ -40,7 +40,7 @@ def load_ig_module(args):
         inputs = inputs.to(device).clone().detach().requires_grad_(True)
         model.eval()
         logits = model(inputs)
-        print("-----LOGIT", logits)
+
         if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
             class_idx = call_model_args.get("target_class_idx", 0)
             target = logits[:, class_idx]
@@ -113,6 +113,10 @@ def main(args):
 
     test_dataset = load_dataset(args, fold_id=args.fold)
     for idx, data in enumerate(test_dataset):
+        save_dir = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{args.fold}') 
+        if args.skip_if_exists and os.path.isfile(save_path):
+            print(f"[{idx+1}/{len(test_dataset)}] Skipping {basename} (already exists: {save_path})")
+            continue 
         features, label = data[:2]
         features = features.unsqueeze(0) if features.dim() == 2 else features
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
@@ -138,7 +142,7 @@ def main(args):
         }
 
         attribution_values = ig_module.GetMask(**kwargs)
-        save_dir = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{args.fold}')
+        
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{basename}.npy")
         np.save(save_path, attribution_values)
@@ -157,6 +161,8 @@ if __name__ == "__main__":
     parser.add_argument('--fold_end', type=int, default=1)
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'])
     parser.add_argument('--ckpt_path', type=str, required=True)
+    parser.add_argument('--skip_if_exists', type=int, default=0, help='Skip if attribution file already exists')
+ 
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
