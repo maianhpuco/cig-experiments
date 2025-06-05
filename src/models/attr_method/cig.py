@@ -51,7 +51,7 @@ class CIG(CoreSaliency):
             logits_r = call_model_function(baseline_features, model, call_model_args)
             if isinstance(logits_r, tuple):
                 logits_r = logits_r[0]
-            logits_r = logits_r.detach()  # detach so it's not part of graph
+            # logits_r = logits_r.detach()  # detach so it's not part of graph
 
             logits_step = call_model_function(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
