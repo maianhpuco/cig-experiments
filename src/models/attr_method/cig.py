@@ -111,8 +111,8 @@ class CIG(CoreSaliency):
             print(f"New x_diff norm: {x_diff_norm:.4f}")
 
         model.eval()
-        alphas = torch.linspace(0, 1, x_steps, device=device)
-
+        alphas = torch.linspace(0, 1, x_steps, device=device)[1:]
+        
         for alpha in tqdm(alphas, desc=f"Computing class {target_class_idx}:", ncols=100):
             x_step_batch = (x_baseline_batch + alpha * x_diff).clone().detach().requires_grad_(True).to(device)
             x_baseline_torch = x_baseline_batch.clone().detach().to(device)
