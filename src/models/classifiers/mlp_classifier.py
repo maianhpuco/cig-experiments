@@ -56,103 +56,103 @@ class Attn_Net_Gated(nn.Module):
         return A, x 
 
 
-# class MLP_Classifier(nn.Module):
-#     def __init__(
-#         self, 
-#         gate = False,
-#         size_arg = "small", 
-#         dropout = 0.,  
-#         n_classes=2,
-#         subtyping=False, 
-#         embed_dim=1024):
-        
-#         super().__init__()
-#         self.size_dict = {"small": [embed_dim, 512, 256], "big": [embed_dim, 512, 384]}
-#         size = self.size_dict[size_arg]
-#         fc = [nn.Linear(size[0], size[1]), nn.ReLU(), nn.Dropout(dropout)]
-#         if gate:
-#             attention_net = Attn_Net_Gated(L = size[1], D = size[2], dropout = dropout, n_classes = 1)
-#         else:
-#             attention_net = Attn_Net(L = size[1], D = size[2], dropout = dropout, n_classes = 1)
-        
-#         fc.append(attention_net)
-        
-#         self.attention_net = nn.Sequential(*fc)
-#         self.classifiers = nn.Linear(size[1], n_classes)
-#         self.n_classes = n_classes
-#         self.subtyping = subtyping
-
-#     def forward(self, h, label=None, return_features=False, attention_only=False):
-#         if h.shape[0] == 1:
-#             h = h.squeeze(0)    
-                 
-#         A, h = self.attention_net(h)  # NxK        
-#         A = torch.transpose(A, 1, 0)  # KxN
-#         if attention_only:
-#             return A
-        
-#         A = F.softmax(A, dim=1)  # softmax over N
-        
-#         M = torch.mm(A, h) 
-#         logits = self.classifiers(M)
-#         # Y_prob = F.softmax(logits, dim = 1)
-
-#         # return logits, Y_prob, Y_hat, A_raw  
-#         return logits
-    
 class MLP_Classifier(nn.Module):
     def __init__(
         self, 
-        gate=False,
-        size_arg="small", 
-        dropout=0.,  
+        gate = False,
+        size_arg = "small", 
+        dropout = 0.,  
         n_classes=2,
         subtyping=False, 
         embed_dim=1024):
-
+        
         super().__init__()
         self.size_dict = {"small": [embed_dim, 512, 256], "big": [embed_dim, 512, 384]}
         size = self.size_dict[size_arg]
-
-        # Separate input projection from attention
-        self.input_projector = nn.Sequential(
-            nn.Linear(size[0], size[1]),
-            nn.ReLU(),
-            nn.Dropout(dropout)
-        )
-
+        fc = [nn.Linear(size[0], size[1]), nn.ReLU(), nn.Dropout(dropout)]
         if gate:
-            self.attention_net = Attn_Net_Gated(L=size[1], D=size[2], dropout=dropout, n_classes=1)
+            attention_net = Attn_Net_Gated(L = size[1], D = size[2], dropout = dropout, n_classes = 1)
         else:
-            self.attention_net = Attn_Net(L=size[1], D=size[2], dropout=dropout, n_classes=1)
-
+            attention_net = Attn_Net(L = size[1], D = size[2], dropout = dropout, n_classes = 1)
+        
+        fc.append(attention_net)
+        
+        self.attention_net = nn.Sequential(*fc)
         self.classifiers = nn.Linear(size[1], n_classes)
         self.n_classes = n_classes
         self.subtyping = subtyping
 
     def forward(self, h, label=None, return_features=False, attention_only=False):
         if h.shape[0] == 1:
-            h = h.squeeze(0)  # [1, N, D] → [N, D]
-
-        # Ensure gradient flow from input
-        h_input = h.clone().detach().requires_grad_(True) if not h.requires_grad else h
-
-        # Project input
-        h_proj = self.input_projector(h_input)  # [N, 512]
-
-        # Attention over projected features
-        A, _ = self.attention_net(h_proj)  # [N, 1]
-        A = torch.transpose(A, 1, 0)  # [1, N]
-
+            h = h.squeeze(0)    
+                 
+        A, h = self.attention_net(h)  # NxK        
+        A = torch.transpose(A, 1, 0)  # KxN
         if attention_only:
             return A
+        
+        A = F.softmax(A, dim=1)  # softmax over N
+        
+        M = torch.mm(A, h) 
+        logits = self.classifiers(M)
+        # Y_prob = F.softmax(logits, dim = 1)
 
-        A = F.softmax(A, dim=1)  # Normalize attention
-
-        M = torch.mm(A, h_proj)  # [1, 512]
-        logits = self.classifiers(M)  # [1, n_classes]
-
+        # return logits, Y_prob, Y_hat, A_raw  
         return logits
+    
+# class MLP_Classifier(nn.Module):
+#     def __init__(
+#         self, 
+#         gate=False,
+#         size_arg="small", 
+#         dropout=0.,  
+#         n_classes=2,
+#         subtyping=False, 
+#         embed_dim=1024):
+
+#         super().__init__()
+#         self.size_dict = {"small": [embed_dim, 512, 256], "big": [embed_dim, 512, 384]}
+#         size = self.size_dict[size_arg]
+
+#         # Separate input projection from attention
+#         self.input_projector = nn.Sequential(
+#             nn.Linear(size[0], size[1]),
+#             nn.ReLU(),
+#             nn.Dropout(dropout)
+#         )
+
+#         if gate:
+#             self.attention_net = Attn_Net_Gated(L=size[1], D=size[2], dropout=dropout, n_classes=1)
+#         else:
+#             self.attention_net = Attn_Net(L=size[1], D=size[2], dropout=dropout, n_classes=1)
+
+#         self.classifiers = nn.Linear(size[1], n_classes)
+#         self.n_classes = n_classes
+#         self.subtyping = subtyping
+
+#     def forward(self, h, label=None, return_features=False, attention_only=False):
+#         if h.shape[0] == 1:
+#             h = h.squeeze(0)  # [1, N, D] → [N, D]
+
+#         # Ensure gradient flow from input
+#         h_input = h.clone().detach().requires_grad_(True) if not h.requires_grad else h
+
+#         # Project input
+#         h_proj = self.input_projector(h_input)  # [N, 512]
+
+#         # Attention over projected features
+#         A, _ = self.attention_net(h_proj)  # [N, 1]
+#         A = torch.transpose(A, 1, 0)  # [1, N]
+
+#         if attention_only:
+#             return A
+
+#         A = F.softmax(A, dim=1)  # Normalize attention
+
+#         M = torch.mm(A, h_proj)  # [1, 512]
+#         logits = self.classifiers(M)  # [1, n_classes]
+
+#         return logits
 
     
     # def forward(self, h, label=None, return_features=False, attention_only=False):
