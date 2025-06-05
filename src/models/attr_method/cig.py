@@ -133,8 +133,8 @@ class CIG(CoreSaliency):
         # total_grad =  np.zeros_like(x_value, dtype=np.float32)
          
         alphas = np.linspace(0, 1, x_steps)
-        sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
-        x_baseline_batch = baseline_features[sampled_indices]
+        # sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[-2]), replace=True)
+        x_baseline_batch = baseline_features
         x_diff = x_value - x_baseline_batch 
         
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
