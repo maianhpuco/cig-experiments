@@ -4,6 +4,23 @@ import torch
 from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 
+def call_model_function_logit(inputs, model, call_model_args=None):
+    device = next(model.parameters()).device
+    model.eval()
+
+    # Ensure input requires grad
+    inputs = inputs.to(device)
+    inputs.requires_grad_(True)
+
+    # Run model
+    outputs = model(inputs)
+
+    # Handle models returning tuples (like CLAM)
+    if isinstance(outputs, tuple):
+        outputs = outputs[0]
+
+    return outputs
+ 
 class CIG(CoreSaliency):
     """
     Contrastive Integrated Gradients Attribution for per-class computation.
@@ -50,13 +67,13 @@ class CIG(CoreSaliency):
             x_step_batch = (x_baseline_batch + alpha * x_diff).clone().detach().requires_grad_(True)
 
             # Get baseline logits without tracking gradients
-            with torch.no_grad():
-                logits_r = call_model_function(x_baseline_batch, model, call_model_args)
-                if isinstance(logits_r, tuple):
-                    logits_r = logits_r[0]
+            # with torch.no_grad():
+            logits_r = call_model_function_logit(x_baseline_batch, model, call_model_args)
+            if isinstance(logits_r, tuple):
+                logits_r = logits_r[0]
 
             # Forward pass with gradient tracking
-            logits_step = call_model_function(x_step_batch, model, call_model_args)
+            logits_step = call_model_function_logit(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
 
@@ -65,7 +82,8 @@ class CIG(CoreSaliency):
 
             # Compute contrastive loss
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
-
+            print(f"[Debug] logits_step.requires_grad: {logits_step.requires_grad}")
+ 
             # Compute gradients
             gradients = torch.autograd.grad(
                 outputs=loss,
