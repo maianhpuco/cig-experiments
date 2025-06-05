@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 
-class ContrastiveGradients(CoreSaliency):
+class CIG(CoreSaliency):
     """
     Contrastive Integrated Gradients Attribution for per-class computation.
     """
