@@ -85,22 +85,22 @@ class CIG(CoreSaliency):
         # Prepare tensors
         x_value = (torch.tensor(x_value, dtype=torch.float32, device=device)
                    if not isinstance(x_value, torch.Tensor) else x_value.to(device, dtype=torch.float32))
-        baseline_features = (torch.tensor(baseline_features, dtype=torch.float32, device=device)
+        x_baseline_batch = (torch.tensor(baseline_features, dtype=torch.float32, device=device)
                             if not isinstance(baseline_features, torch.Tensor) else baseline_features.to(device, dtype=torch.float32))
 
         # Initialize attribution values
         attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
 
-        # Sample baseline indices
-        try:
-            sampled_indices = torch.randint(0, baseline_features.shape[0], (x_value.shape[0],), device=device)
-            x_baseline_batch = baseline_features[sampled_indices]  # [N, D]
-        except (IndexError, ValueError):
-            print("Warning: Invalid baseline sampling, using zero baseline")
-            x_baseline_batch = torch.zeros_like(x_value, device=device)
+        # # Sample baseline indices
+        # try:
+        #     sampled_indices = torch.randint(0, baseline_features.shape[0], (x_value.shape[0],), device=device)
+        #     x_baseline_batch = baseline_features[sampled_indices]  # [N, D]
+        # except (IndexError, ValueError):
+        #     print("Warning: Invalid baseline sampling, using zero baseline")
+        #     x_baseline_batch = torch.zeros_like(x_value, device=device)
 
         x_diff = x_value - x_baseline_batch  # [N, D]
-
+        print("shape of x_diff", x_diff)
         # Check x_diff norm
         x_diff_norm = torch.norm(x_diff).item()
         print(f"x_diff norm: {x_diff_norm:.4f}")
