@@ -6,7 +6,7 @@ from saliency.core.base import CoreSaliency
 from saliency.core.base import INPUT_OUTPUT_GRADIENTS
 import torch
 import torch.nn.functional as F
-from attr_method._common import PreprocessInputs, call_model_function
+# from attr_method._common import PreprocessInputs, call_model_function
 
 class ContrastiveGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
