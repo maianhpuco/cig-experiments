@@ -34,8 +34,8 @@ def main(args):
     ann_list = os.listdir(args.paths['annotation_dir'])
     existing_csvs = os.listdir(args.paths['ground_truth_corr_dir'])
     h5_files = os.listdir(args.paths['h5_files'])
-
-    valid_annotations = [f for f in ann_list if f.endswith(".xml") and f.replace(".xml", ".csv") not in existing_csvs and f.replace(".xml", ".h5") in h5_files]
+    valid_annotations = [f for f in ann_list if f.endswith(".xml")] 
+    # valid_annotations = [f for f in ann_list if f.endswith(".xml") and f.replace(".xml", ".csv") not in existing_csvs and f.replace(".xml", ".h5") in h5_files]
 
     print(f"Total files to process: {len(valid_annotations)}")
 
