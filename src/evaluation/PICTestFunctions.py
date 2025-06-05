@@ -176,10 +176,10 @@ def compute_pic_metric(top_k: Sequence[float], features: np.ndarray, saliency_ma
         normalized_info= normalized_infos[i]  # Use precomputed normalized info for current norma
         normalized_pred = (pred - fully_neutral_pred) / (original_pred - fully_neutral_pred) if (original_pred - fully_neutral_pred) > 1e-6 else pred
         normalized_pred = np.clip(normalized_pred, 0.0, 1.0)
-        if i < len(top_k):
-            print(f"{'SIC' if method == 0 else 'AIC'} - P : {patch_mask.sum()} - Topk {k}: Info: {normalized_info:.3f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
-        else:
-            print(f"{'SIC' if method == 0 else 'AIC'} - P : {patch_mask.sum()}TH {threshold:.3f}: Info: {normalized_info:.3f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}") 
+        # if i < len(top_k):
+        #     print(f"{'SIC' if method == 0 else 'AIC'} - P : {patch_mask.sum()} - Topk {k}: Info: {normalized_info:.3f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}")
+        # else:
+        #     print(f"{'SIC' if method == 0 else 'AIC'} - P : {patch_mask.sum()}TH {threshold:.3f}: Info: {normalized_info:.3f},Pred = {pred:.5f} | Normed Info = {normalized_info:.4f}, Normed Pred = {normalized_pred:.4f}") 
             
         if keep_monotonous:
             curve_normed_tuples.append((normalized_info, max_normalized_pred))
