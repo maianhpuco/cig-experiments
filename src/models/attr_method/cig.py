@@ -48,20 +48,25 @@ class CIG(CoreSaliency):
         alphas = torch.linspace(0, 1, x_steps, device=device)[1:]  # skip alpha=0
 
         for alpha in tqdm(alphas, desc=f"Computing class {target_class_idx}:", ncols=100):
-            x_step_batch = (x_baseline_batch + alpha * x_diff).clone().detach().requires_grad_(True)
-
+            x_step_batch = x_baseline_batch + alpha * x_diff
+            x_baseline_batch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, requires_grad=False)
             # Get baseline logits without tracking gradients
             # with torch.no_grad():
+            x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True) 
+            
             logits_r = call_model_function(x_baseline_batch, model, call_model_args)
             if isinstance(logits_r, tuple):
                 logits_r = logits_r[0]
 
             # Forward pass with gradient tracking
-            logits_step = call_model_function(x_step_batch, model, call_model_args)
+            logits_step = call_model_function(x_step_batch_torch, model, call_model_args)
             
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
-
+                
+            if x_step_batch_torch.grad is None:
+                raise RuntimeError("-> x_step_batch Gradients are not being computed! Ensure tensors require gradients.")
+ 
             if not logits_step.requires_grad:
                 raise RuntimeError("logits_step does not require gradients")
 
