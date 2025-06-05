@@ -1117,3 +1117,7 @@ group_all_topknpc_clam_tcga_lung: \
 	topknpc_clam_cig_tcga_lung topknpc_clam_idg_tcga_lung topknpc_clam_random_tcga_lung
 
 
+
+#=====================================================
+pre_plot_clam_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig 
