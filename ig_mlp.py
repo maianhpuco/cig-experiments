@@ -134,7 +134,7 @@ def main(args):
 
         baseline = get_baseline_features(args, args.fold, basename, features.shape[1])
         print(">>> check model result", logits, pred_class)
-        
+        print(">>> baseline", baseline.shape)
         kwargs = {
             "x_value": features,
             "call_model_function": call_model_function,
