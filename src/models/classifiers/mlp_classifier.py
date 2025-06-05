@@ -82,20 +82,39 @@ class MLP_Classifier(nn.Module):
         self.n_classes = n_classes
         self.subtyping = subtyping
 
+    # def forward(self, h, label=None, return_features=False, attention_only=False):
+    #     if h.shape[0] == 1:
+    #         h = h.squeeze(0)    
+                 
+    #     A, h = self.attention_net(h)  # NxK        
+    #     A = torch.transpose(A, 1, 0)  # KxN
+    #     if attention_only:
+    #         return A
+        
+    #     A = F.softmax(A, dim=1)  # softmax over N
+        
+    #     M = torch.mm(A, h) 
+    #     logits = self.classifiers(M)
+    #     # Y_prob = F.softmax(logits, dim = 1)
+
+    #     # return logits, Y_prob, Y_hat, A_raw  
+    #     return logits
     def forward(self, h, label=None, return_features=False, attention_only=False):
         if h.shape[0] == 1:
-            h = h.squeeze(0)    
-                 
-        A, h = self.attention_net(h)  # NxK        
-        A = torch.transpose(A, 1, 0)  # KxN
+            h = h.squeeze(0) 
+
+        # Preserve gradient flow from original input
+        h_input = h.clone().detach().requires_grad_(True) if not h.requires_grad else h
+
+        A, _ = self.attention_net(h_input)  # Only use A, ignore second output
+        A = torch.transpose(A, 1, 0)  # K x N
         if attention_only:
             return A
+
         A_raw = A
         A = F.softmax(A, dim=1)  # softmax over N
 
-        M = torch.mm(A, h) 
+        M = torch.mm(A, h_input)  # Use the preserved input here
         logits = self.classifiers(M)
-        # Y_prob = F.softmax(logits, dim = 1)
-
-        # return logits, Y_prob, Y_hat, A_raw  
         return logits
+ 

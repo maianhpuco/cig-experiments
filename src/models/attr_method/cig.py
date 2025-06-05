@@ -60,7 +60,7 @@ class CIG(CoreSaliency):
             print("Leaf:", x_step_batch.is_leaf, "Requires grad:", x_step_batch.requires_grad)
             print("Leaf:", baseline_features.is_leaf, "Requires grad:", baseline_features.requires_grad)
             print("Loss:", loss.item(), "Requires grad:", loss.requires_grad)
-            print("x_step_batch.grad", x_step_batch.grad)
+            print(">>> x_step_batch.grad", x_step_batch.grad)
         #     gradients = torch.autograd.grad(
         #         outputs=loss,
         #         inputs=x_step_batch,
