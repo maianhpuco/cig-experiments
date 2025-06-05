@@ -1201,7 +1201,7 @@ plot_tcga_lung_mlp:
 	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name eg
 
 proc_anno:
-	python processing_anno.py --config configs_simea/clam_camelyon16.yaml
+	python metric2_processing_anno.py --config configs_simea/clam_camelyon16.yaml
 
 # proc_anno >> compute_iou_dice_camelyon 16 
 test_dice_iou:

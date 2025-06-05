@@ -62,6 +62,11 @@ def main(args):
         mask = check_xy_in_coordinates_fast(df_xml, coords)
         mask_save_path = os.path.join(args.paths['ground_truth_numpy_dir'], f"{base}.npy")
         np.save(mask_save_path, mask)
+        # np.save(mask_save_path, mask)
+        unique, counts = np.unique(mask, return_counts=True)
+        label_counts = dict(zip(unique, counts))
+        print(f"Saved mask to: {mask_save_path}, label counts: {label_counts}")
+ 
         print(f"Saved mask to: {mask_save_path}, sum={np.sum(mask)}")
         # Load corresponding .pt file
         
