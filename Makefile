@@ -1120,4 +1120,8 @@ group_all_topknpc_clam_tcga_lung: \
 
 #=====================================================
 pre_plot_clam_camelyon16:
-	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_camelyon16.yaml 
+	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_camelyon16.yaml
+pre_plot_tcga_renal:
+	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_tcga_renal.yaml  
+pre_plot_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_tcga_lung.yaml  
