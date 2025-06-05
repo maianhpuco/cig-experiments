@@ -134,7 +134,7 @@ class CIG(CoreSaliency):
          
         alphas = np.linspace(0, 1, x_steps)
         # sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[-2]), replace=True)
-        x_baseline_batch = baseline_features
+        x_baseline_batch = baseline_features.unsqueeze(0)
         x_diff = x_value - x_baseline_batch 
         
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
