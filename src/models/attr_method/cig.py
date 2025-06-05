@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 
-class ContrastiveGradients(CoreSaliency):
+class CIG(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
 
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
