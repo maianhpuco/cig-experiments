@@ -208,7 +208,7 @@ class CIG(CoreSaliency):
 
         # Use baseline_features directly with batch dimension
         x_baseline_batch = baseline_features.unsqueeze(0)  # [1, N, D]
-        print(f"x_baseline_batch shape: {x_value.shape_batch.shape}")
+        print(f"x_baseline_batch shape: {x_baseline_batch.shape}")
         with torch.no_grad():
             baseline_logits = call_model_function(x_baseline_batch, model, call_model_args)
             print(f"Baseline logits: {baseline_logits.detach().cpu().numpy()}")
