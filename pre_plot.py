@@ -43,7 +43,7 @@ def extract_slide_metadata(args):
         elif dataset_name in ["tcga_renal", 'tcga_lung']:
             slide_path = find_slide_path_mapping(basename, args.paths['slide_root'])
             features_h5_pattern = args.patterns['h5_files']
-            h5_path = glob(os.path.join(args.features_h5_pattern, f"{basename}.h5"))  
+            h5_path = glob(os.path.join(features_h5_pattern, f"{basename}.h5"))  
         else:
             raise ValueError("Unknown dataset.")
 
