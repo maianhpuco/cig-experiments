@@ -114,6 +114,7 @@ def main(args):
     test_dataset = load_dataset(args, fold_id=args.fold)
     for idx, data in enumerate(test_dataset):
         save_dir = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{args.fold}') 
+        save_path = os.path.join(save_dir, f"{basename}.npy") 
         if args.skip_if_exists and os.path.isfile(save_path):
             print(f"[{idx+1}/{len(test_dataset)}] Skipping {basename} (already exists: {save_path})")
             continue 
@@ -144,7 +145,6 @@ def main(args):
         attribution_values = ig_module.GetMask(**kwargs)
         
         os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, f"{basename}.npy")
         np.save(save_path, attribution_values)
 
         scores = np.mean(np.abs(attribution_values), axis=-1).squeeze()
