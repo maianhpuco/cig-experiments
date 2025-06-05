@@ -276,4 +276,7 @@ class CIG(CoreSaliency):
         final_attribution = (attribution_values * x_diff_mean) / x_steps
 
         result = final_attribution.detach().cpu().numpy()
-        if np.all(result == 0
+        if np.all(result == 0):
+            print(f"Warning: All attribution values for class {target_class_idx} are zero. Check model output or baseline.")
+
+        return result
