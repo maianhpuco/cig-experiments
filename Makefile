@@ -1119,12 +1119,71 @@ group_all_topknpc_clam_tcga_lung: \
 
 
 #=====================================================
-pre_plot_clam_camelyon16:
+pre_plot_camelyon16:
 	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_camelyon16.yaml
 pre_plot_tcga_renal:
 	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_tcga_renal.yaml  
 pre_plot_tcga_lung:
 	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_tcga_lung.yaml 
-
+#=====================================================
 plot_clam_camelyon16_ig:
 	CUDA_VISIBLE_DEVICES=3 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig 
+
+### --------------------- CAMELYON16 ---------------------
+plot_camelyon:
+	make plot_camelyon_clam
+	make plot_camelyon_mlp
+
+plot_camelyon_clam:
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
+
+plot_camelyon_mlp:
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/mlp_camelyon16.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/mlp_camelyon16.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/mlp_camelyon16.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/mlp_camelyon16.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/mlp_camelyon16.yaml --ig_name eg
+
+
+### --------------------- TCGA RENAL ---------------------
+plot_tcga_renal:
+	make plot_tcga_renal_clam
+	make plot_tcga_renal_mlp
+
+plot_tcga_renal_clam:
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/clam_tcga_renal.yaml --ig_name eg
+
+plot_tcga_renal_mlp:
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/mlp_tcga_renal.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/mlp_tcga_renal.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/mlp_tcga_renal.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/mlp_tcga_renal.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/mlp_tcga_renal.yaml --ig_name eg
+
+
+### --------------------- TCGA LUNG ---------------------
+plot_tcga_lung:
+	make plot_tcga_lung_clam
+	make plot_tcga_lung_mlp
+
+plot_tcga_lung_clam:
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/clam_tcga_lung.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/clam_tcga_lung.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/clam_tcga_lung.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/clam_tcga_lung.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/clam_tcga_lung.yaml --ig_name eg
+
+plot_tcga_lung_mlp:
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name g
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name ig
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name idg
+	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name eg
