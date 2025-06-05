@@ -185,7 +185,7 @@ class CIG(CoreSaliency):
         x_steps = kwargs.get("x_steps", 25)
         device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         target_class_idx = call_model_args.get("target_class_idx", 0)
-        call_model_function = kwargs.get("call_model_function", "") or call_model_function)
+        call_model_function = kwargs.get("call_model_function", "") or call_model_function
 
         # Ensure model parameters require gradients
         for param in model.parameters():
