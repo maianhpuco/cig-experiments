@@ -59,7 +59,7 @@ class Attn_Net_Gated(nn.Module):
 class MLP_Classifier(nn.Module):
     def __init__(
         self, 
-        gate = True,
+        gate = False,
         size_arg = "small", 
         dropout = 0.,  
         n_classes=2,
