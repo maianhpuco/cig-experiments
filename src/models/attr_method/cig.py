@@ -142,6 +142,7 @@ class CIG(CoreSaliency):
             x_step_batch = x_baseline_batch + alpha * x_diff
             # ------------ Counter Factual Gradient ------------
             x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, requires_grad=False)
+            print("x_baseline_torch", x_baseline_torch.shape)
             logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])
 
             # Compute counterfactual gradients using logitws difference
