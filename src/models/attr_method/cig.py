@@ -138,7 +138,7 @@ class CIG(CoreSaliency):
         x_steps = kwargs.get("x_steps", 25)
         device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         target_class_idx = call_model_args.get("target_class_idx", 0)
-        # call_model_function = kwargs.get("call_model_function")
+        call_model_function = kwargs.get("call_model_function")
 
         # Convert to numpy if input is tensor
         if isinstance(x_value, torch.Tensor):
@@ -157,7 +157,14 @@ class CIG(CoreSaliency):
             x_step_batch = x_baseline_batch + alpha * x_diff
 
             x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, device=device, requires_grad=True)
+            x_step_batch_torch.retain_grad()
+
             x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, device=device)
+
+            if x_step_batch_torch.dim() == 2:
+                x_step_batch_torch = x_step_batch_torch.unsqueeze(0)
+            if x_baseline_torch.dim() == 2:
+                x_baseline_torch = x_baseline_torch.unsqueeze(0)
 
             logits_r = call_model_function(x_baseline_torch, model, call_model_args)
             if isinstance(logits_r, dict):
@@ -186,4 +193,3 @@ class CIG(CoreSaliency):
         attribution_values *= x_diff_mean
 
         return attribution_values / x_steps
- 
