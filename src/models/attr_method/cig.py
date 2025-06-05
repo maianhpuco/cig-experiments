@@ -41,15 +41,14 @@ class CIG(CoreSaliency):
         alphas = torch.linspace(0, 1, x_steps + 1, device=device)[1:]  # Skip alpha=0
 
         # Precompute reference logits
-        # with torch.no_grad():
-        # baseline_features.
-        logits_r = call_model_function(baseline_features, model, call_model_args)
-        if isinstance(logits_r, tuple):
-            logits_r = logits_r[0]
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = (baseline_features + alpha * x_diff).requires_grad_(True)
-
+            with torch.no_grad():
+                logits_r = call_model_function(baseline_features, model, call_model_args)
+                if isinstance(logits_r, tuple):
+                    logits_r = logits_r[0]
+ 
             logits_step = call_model_function(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
@@ -67,7 +66,7 @@ class CIG(CoreSaliency):
             )[0]
 
             if gradients is None:
-                print(f"No gradients at alpha {alpha:.2f}, skipping")
+                print(f">>>>> No gradients at alpha {alpha:.2f}, skipping")
                 continue
 
             counterfactual_gradients = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
