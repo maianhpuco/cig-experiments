@@ -5,7 +5,7 @@ import torch
 import sys
 import numpy as np
 import pandas as pd
-from torch.nn.functional import softmax
+from torch.nn.functional import sigmoid
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 # Add model paths
@@ -25,43 +25,46 @@ def load_dsmil_model(args, ckpt_path):
                                    dropout_v=args.dropout_node, nonlinear=args.non_linearity).cuda()
     model = mil.MILNet(i_classifier, b_classifier).cuda()
 
-    state_dict = torch.load(ckpt_path, map_location=args.device)
-    print("Model architecture:", model)
-    print("State dict keys:", state_dict.keys())
-    print("Checkpoint keys:", state_dict.keys())
-    print("Checkpoint values:", {k: v.shape for k, v in state_dict.items()})
-    model.load_state_dict(state_dict, strict=True)
+    try:
+        state_dict = torch.load(ckpt_path, map_location=args.device)
+        model.load_state_dict(state_dict, strict=True)
+        print("[INFO] DSMIL model loaded successfully.")
+    except Exception as e:
+        print(f"[ERROR] Failed to load checkpoint: {e}")
+        raise e
+
     model.eval()
-    print("[INFO] DSMIL model loaded and set to eval mode.")
     return model
 
-def predict(model, test_dataset, device, dataset_name):
+def predict(model, test_dataset, device, dataset_name, dropout_patch=0.0):
     model.eval()
     all_preds, all_labels, all_slide_ids = [], [], []
     all_logits, all_probs = [], []
-    all_feature_counts = [] 
+    all_feature_counts = []
+    
     for idx, data in enumerate(test_dataset):
         if dataset_name == 'camelyon16':
             (features, label) = data
         elif dataset_name in ['tcga_renal', 'tcga_lung']:
             (features, label, _) = data 
+        else:
+            raise ValueError(f"Unsupported dataset: {dataset_name}")
 
         slide_id = test_dataset.slide_data['slide_id'].iloc[idx]
         print(f"\n[INFO] Processing {idx+1}/{len(test_dataset)}: {slide_id}")
 
         features = features.to(device)
-        #print("Feature shape:", features.shape)
-        #print("Feature stats - min:", features.min().item(), "max:", features.max().item(), "mean:", features.mean().item())
-        with torch.no_grad():
-            ins_pred, bag_pred, A, B = model(features)
-            logits = bag_pred.squeeze()
-            probs = softmax(logits, dim=0)
-            pred = torch.argmax(probs).item()
+        if dropout_patch > 0:
+            features = dropout_patches(features, 1 - dropout_patch)
+        features = features.view(-1, args.feats_size)
 
-        print(f"   - Prediction: {pred} | Ground Truth: {label}")
-        ##print("Instance predictions:", ins_pred)
-        ##print("Bag predictions:", bag_pred)
-        ##print("Attention weights:", A)
+        with torch.no_grad():
+            ins_pred, bag_pred, A, _ = model(features)
+            logits = bag_pred.squeeze()
+            probs = sigmoid(logits)  # Use sigmoid for binary classification
+            pred = (probs[1] > 0.5).long().item()  # Threshold at 0.5 for class 1
+
+        print(f"   - Prediction: {pred} | Ground Truth: {label} | Probabilities: {probs.cpu().numpy()}")
 
         all_preds.append(pred)
         all_labels.append(label)
@@ -69,8 +72,18 @@ def predict(model, test_dataset, device, dataset_name):
         all_logits.append(logits.cpu().numpy())
         all_probs.append(probs.cpu().numpy())
         all_feature_counts.append(features.shape[0])
-    print("All labels:", all_labels)
+
+    # Debug class distribution
+    unique_labels, counts = np.unique(all_labels, return_counts=True)
+    print(f"[INFO] Test set label distribution: {dict(zip(unique_labels, counts))}")
+
     return all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts
+
+def dropout_patches(feats, p):
+    num_rows = feats.size(0)
+    num_rows_to_select = int(num_rows * p)
+    random_indices = torch.randperm(num_rows)[:num_rows_to_select]
+    return feats[random_indices]
 
 def main(args):
     fold_id = args.fold
@@ -82,17 +95,7 @@ def main(args):
     if args.dataset_name == 'camelyon16':
         label_dict = {'normal': 0, 'tumor': 1}
         split_csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-        # df = pd.read_csv(split_csv_path)
         
-        # train_count = df['train'].notna().sum()
-        # val_count = df['val'].notna().sum()
-        # test_count = df['test'].notna().sum()
-
-        # print(f"[INFO] Number of slides in each split:")
-        # print(f"  Train: {train_count}")
-        # print(f"  Val:   {val_count}")
-        # print(f"  Test:  {test_count}")
-    
         train_dataset, val_dataset, test_dataset = return_splits_camelyon16(
             csv_path=split_csv_path,
             data_dir=args.paths['data_dir'],
@@ -100,11 +103,10 @@ def main(args):
             seed=42,
             print_info=True
         )
+        print(f"[INFO] Train Set Size: {len(train_dataset)}")
         print(f"[INFO] Val Set Size: {len(val_dataset)}")
         print(f"[INFO] Test Set Size: {len(test_dataset)}")
-        print(f"[INFO] Train Set Size: {len(train_dataset)}")
     else:
-        
         label_dict = args.label_dict if hasattr(args, "label_dict") else None
         print(f"[INFO] Using label_dict: {label_dict}")
         split_folder = args.paths['split_folder']
@@ -124,26 +126,20 @@ def main(args):
             print_info=True
         )
         print(f"[INFO] FOLD {fold_id} -> Train: {len(train_dataset)} | Val: {len(val_dataset)} | Test: {len(test_dataset)}")
-    # for i in range(len(test_dataset)):
-    for idx, data in enumerate(test_dataset):
-        if args.dataset_name == 'camelyon16':
-            (features, label) = data
-        if args.dataset_name in ['tcga_renal', 'tcga_lung']:
-            (features, label, _) = data 
-        print(data)
-        break  
+
     print("========= Start Prediction on Test Set ===========")
     all_preds, all_labels, all_slide_ids, all_logits, all_probs, all_feature_counts = predict(
         model=model,
         test_dataset=test_dataset,
         device=device,
-        dataset_name=args.dataset_name
+        dataset_name=args.dataset_name,
+        dropout_patch=args.dropout_patch if hasattr(args, 'dropout_patch') else 0.0
     )
 
     os.makedirs(args.paths['predictions_dir'], exist_ok=True)
     df_dict = {
         'slide_id': all_slide_ids,
-        "feature_count": all_feature_counts,
+        'feature_count': all_feature_counts,
         'true_label': all_labels,
         'pred_label': all_preds,
         'logits': [logit.tolist() for logit in all_logits],
@@ -160,16 +156,17 @@ def main(args):
     output_df.to_csv(save_path, index=False)
     print(f"[INFO] Predictions saved to {save_path}")
 
-    print("========= Compute Accuracy after finish ===========")
+    print("========= Compute Metrics ===========")
     accuracy = accuracy_score(all_labels, all_preds)
     print(f"[INFO] Accuracy: {accuracy:.4f}")
 
     try:
-        if len(set(all_labels)) == 2:
+        if num_classes == 2:
             auc_score = roc_auc_score(all_labels, [p[1] for p in all_probs])
+            print(f"[INFO] AUC: {auc_score:.4f}")
         else:
             auc_score = roc_auc_score(all_labels, all_probs, multi_class='ovr')
-        print(f"[INFO] AUC: {auc_score:.4f}")
+            print(f"[INFO] AUC (ovr): {auc_score:.4f}")
     except Exception as e:
         auc_score = 'N/A'
         print(f"[WARNING] Could not compute AUC: {e}")
@@ -180,18 +177,18 @@ def main(args):
         'auc': round(auc_score, 4) if auc_score != 'N/A' else 'N/A'
     }])
 
-    save_path = os.path.join(args.paths['predictions_dir'], f'acc_auc_{fold_id}.csv')
+    save_path = os.path.join(args.paths['metrics_dir'], f'acc_auc_fold{fold_id}.csv')
     metrics_df.to_csv(save_path, index=False)
-    print(f"[INFO] Accuracy and AUC saved to {save_path}")
+    print(f"[INFO] Metrics saved to {save_path}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Predict with DSMIL model')
     parser.add_argument('--dry_run', type=int, default=0)
-    parser.add_argument('--config', default='clam_camelyon16.yaml')
-    parser.add_argument('--ig_name', default='integrated_gradient')
-    parser.add_argument('--fold', type=int, default=1)
+    parser.add_argument('--config', type=str, required=True, help='Path to YAML config file')
+    parser.add_argument('--ig_name', type=str, default='integrated_gradient')
+    parser.add_argument('--fold', type=int, default=1, help='Fold number to evaluate')
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'])
-    parser.add_argument('--ckpt_path', type=str, default=None)
+    parser.add_argument('--ckpt_path', type=str, default=None, help='Path to model checkpoint')
 
     args = parser.parse_args()
     with open(args.config, 'r') as f:
@@ -207,7 +204,9 @@ if __name__ == "__main__":
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     if args.ckpt_path is None:
-        args.ckpt_path = args.paths[f'for_ig_checkpoint_path_fold_{args.fold}']
+        args.ckpt_path = args.paths.get(f'for_ig_checkpoint_path_fold_{args.fold}', None)
+        if args.ckpt_path is None:
+            raise ValueError(f"[ERROR] No checkpoint path provided and no 'for_ig_checkpoint_path_fold_{args.fold}' found in config")
         print(f"[INFO] Using checkpoint from config: {args.ckpt_path}")
     else:
         print(f"[INFO] Using checkpoint from argument: {args.ckpt_path}")
