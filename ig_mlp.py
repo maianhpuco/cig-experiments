@@ -143,7 +143,7 @@ def main(args):
             "model": model,
             "baseline_features": baseline,
             "memmap_path": memmap_path,
-            "x_steps": 50,
+            "x_steps": 5,
             "device": args.device,
             "call_model_args": {"target_class_idx": pred_class},
             "batch_size": 500
