@@ -35,14 +35,14 @@ class CIG(CoreSaliency):
             x_step_batch = x_step_batch.clone().detach().requires_grad_(True)
 
             with torch.no_grad():
-                logits_r = call_model_function(baseline_features, model, call_model_args)[1]
+                logits_r = call_model_function(baseline_features, model, call_model_args)
                 if isinstance(logits_r, tuple):
                     logits_r = logits_r[0]
 
-            logits_step = call_model_function(x_step_batch, model, call_model_args)[1]
+            logits_step = call_model_function(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
-
+            print("logit", logits_r, logits_step)
             # Compute L2 loss between step and reference logits
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
 
