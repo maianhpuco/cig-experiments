@@ -39,7 +39,7 @@ def extract_slide_metadata(args):
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.paths['slide_root'], f"{basename}.tif")
             features_h5_dir = args.paths['h5_files']
-            h5_path = glob(os.path.join(args.features_h5_dir, f"{basename}.h5"))  
+            h5_path = glob(os.path.join(features_h5_dir, f"{basename}.h5"))  
         elif dataset_name in ["tcga_renal", 'tcga_lung']:
             slide_path = find_slide_path_mapping(basename, args.paths['slide_root'])
             features_h5_pattern = args.patterns['h5_files']
