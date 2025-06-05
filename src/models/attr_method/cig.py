@@ -134,14 +134,14 @@ class CIG(CoreSaliency):
          
         alphas = np.linspace(0, 1, x_steps)
         # sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[-2]), replace=True)
-        x_baseline_batch = baseline_features.unsqueeze(0)
+        x_baseline_batch = baseline_features
         x_diff = x_value - x_baseline_batch 
         
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             # ------------ Counter Factual Gradient ------------ 
             x_step_batch = x_baseline_batch + alpha * x_diff
             # ------------ Counter Factual Gradient ------------
-            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, requires_grad=False)
+            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, requires_grad=False).unsqueeze(0)
             print("x_baseline_torch", x_baseline_torch.shape)
             logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])
 
