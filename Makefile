@@ -679,13 +679,13 @@ pictopk_mlp_eg_camelyon16:
 		--ig_name eg
 
 pictopk_mlp_idg_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+	CUDA_VISIBLE_DEVICES=0 python metric_pic_mlp_topk.py \
 		--config configs_simea/mlp_camelyon16.yaml \
 		--ckpt_path $(CKPT_MLP_CAMELYON16) \
 		--ig_name idg
 
 pictopk_mlp_cig_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+	CUDA_VISIBLE_DEVICES=0 python metric_pic_mlp_topk.py \
 		--config configs_simea/mlp_camelyon16.yaml \
 		--ckpt_path $(CKPT_MLP_CAMELYON16) \
 		--ig_name cig
