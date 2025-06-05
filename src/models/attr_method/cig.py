@@ -45,10 +45,11 @@ class CIG(CoreSaliency):
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = (baseline_features + alpha * x_diff).requires_grad_(True)
             x_step_batch.retain_grad()  # <-- add this line 
-            with torch.no_grad():
-                logits_r = call_model_function(baseline_features, model, call_model_args)
-                if isinstance(logits_r, tuple):
-                    logits_r = logits_r[0]
+            baseline_features.requires_grad = False  
+            logits_r = call_model_function(baseline_features, model, call_model_args)
+            if isinstance(logits_r, tuple):
+                logits_r = logits_r[0]
+            logits_r = logits_r.detach()
  
             logits_step = call_model_function(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
@@ -60,7 +61,7 @@ class CIG(CoreSaliency):
             print("Leaf:", x_step_batch.is_leaf, "Requires grad:", x_step_batch.requires_grad)
             print("Leaf:", baseline_features.is_leaf, "Requires grad:", baseline_features.requires_grad)
             print("Loss:", loss.item(), "Requires grad:", loss.requires_grad)
-            print(">>> x_step_batch.grad", x_step_batch.grad)
+            print("\n >>> x_step_batch.grad", x_step_batch.grad)
             
         #     gradients = torch.autograd.grad(
         #         outputs=loss,
