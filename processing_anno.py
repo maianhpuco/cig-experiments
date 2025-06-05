@@ -32,7 +32,7 @@ def reset_directory(path):
 
 def main(args):
     ann_list = os.listdir(args.paths['annotation_dir'])
-    existing_csvs = os.listdir(args.paths['ground_truth_corr_path'])
+    existing_csvs = os.listdir(args.paths['ground_truth_corr_dir'])
     h5_files = os.listdir(args.paths['h5_files'])
 
     valid_annotations = [f for f in ann_list if f.endswith(".xml") and f.replace(".xml", ".csv") not in existing_csvs and f.replace(".xml", ".h5") in h5_files]
@@ -45,7 +45,7 @@ def main(args):
 
         h5_path = os.path.join(args.paths['h5_files'], f"{base}.h5")
         xml_path = os.path.join(args.paths['annotation_dir'], xml_file)
-        csv_save_path = os.path.join(args.paths['ground_truth_corr_path'], f"{base}.csv")
+        csv_save_path = os.path.join(args.paths['ground_truth_corr_dir'], f"{base}.csv")
 
         df_xml = extract_coordinates(xml_path, csv_save_path)
         if df_xml is None:
@@ -74,7 +74,7 @@ def main(args):
                 print(f"✔️  Patch count matches: {features.shape[0]} patches")
         else:
             print(f"[WARN] PT file not found: {pt_path}") 
-    total_csv = len(os.listdir(args.paths['ground_truth_corr_path']))
+    total_csv = len(os.listdir(args.paths['ground_truth_corr_dir']))
     total_mask = len(os.listdir(args.ground_truth_numpy_dir))
     print(f"\n ✅ Finished.")
     print(f"+ Total annotations processed: {len(valid_annotations)}")
@@ -101,10 +101,10 @@ if __name__ == "__main__":
 
     # args.paths['annotation_dir'] = r"{annotation_dir}"
     # args.paths['h5_files'] = r"{h5_files}"
-    # args.paths['ground_truth_corr_path'] = r"{ground_truth_corr_path}"
+    # args.paths['ground_truth_corr_dir'] = r"{ground_truth_corr_dir}"
     # args.ground_truth_numpy_dir = r"{ground_truth_numpy_dir}"
 
-    for path in [args.paths['ground_truth_corr_path'], args.ground_truth_numpy_dir]:
+    for path in [args.paths['ground_truth_corr_dir'], args.ground_truth_numpy_dir]:
         os.makedirs(path, exist_ok=True)
 
     main(args)
