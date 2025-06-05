@@ -38,28 +38,25 @@ def extract_slide_metadata(args):
 
         if dataset_name == "camelyon16":
             slide_path = os.path.join(args.paths['slide_root'], f"{basename}.tif")
-            
+            features_h5_dir = args.path['h5_files']
+            h5_path = glob(os.path.join(args.features_h5_dir, f"{basename}.h5"))  
         elif dataset_name in ["tcga_renal", 'tcga_lung']:
             slide_path = find_slide_path_mapping(basename, args.paths['slide_root'])
-            if slide_path is None:
-                error_list.append(basename)
-                continue
+            features_h5_pattern = args.patterns['h5_files']
+            h5_path = glob(os.path.join(args.features_h5_pattern, f"{basename}.h5"))  
         else:
             raise ValueError("Unknown dataset.")
 
         # try:
-        print(f"Slide number {idx}/{total} - Reading slide at {slide_path}")
-        slide = openslide.open_slide(slide_path)
-        # except Exception as e:
-        #     print(f"[ERROR] Failed to open slide {basename}: {e}")
-        #     error_list.append(basename)
-        #     continue
+        print(f"Slide number {idx}/{total} - Reading slide at {slide_path}; h5_file at {h5_path}")
+        slide = openslide.open_slide(slide_path)    
 
-        _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
+        _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(
+            slide, downsampling_size=1096)
         scale_x = new_width / original_width
         scale_y = new_height / original_height
         
-        h5_path = glob(os.path.join(args.features_h5_pattern, f"{basename}.h5"))
+        
         if len(h5_path) == 0 or not os.path.exists(h5_path[0]):
             print(f"[WARN] H5 not found for {basename}")
             error_list.append(basename)
