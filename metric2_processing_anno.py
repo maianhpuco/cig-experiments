@@ -81,6 +81,7 @@ def main(args):
                 print(f"✔️  Patch count matches: {features.shape[0]} patches")
         else:
             print(f"[WARN] PT file not found: {pt_path}") 
+        return 
     total_csv = len(os.listdir(args.paths['ground_truth_corr_dir']))
     total_mask = len(os.listdir(args.paths['ground_truth_numpy_dir']))
     print(f"\n ✅ Finished.")
