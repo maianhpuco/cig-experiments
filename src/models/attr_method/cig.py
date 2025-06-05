@@ -100,7 +100,7 @@ class CIG(CoreSaliency):
         #     x_baseline_batch = torch.zeros_like(x_value, device=device)
 
         x_diff = x_value - x_baseline_batch  # [N, D]
-        print("shape of x_diff", x_diff)
+        print("----shape of x_diff", x_diff)
         # Check x_diff norm
         x_diff_norm = torch.norm(x_diff).item()
         print(f"x_diff norm: {x_diff_norm:.4f}")
