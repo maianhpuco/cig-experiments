@@ -9,7 +9,7 @@ paths:
   # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-19_15-16-56/s_1_checkpoint.pt"
   # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_result/result_final_ep200/s_1_checkpoint.pt"
   # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_tcga_256/result_2025-05-20_03-31-00_ep200/s_1_checkpoint.pt"
-  attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores_no_class/tcga_lung"
+  attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores_no_class/tcga_lung/clam"
   # attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/tcga_lung"
   ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/tcga_lung"   
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_tcga_lung"
