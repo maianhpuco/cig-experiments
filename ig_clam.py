@@ -63,6 +63,11 @@ def load_ig_module(args):
     def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
         device = next(model.parameters()).device
         was_batched = inputs.dim() == 3
+        inputs = inputs.to(device)
+        
+        if not inputs.requires_grad:
+            inputs.requires_grad_(True) 
+            
         inputs = inputs.to(device).clone().detach().requires_grad_(True)
         if was_batched:
             inputs = inputs.squeeze(0)
