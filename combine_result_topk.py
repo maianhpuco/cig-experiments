@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import glob
 
+# All base directories to search
 base_dirs = [
     "/home/mvu9/processing_datasets/processing_camelyon16/clam_metrics",
     "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_metrics",
@@ -13,6 +14,7 @@ base_dirs = [
 
 all_dfs = []
 
+# Read all CSVs from each base directory
 for base_dir in base_dirs:
     csv_files = glob.glob(os.path.join(base_dir, "*", "topk_pic_results_fold_1.csv"))
     folder_name = os.path.basename(base_dir)
@@ -27,16 +29,17 @@ for base_dir in base_dirs:
         except Exception as e:
             print(f"[WARN] Failed to read {file}: {e}")
 
-if not all_dfs:
-    print("No data found.")
-else:
+# Combine and group
+if all_dfs:
     combined_df = pd.concat(all_dfs, ignore_index=True)
 
-    # Group by pred_label and folder name
-    grouped = combined_df.groupby(['source_folder', 'pred_label'])[['AIC', 'SIC']].agg(['mean', 'std']).reset_index()
+    # Group by source_folder, method, pred_label
+    grouped = combined_df.groupby(['source_folder', 'method', 'pred_label'])[['AIC', 'SIC']].agg(['mean', 'std']).reset_index()
 
-    # Optional: flatten multi-level columns
-    grouped.columns = ['source_folder', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
+    # Flatten MultiIndex columns
+    grouped.columns = ['source_folder', 'method', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
 
-    print("\n=== Grouped by source folder and predicted label ===")
+    print("\n=== Grouped by source_folder, method, pred_label ===")
     print(grouped.to_string(index=False))
+else:
+    print("No valid result files found.")
