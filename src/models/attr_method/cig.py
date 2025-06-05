@@ -155,7 +155,7 @@ class CIG(CoreSaliency):
             if x_step_batch_torch.dim() == 3:
                 x_step_batch_torch = x_step_batch_torch.squeeze(0) 
                 
-            logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])
+            logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])[0]
             logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
             logits_difference.backward()
             
