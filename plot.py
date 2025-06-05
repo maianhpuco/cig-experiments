@@ -8,8 +8,10 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.patches as patches
 from tqdm import tqdm
+import time
 
-def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, scores, figsize=(10, 10), name="", save_path=None, patch_size=256):
+def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, scores,
+                        figsize=(10, 10), name="", save_path=None, patch_size=256):
     cmap = cm.get_cmap('coolwarm')
     norm = plt.Normalize(vmin=np.min(scores), vmax=np.max(scores))
 
@@ -18,14 +20,13 @@ def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, sc
     ax.imshow(white_background)
     ax.axis('off')
 
-    for i, coord in tqdm(enumerate(coordinates), total=len(coordinates), desc="Plotting heatmap patches"):
+    for i, coord in enumerate(coordinates):
         x, y = np.array(coord).astype('int')
         scaled_x = x * scale_x
         scaled_y = y * scale_y
         scaled_patch_w = patch_size * scale_x
         scaled_patch_h = patch_size * scale_y
         color = cmap(scores[i])
-
         rect = patches.Rectangle((scaled_x, scaled_y), scaled_patch_w, scaled_patch_h,
                                  linewidth=0.0, edgecolor=color, facecolor=color)
         ax.add_patch(rect)
@@ -40,7 +41,6 @@ def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, sc
 
 def main(args):
     fold_id = args.fold if hasattr(args, "fold") else 1
-
     meta_path = os.path.join(args.paths['metadata_plot_dir'], f"meta_fold_{fold_id}.pkl")
     score_dir = os.path.join(args.paths['attribution_scores_folder'], args.ig_name, f"fold_{fold_id}")
     plot_dir = os.path.join(args.paths['plot_folder'], args.ig_name, f"fold_{fold_id}")
@@ -49,7 +49,8 @@ def main(args):
     meta_df = pd.read_pickle(meta_path)
     print(f"[INFO] Loaded {len(meta_df)} entries.")
 
-    for i, row in meta_df.iterrows():
+    total_start = time.time()
+    for _, row in tqdm(meta_df.iterrows(), total=len(meta_df), desc="Plotting all slides"):
         slide_id = row['slide_id']
         save_path = os.path.join(plot_dir, f"{slide_id}.png")
         score_path = os.path.join(score_dir, f"{slide_id}.npy")
@@ -57,13 +58,22 @@ def main(args):
         if not os.path.exists(score_path):
             print(f"[WARN] Score not found: {score_path}")
             continue
-        attribution_values = np.load(score_path)
-        scores = np.mean(attribution_values, axis=-1)
 
-        # scores = np.mean(np.abs(attribution_values), axis=-1).squeeze()
-        # Make sure it's 1D
-        if scores.ndim != 1:
-            raise ValueError(f"[ERROR] Unexpected shape for scores: {scores.shape}")
+        start_time = time.time()
+
+        attribution_values = np.load(score_path)
+
+        # Clean shape: [N, D] or [N]
+        attribution_values = attribution_values.squeeze()
+        if attribution_values.ndim == 2:
+            scores = np.mean(attribution_values, axis=-1)
+        elif attribution_values.ndim == 1:
+            scores = attribution_values
+        else:
+            print(f"[ERROR] Invalid attribution shape: {attribution_values.shape}")
+            continue
+
+        # Clip & normalize
         clipped_scores = np.clip(scores, np.percentile(scores, 1), np.percentile(scores, 99))
         scaled_scores = (clipped_scores - clipped_scores.min()) / (clipped_scores.max() - clipped_scores.min() + 1e-8)
 
@@ -76,6 +86,10 @@ def main(args):
             scores=scaled_scores,
             save_path=save_path
         )
+
+        print(f"⏱️ Time taken for {slide_id}: {time.time() - start_time:.2f} sec")
+
+    print(f"\n✅ All plots done. Total time: {time.time() - total_start:.2f} seconds")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
