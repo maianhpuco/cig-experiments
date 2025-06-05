@@ -14,14 +14,14 @@ base_dirs = [
 
 def parse_folder(folder_name):
     folder_name = folder_name.lower()
-    if "camelyon16" in folder_name:
+    if "camelyon16" in folder_name or "clam_metrics" in folder_name or "mlp_metrics" in folder_name:
         dataset = "camelyon16"
     elif "renal" in folder_name:
         dataset = "tcga_renal"
     elif "lung" in folder_name:
         dataset = "tcga_lung"
     else:
-        dataset = "unknown"
+        dataset = "camelyon16"  # fallback if unrecognized
 
     if "clam" in folder_name:
         classifier = "clam"
@@ -31,6 +31,7 @@ def parse_folder(folder_name):
         classifier = "unknown"
 
     return dataset, classifier
+
 
 all_dfs = []
 
