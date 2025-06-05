@@ -146,7 +146,7 @@ class CIG(CoreSaliency):
                 x_baseline_torch = x_baseline_torch.squeeze(0) 
             
             print("x_baseline_torch", x_baseline_torch.shape)
-            logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])
+            logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])[0]
 
             # Compute counterfactual gradients using logitws difference
             
@@ -156,6 +156,7 @@ class CIG(CoreSaliency):
                 x_step_batch_torch = x_step_batch_torch.squeeze(0) 
                 
             logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])[0]
+            
             logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
             logits_difference.backward()
             
