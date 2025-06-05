@@ -290,9 +290,9 @@ class CIG(CoreSaliency):
                 print(f"logits_r: {logits_r.detach().cpu().numpy()}")
 
             # Compute attention weights for debugging
-            with torch.no_grad():
-                A = model(x_step_batch, attention_only=True)  # [1, N] or [n_classes, N]
-                print(f"Attention weights shape: {A.shape}, norm: {torch.norm(A):.4f}, max: {A.max():.4f}, min: {A.min():.4f}")
+            # with torch.no_grad():
+            A = model(x_step_batch, attention_only=True)  # [1, N] or [n_classes, N]
+            print(f"Attention weights shape: {A.shape}, norm: {torch.norm(A):.4f}, max: {A.max():.4f}, min: {A.min():.4f}")
 
             logits_step = call_model_function(x_step_batch, model, call_model_args)
             print(f"logits_step: {logits_step.detach().cpu().numpy()}, requires_grad: {logits_step.requires_grad}")
