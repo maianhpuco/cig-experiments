@@ -155,6 +155,7 @@ def main(args):
     save_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
     output_df.to_csv(save_path, index=False)
     print(f"[INFO] Predictions saved to {save_path}")
+    print("Unique predicted labels:", output_df['pred_label'].unique())
 
     print("========= Compute Metrics ===========")
     accuracy = accuracy_score(all_labels, all_preds)

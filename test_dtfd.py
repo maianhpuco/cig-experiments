@@ -153,6 +153,7 @@ def main(args):
     except Exception as e:
         auc_score = 'N/A'
         print(f"[WARNING] Could not compute AUC: {e}")
+    print("Unique predicted labels:", df_out['pred_label'].unique())
 
     df_metrics = pd.DataFrame([{
         'fold': fold_id,
