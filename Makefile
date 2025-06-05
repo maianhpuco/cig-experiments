@@ -663,7 +663,7 @@ pictopk_clam_random_tcga_lung:
 
 # === Group Rules ===
 group_basic_pictopk_tcga_lung: pictopk_clam_ig_tcga_lung pictopk_clam_g_tcga_lung pictopk_clam_eg_tcga_lung pictopk_clam_cig_tcga_lung pictopk_clam_idg_tcga_lung pictopk_clam_random_tcga_lung 
-
+group_missing_pictopk_tcga_lung:  pictopk_clam_eg_tcga_lung pictopk_clam_idg_tcga_lung 
 # ====================================================== Metric TOP-K PIC MLP ===============
 # === PIC Top-K Targets for Camelyon16 (MLP) ===
 pictopk_mlp_ig_camelyon16:
