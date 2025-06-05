@@ -32,50 +32,42 @@ def extract_slide_metadata(args):
 
     meta_list = []
     error_list = []
-
+    total = len(basenames)
     for idx, basename in enumerate(tqdm(basenames, desc="Processing slides")):
         dataset_name = args.dataset_name
 
         if dataset_name == "camelyon16":
-            slide_path = os.path.join(args.slide_path, f"{basename}.tif")
-        elif dataset_name == "tcga_renal":
-            slide_path = find_slide_path_mapping(basename, args.slide_path)
+            slide_path = os.path.join(args.paths.slide_root, f"{basename}.tif")
+            classes = [1]
+        elif dataset_name in ["tcga_renal", 'tcga_lung']:
+            slide_path = find_slide_path_mapping(basename, args.paths.slide_root)
             if slide_path is None:
                 error_list.append(basename)
                 continue
         else:
             raise ValueError("Unknown dataset.")
 
-        try:
-            slide = openslide.open_slide(slide_path)
-        except Exception as e:
-            print(f"[ERROR] Failed to open slide {basename}: {e}")
-            error_list.append(basename)
-            continue
+        # try:
+        print(f"Slide number {idx}/{total} - Reading slide at {slide_path}")
+        slide = openslide.open_slide(slide_path)
+        # except Exception as e:
+        #     print(f"[ERROR] Failed to open slide {basename}: {e}")
+        #     error_list.append(basename)
+        #     continue
 
-        try:
-            _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
-            scale_x = new_width / original_width
-            scale_y = new_height / original_height
-        except Exception as e:
-            print(f"[ERROR] Failed to get rescaling stats for {basename}: {e}")
-            error_list.append(basename)
-            continue
-
+        _, new_width, new_height, original_width, original_height = rescaling_stat_for_segmentation(slide, downsampling_size=1096)
+        scale_x = new_width / original_width
+        scale_y = new_height / original_height
+        
         h5_path = glob(os.path.join(args.features_h5_pattern, f"{basename}.h5"))
         if len(h5_path) == 0 or not os.path.exists(h5_path[0]):
             print(f"[WARN] H5 not found for {basename}")
             error_list.append(basename)
             continue
 
-        try:
-            with h5py.File(h5_path[0], "r") as f:
-                coords = f['coords'][:]
-        except Exception as e:
-            print(f"[ERROR] Failed to read h5 coords for {basename}: {e}")
-            error_list.append(basename)
-            continue
-
+        with h5py.File(h5_path[0], "r") as f:
+            coords = f['coords'][:]
+    
         meta_list.append({
             "slide_id": basename,
             "slide_path": slide_path,
@@ -90,18 +82,15 @@ def extract_slide_metadata(args):
     os.makedirs(args.paths['metadata_dir'], exist_ok=True)
     output_path = os.path.join(args.paths['metadata_dir'], f"meta_fold_{fold_id}.pkl")
     meta_df.to_pickle(output_path)
+    
     print(f"\n✅ Metadata saved to: {output_path}")
 
-    if error_list:
-        print("\n⚠️ Some slides failed:")
-        for e in error_list:
-            print(" -", e)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True)
-    parser.add_argument('--ig_name', type=str, required=True)
+    parser.add_argument('--ckpt_path', type=str, required=True)
     
     args_cmd = parser.parse_args()
 
@@ -118,5 +107,7 @@ if __name__ == "__main__":
         else:
             setattr(args, key, val)
 
+    extract_slide_metadata(args)
+ 
     extract_slide_metadata(args)
 
