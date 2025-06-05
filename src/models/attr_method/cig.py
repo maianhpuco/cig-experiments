@@ -44,8 +44,8 @@ class CIG(CoreSaliency):
                 logits_step = logits_step[0]
             print("logit", logits_r, logits_step)
             # Compute L2 loss between step and reference logits
-            loss = torch.norm(logits_step - logits_r, p=2) ** 2
-
+            # loss = torch.norm(logits_step - logits_r, p=2) ** 2
+            loss = (logits_step - logits_r) 
             gradients = torch.autograd.grad(
                 outputs=loss,
                 inputs=x_step_batch,
