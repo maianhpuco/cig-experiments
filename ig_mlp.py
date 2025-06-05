@@ -161,7 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('--fold_end', type=int, default=1)
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'])
     parser.add_argument('--ckpt_path', type=str, required=True)
-    parser.add_argument('--skip_if_exists', type=int, default=0, help='Skip if attribution file already exists')
+    parser.add_argument('--skip_if_exists', type=int, default=1, help='Skip if attribution file already exists')
  
     args = parser.parse_args()
 
