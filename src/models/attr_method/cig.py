@@ -59,21 +59,7 @@ class CIG(CoreSaliency):
 
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
             loss.backward()
-
-            # print("Loss:", loss.item())
-            # print("x_step_batch.grad is None?", x_step_batch.grad is None)
-            # if x_step_batch.grad is not None:
-            #     print("Grad shape:", x_step_batch.grad.shape)
             gradients = x_step_batch.grad 
-            # gradients = torch.autograd.grad(
-            #     outputs=loss,
-            #     inputs=x_step_batch,
-            #     grad_outputs=torch.ones_like(loss),
-            #     retain_graph=True,
-            #     create_graph=False,
-            #     allow_unused=True
-            # )[0]
-
             if gradients is None:
                 print(f">>>>>>>>>>>>>>>>>> No gradients at alpha {alpha:.2f}, skipping")
                 continue

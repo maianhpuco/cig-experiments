@@ -251,7 +251,7 @@ clam_idg_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name idg --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_CAMELYON16)  
 clam_cig_camelyon16:
-	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=0 python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name cig --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_CAMELYON16)  
 clam_g_camelyon16:
 	python ig_clam.py --config configs_simea/clam_camelyon16.yaml --ig_name g --fold_start 1 --fold_end 1 \
@@ -271,7 +271,7 @@ clam_idg_tcga_renal:
 	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name idg --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_cig_tcga_renal:
-	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
+	CUDA_VISIBLE_DEVICES=1 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name cig --fold_start 1 --fold_end 1 \
 	--ckpt_path $(CKPT_CLAM_TCGA_RENAL)
 clam_g_tcga_renal:
 	CUDA_VISIBLE_DEVICES=3 python ig_clam.py --config configs_simea/clam_tcga_renal.yaml --ig_name g --fold_start 1 --fold_end 1 \
@@ -303,6 +303,7 @@ group_adv_tcga_lung: clam_cig_tcga_lung clam_idg_tcga_lung
 group_basic: clam_ig, clam_g, clam_eg 
 group_adv: clam_cig, clam_idg 
 
+clam_cig: clam_cig_tcga_lung clam_cig_tcga_renal clam_cig_camelyon16
 
 group_square: #done  runing  
 	make ig_clam_square_integrated_gradient
@@ -844,3 +845,6 @@ mlp_g_tcga_lung:
 
 group_basic_mlp_tcga_lung: mlp_ig_tcga_lung mlp_g_tcga_lung mlp_eg_tcga_lung mlp_cig_tcga_lung mlp_idg_tcga_lung
 group_adv_mlp_tcga_lung: mlp_cig_tcga_lung mlp_idg_tcga_lung
+
+
+rerun_cig_clam: clam_cig_camelyon16 
