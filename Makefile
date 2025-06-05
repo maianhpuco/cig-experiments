@@ -601,7 +601,7 @@ pictopk_clam_idg_tcga_renal:
 		--ig_name idg
 
 pictopk_clam_cig_tcga_renal:
-	CUDA_VISIBLE_DEVICES=7 python metric_pic_clam_topk.py \
+	CUDA_VISIBLE_DEVICES=6 python metric_pic_clam_topk.py \
 		--config configs_simea/clam_tcga_renal.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
 		--ig_name cig
