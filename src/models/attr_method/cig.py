@@ -44,7 +44,7 @@ class CIG(CoreSaliency):
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = (baseline_features + alpha * x_diff).requires_grad_(True)
-            
+            x_step_batch.retain_grad()  # <-- add this line 
             with torch.no_grad():
                 logits_r = call_model_function(baseline_features, model, call_model_args)
                 if isinstance(logits_r, tuple):
