@@ -133,7 +133,8 @@ def main(args):
             pred_class = torch.argmax(probs, dim=1).item()
 
         baseline = get_baseline_features(args, args.fold, basename, features.shape[1])
-
+        print(">>> check model result", logits, pred_class)
+        
         kwargs = {
             "x_value": features,
             "call_model_function": call_model_function,
