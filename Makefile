@@ -761,13 +761,13 @@ pictopk_mlp_eg_tcga_lung:
 		--ig_name eg
 
 pictopk_mlp_idg_tcga_lung:
-	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+	CUDA_VISIBLE_DEVICES=4 python metric_pic_mlp_topk.py \
 		--config configs_simea/mlp_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
 		--ig_name idg
 
 pictopk_mlp_cig_tcga_lung:
-	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+	CUDA_VISIBLE_DEVICES=4 python metric_pic_mlp_topk.py \
 		--config configs_simea/mlp_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
 		--ig_name cig
