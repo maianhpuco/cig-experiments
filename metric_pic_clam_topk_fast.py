@@ -9,7 +9,6 @@ import pandas as pd
 from scipy.stats import pearsonr
 import warnings
 from glob import glob
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -36,7 +35,7 @@ def parse_args_from_config(config):
     args.device = getattr(args, 'device', "cuda" if torch.cuda.is_available() else "cpu")
     return args
 
-def compute_one_slide(args, basename, model, baseline_dict, attribution_dict):
+def compute_one_slide(args, basename, model):
     fold_id = args.fold
 
     if args.dataset_name == 'camelyon16':
@@ -45,15 +44,18 @@ def compute_one_slide(args, basename, model, baseline_dict, attribution_dict):
         slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
         true_label = int(slide_row['true_label'].iloc[0]) if not slide_row.empty else -1
         reverse_label_dict = {v: k for k, v in args.label_dict.items()}
+        if true_label == -1:
+            raise ValueError(f"True label not found for slide {basename}")
         subtype = reverse_label_dict[true_label].lower()
         feature_path = os.path.join(args.paths['data_dir'][subtype], f"pt_files/{basename}.pt")
     else:
         raise ValueError(f"Unknown dataset: {args.dataset_name}")
 
+    print(f"> Loading feature from: {feature_path}")
     data = torch.load(feature_path)
     features = data['features'] if isinstance(data, dict) else data
-    features = features.to(args.device, dtype=torch.float32).squeeze(0)
-    features_data = features.unsqueeze(0) if features.dim() == 2 else features
+    features = features.to(args.device, dtype=torch.float32)
+    features = features.squeeze(0) if features.dim() == 3 else features
 
     with torch.no_grad():
         model_wrapper = ModelWrapper(model, model_type='clam')
@@ -62,44 +64,57 @@ def compute_one_slide(args, basename, model, baseline_dict, attribution_dict):
         _, predicted_class = torch.max(logits, dim=1)
     pred_class = predicted_class.item()
 
-    baseline = baseline_dict[basename].to(args.device, dtype=torch.float32).squeeze(0)
+    baseline_path = os.path.join(args.paths[f'baseline_dir_fold_{fold_id}'], f"{basename}.pt")
+    if not os.path.isfile(baseline_path):
+        raise FileNotFoundError(f"Baseline file not found at: {baseline_path}")
+    baseline = torch.load(baseline_path).to(args.device, dtype=torch.float32)
+    baseline = baseline.squeeze(0) if baseline.dim() == 3 else baseline
     if baseline.shape[0] != features.shape[0]:
         indices = torch.randint(0, baseline.shape[0], (features.shape[0],), device=baseline.device)
         baseline = baseline[indices]
 
     with torch.no_grad():
-        baseline_pred = model(baseline)
-        _, baseline_predicted_class = torch.max(baseline_pred[0], dim=1)
+        baseline_logits = model_wrapper.forward(baseline.unsqueeze(0))
+        _, baseline_pred_class = torch.max(baseline_logits, dim=1)
 
-    attribution_values = attribution_dict[basename]
-    saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
+    ig_name = args.ig_name.lower()
+    if ig_name == 'random':
+        np.random.seed(42)
+        saliency_map = np.random.rand(features.shape[0])
+    else:
+        attribution_path = os.path.join(
+            args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", f"{basename}.npy"
+        )
+        if not os.path.isfile(attribution_path):
+            raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
+        attribution_values = np.load(attribution_path)
+        saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
     saliency_map = saliency_map / (saliency_map.max() + 1e-8)
 
-    top_k = np.array(list(range(1, 11)) + list(range(15, 55, 5)) + list(range(60, 110, 10)) + [150, 200, 300, 400, 500])
+    top_k = np.array(
+        list(range(1, 11)) + list(range(15, 55, 5)) + list(range(60, 110, 10)) + [150, 200, 300, 400, 500]
+    )
     random_mask = generate_random_mask(features.shape[0], fraction=0.0)
 
     slide_row = args.pred_df[args.pred_df['slide_id'] == basename]
     pred_label = slide_row['pred_label'].iloc[0] if not slide_row.empty else pred_class
     true_label = slide_row['true_label'].iloc[0] if 'true_label' in slide_row.columns else -1
 
-    features_np = features.cpu().numpy()
-    baseline_np = baseline.cpu().numpy()
-
-    sic_score = compute_pic_metric(top_k, features_np, saliency_map, random_mask,
+    sic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
                                    None, 0, model, args.device,
-                                   baseline=baseline_np, min_pred_value=0.3,
+                                   baseline=baseline.cpu().numpy(), min_pred_value=0.3,
                                    keep_monotonous=False)
 
-    aic_score = compute_pic_metric(top_k, features_np, saliency_map, random_mask,
+    aic_score = compute_pic_metric(top_k, features.cpu().numpy(), saliency_map, random_mask,
                                    None, 1, model, args.device,
-                                   baseline=baseline_np, min_pred_value=0.3,
+                                   baseline=baseline.cpu().numpy(), min_pred_value=0.3,
                                    keep_monotonous=False)
 
     return {
         "slide_id": basename,
         "pred_label": pred_label,
         "true_label": true_label,
-        "baseline_pred_label": baseline_predicted_class.item(),
+        "baseline_pred_label": baseline_pred_class.item(),
         "saliency_map_mean": saliency_map.mean(),
         "saliency_map_std": saliency_map.std(),
         "IG": args.ig_name,
@@ -123,28 +138,14 @@ def main(args):
     model.eval()
 
     pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
-    pred_df = pd.read_csv(pred_path)
-    args.pred_df = pred_df
-    basenames = pred_df['slide_id'].unique().tolist()
-    print(f"[INFO] Loaded {len(pred_df)} slides")
-
-    # Preload baselines and attributions
-    baseline_dir = args.paths[f'baseline_dir_fold_{fold_id}']
-    attribution_dir = os.path.join(args.paths['attribution_scores_folder'], args.ig_name, f"fold_{fold_id}")
-
-    baseline_dict = {bn: torch.load(os.path.join(baseline_dir, f"{bn}.pt")) for bn in basenames}
-    attribution_dict = {bn: np.load(os.path.join(attribution_dir, f"{bn}.npy")) for bn in basenames}
+    args.pred_df = pd.read_csv(pred_path)
+    basenames = args.pred_df['slide_id'].unique().tolist()
 
     all_results = []
     start = time.time()
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {executor.submit(compute_one_slide, args, bn, model, baseline_dict, attribution_dict): bn for bn in basenames}
-        for future in as_completed(futures):
-            try:
-                result = future.result()
-                all_results.append(result)
-            except Exception as e:
-                print(f"[ERROR] Failed on slide {futures[future]}: {e}")
+    for idx, basename in enumerate(basenames):
+        print(f"\n=== Processing slide: {basename} ({idx + 1}/{len(basenames)}) ===")
+        all_results.append(compute_one_slide(args, basename, model))
 
     results_df = pd.DataFrame(all_results)
     output_dir = os.path.join(args.paths['metrics_dir'], f"{args.ig_name}")
