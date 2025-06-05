@@ -12,7 +12,9 @@ import time
 
 def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, scores,
                         figsize=(10, 10), name="", save_path=None, patch_size=256):
-    cmap = cm.get_cmap('coolwarm')
+    # cmap = cm.get_cmap('coolwarm')
+    cmap = plt.colormaps['coolwarm']
+
     norm = plt.Normalize(vmin=np.min(scores), vmax=np.max(scores))
 
     fig, ax = plt.subplots(figsize=figsize)
