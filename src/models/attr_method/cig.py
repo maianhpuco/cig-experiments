@@ -64,7 +64,7 @@ class CIG(CoreSaliency):
                 grad_outputs=torch.ones_like(loss),
                 retain_graph=False,
                 create_graph=False,
-                allow_unused=True
+                allow_unused=False
             )[0]
 
             if gradients is None:
