@@ -160,10 +160,11 @@ class CIG(CoreSaliency):
         x_diff = x_value - x_baseline_batch
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
-            x_step_batch = x_baseline_batch + alpha * x_diff
+            x_step_batch_np = x_baseline_batch + alpha * x_diff
 
-            x_step_batch_torch = torch.tensor(x_step_batch.copy(), dtype=torch.float32, requires_grad=True).to(device)
-            x_step_batch_torch.retain_grad()
+            # Ensure x_step_batch is a leaf tensor and tracked
+            x_step_batch_torch = torch.tensor(x_step_batch_np.copy(), dtype=torch.float32).to(device)
+            x_step_batch_torch.requires_grad_(True)
 
             if x_step_batch_torch.dim() == 2:
                 x_step_batch_torch = x_step_batch_torch.unsqueeze(0)
