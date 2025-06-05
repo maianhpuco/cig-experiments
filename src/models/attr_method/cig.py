@@ -58,8 +58,8 @@ class CIG(CoreSaliency):
                 outputs=loss,
                 inputs=x_step_batch,
                 grad_outputs=torch.ones_like(loss),
-                retain_graph=True,
-                create_graph=True,
+                retain_graph=False,
+                create_graph=False,
                 allow_unused=True
             )[0]
 
