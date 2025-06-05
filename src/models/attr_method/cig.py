@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 # from attr_method._common import PreprocessInputs, call_model_function
 
-class ContrastiveGradients(CoreSaliency):
+class CIG(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
 
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
