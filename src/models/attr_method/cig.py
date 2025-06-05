@@ -33,7 +33,7 @@ class CIG(CoreSaliency):
         x_diff = x_value - baseline_features
         alphas = torch.linspace(0, 1, x_steps + 1, device=device)[1:]  # Skip alpha=0
 
-        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1)
+        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = baseline_features + alpha * x_diff
             x_step_batch.requires_grad_(True)
 
