@@ -1126,6 +1126,18 @@ pre_plot_tcga_renal:
 pre_plot_tcga_lung:
 	CUDA_VISIBLE_DEVICES=3 python pre_plot.py --config configs_simea/clam_tcga_lung.yaml 
 #=====================================================
+
+
+
+#=====================================================
+gt_plot_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python plot_downscale_slide_gt.py --config configs_simea/clam_camelyon16.yaml
+gt_plot_tcga_renal:
+	CUDA_VISIBLE_DEVICES=4 python plot_downscale_slide_gt.py --config configs_simea/clam_tcga_renal.yaml  
+gt_plot_tcga_lung:
+	CUDA_VISIBLE_DEVICES=5 python plot_downscale_slide_gt.py --config configs_simea/clam_tcga_lung.yaml 
+#===================================================== 
+ 
 plot_clam_camelyon16_ig:
 	CUDA_VISIBLE_DEVICES=3 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig 
 
