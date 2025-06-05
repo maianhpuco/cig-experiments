@@ -102,6 +102,82 @@
 
 #         return result
 
+# import os
+# import numpy as np
+# import torch
+# from tqdm import tqdm
+# from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+
+# class CIG(CoreSaliency):
+#     """
+#     Contrastive Integrated Gradients Attribution for per-class computation.
+#     """
+
+#     def GetMask(self, **kwargs):
+#         x_value = kwargs.get("x_value")
+#         model = kwargs.get("model")
+#         call_model_args = kwargs.get("call_model_args", {})
+#         baseline_features = kwargs.get("baseline_features")
+#         x_steps = kwargs.get("x_steps", 25)
+#         device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
+#         target_class_idx = call_model_args.get("target_class_idx", 0)
+#         call_model_function = kwargs.get("call_model_function")
+
+#         # Convert to numpy if input is tensor
+#         if isinstance(x_value, torch.Tensor):
+#             x_value = x_value.detach().cpu().numpy()
+#         if isinstance(baseline_features, torch.Tensor):
+#             baseline_features = baseline_features.detach().cpu().numpy()
+
+#         attribution_values =  np.zeros_like(x_value, dtype=np.float32)
+#         # total_grad =  np.zeros_like(x_value, dtype=np.float32)
+         
+#         alphas = np.linspace(0, 1, x_steps)
+#         # sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[-2]), replace=True)
+#         x_baseline_batch = baseline_features
+#         x_diff = x_value - x_baseline_batch 
+        
+#         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
+#             # ------------ Counter Factual Gradient ------------ 
+#             x_step_batch = x_baseline_batch + alpha * x_diff
+#             # ------------ Counter Factual Gradient ------------
+#             x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, requires_grad=False)
+#             if x_baseline_torch.dim() == 3:
+#                 x_baseline_torch = x_baseline_torch.squeeze(0) 
+            
+#             print("x_baseline_torch", x_baseline_torch.shape)
+#             logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])[0]
+
+#             # Compute counterfactual gradients using logitws difference
+            
+                 
+#             x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True)
+#             if x_step_batch_torch.dim() == 3:
+#                 x_step_batch_torch = x_step_batch_torch.squeeze(0) 
+                
+#             logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])[0]
+            
+#             logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
+#             logits_difference.backward()
+            
+#             if x_step_batch_torch.grad is None:
+#                 raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.")
+
+#             grad_logits_diff = x_step_batch_torch.grad.numpy()
+            
+#             # ------------ Conbine Gradient and X_diff ------------ 
+#             counterfactual_gradients = grad_logits_diff.mean(axis=0) 
+            
+#             # print("check shape")
+#             # print(x_diff.shape, counterfactual_gradients.shape)
+#             attribution_values += counterfactual_gradients 
+            
+#         x_diff = x_diff.mean(axis=0) 
+        
+#         attribution_values = attribution_values * x_diff 
+        
+#         return attribution_values / x_steps 
+
 import os
 import numpy as np
 import torch
@@ -129,51 +205,43 @@ class CIG(CoreSaliency):
         if isinstance(baseline_features, torch.Tensor):
             baseline_features = baseline_features.detach().cpu().numpy()
 
-        attribution_values =  np.zeros_like(x_value, dtype=np.float32)
-        # total_grad =  np.zeros_like(x_value, dtype=np.float32)
-         
+        attribution_values = np.zeros_like(x_value, dtype=np.float32)
         alphas = np.linspace(0, 1, x_steps)
-        # sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[-2]), replace=True)
-        x_baseline_batch = baseline_features
-        x_diff = x_value - x_baseline_batch 
-        
+
+        sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
+        x_baseline_batch = baseline_features[sampled_indices]
+        x_diff = x_value - x_baseline_batch
+
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
-            # ------------ Counter Factual Gradient ------------ 
             x_step_batch = x_baseline_batch + alpha * x_diff
-            # ------------ Counter Factual Gradient ------------
-            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, requires_grad=False)
-            if x_baseline_torch.dim() == 3:
-                x_baseline_torch = x_baseline_torch.squeeze(0) 
-            
-            print("x_baseline_torch", x_baseline_torch.shape)
-            logits_x_r = model(x_baseline_torch, [x_baseline_torch.shape[0]])[0]
 
-            # Compute counterfactual gradients using logitws difference
-            
-                 
-            x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, requires_grad=True)
-            if x_step_batch_torch.dim() == 3:
-                x_step_batch_torch = x_step_batch_torch.squeeze(0) 
-                
-            logits_x_step = model(x_step_batch_torch, [x_step_batch_torch.shape[0]])[0]
-            
-            logits_difference = torch.norm(logits_x_step - logits_x_r, p=2) ** 2
-            logits_difference.backward()
-            
+            x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, device=device, requires_grad=True)
+            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, device=device)
+
+            logits_r = call_model_function(x_baseline_torch, model, call_model_args)
+            if isinstance(logits_r, dict):
+                logits_r = logits_r.get("logits", list(logits_r.values())[0])
+            if isinstance(logits_r, tuple):
+                logits_r = logits_r[0]
+
+            logits_step = call_model_function(x_step_batch_torch, model, call_model_args)
+            if isinstance(logits_step, dict):
+                logits_step = logits_step.get("logits", list(logits_step.values())[0])
+            if isinstance(logits_step, tuple):
+                logits_step = logits_step[0]
+
+            loss = torch.norm(logits_step - logits_r, p=2) ** 2
+            loss.backward()
+
             if x_step_batch_torch.grad is None:
-                raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.")
+                print(f"No gradients at alpha {alpha:.2f}, skipping")
+                continue
 
-            grad_logits_diff = x_step_batch_torch.grad.numpy()
-            
-            # ------------ Conbine Gradient and X_diff ------------ 
-            counterfactual_gradients = grad_logits_diff.mean(axis=0) 
-            
-            # print("check shape")
-            # print(x_diff.shape, counterfactual_gradients.shape)
-            attribution_values += counterfactual_gradients 
-            
-        x_diff = x_diff.mean(axis=0) 
-        
-        attribution_values = attribution_values * x_diff 
-        
-        return attribution_values / x_steps 
+            grad_logits_diff = x_step_batch_torch.grad.detach().cpu().numpy()
+            counterfactual_gradients = grad_logits_diff.mean(axis=0)
+            attribution_values += counterfactual_gradients
+
+        x_diff_mean = x_diff.mean(axis=0)
+        attribution_values *= x_diff_mean
+
+        return attribution_values / x_steps
