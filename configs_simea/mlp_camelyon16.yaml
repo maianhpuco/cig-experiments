@@ -32,7 +32,7 @@ lr: 0.0001
 reg: 0.00001
 drop_out: 0.25
 model_size: small
-gate: true
+gate: false
 subtyping: false
 embed_dim: 1024 
 n_classes: 2
