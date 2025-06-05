@@ -55,7 +55,7 @@ def main(args):
         print(f"Saved contour to: {csv_save_path}, shape: {df_xml.shape}")
 
         h5_data = read_h5_data(h5_path)
-        coords = h5_data["coordinates"] if isinstance(h5_data, dict) else h5_data
+        coords = h5_data["coords"] if isinstance(h5_data, dict) else h5_data
 
         mask = check_xy_in_coordinates_fast(df_xml, coords)
         mask_save_path = os.path.join(args.paths['ground_truth_numpy_dir'], f"{base}.npy")
