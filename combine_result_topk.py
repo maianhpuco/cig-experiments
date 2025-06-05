@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import glob
 
-# All base directories to search
+# Define base directories
 base_dirs = [
     "/home/mvu9/processing_datasets/processing_camelyon16/clam_metrics",
     "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_metrics",
@@ -12,12 +12,33 @@ base_dirs = [
     "/home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_renal_metrics",
 ]
 
+def parse_folder(folder_name):
+    folder_name = folder_name.lower()
+    if "camelyon16" in folder_name:
+        dataset = "camelyon16"
+    elif "renal" in folder_name:
+        dataset = "tcga_renal"
+    elif "lung" in folder_name:
+        dataset = "tcga_lung"
+    else:
+        dataset = "unknown"
+
+    if "clam" in folder_name:
+        classifier = "clam"
+    elif "mlp" in folder_name:
+        classifier = "mlp"
+    else:
+        classifier = "unknown"
+
+    return dataset, classifier
+
 all_dfs = []
 
 # Read all CSVs from each base directory
 for base_dir in base_dirs:
     csv_files = glob.glob(os.path.join(base_dir, "*", "topk_pic_results_fold_1.csv"))
     folder_name = os.path.basename(base_dir)
+    dataset, classifier = parse_folder(folder_name)
     print(f"[INFO] {folder_name}: found {len(csv_files)} files")
 
     for file in csv_files:
@@ -25,6 +46,8 @@ for base_dir in base_dirs:
             df = pd.read_csv(file)
             df['method'] = df['IG'].str.lower()
             df['source_folder'] = folder_name
+            df['dataset'] = dataset
+            df['classifier'] = classifier
             all_dfs.append(df)
         except Exception as e:
             print(f"[WARN] Failed to read {file}: {e}")
@@ -33,16 +56,17 @@ for base_dir in base_dirs:
 if all_dfs:
     combined_df = pd.concat(all_dfs, ignore_index=True)
 
-    # Group by folder
-    for folder, folder_df in combined_df.groupby('source_folder'):
-        print(f"\n=== {folder.upper()} ===")
+    # Loop over dataset/classifier pairs
+    for (dataset, classifier), folder_df in combined_df.groupby(['dataset', 'classifier']):
+        print(f"\n=== DATASET: {dataset.upper()} | CLASSIFIER: {classifier.upper()} ===")
 
-        # Exclude class 0 for clam_metrics
-        filtered_df = folder_df if folder != "clam_metrics" else folder_df[folder_df['pred_label'] != 0]
+        # Special rule: exclude class 0 for camelyon16 using clam
+        if dataset == "camelyon16" and classifier == "clam":
+            folder_df = folder_df[folder_df['pred_label'] != 0]
 
         # Group by method and pred_label
         grouped = (
-            filtered_df
+            folder_df
             .groupby(['method', 'pred_label'])[['AIC', 'SIC']]
             .agg(['mean', 'std'])
             .reset_index()
@@ -51,10 +75,11 @@ if all_dfs:
         # Flatten MultiIndex columns
         grouped.columns = ['method', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
 
-        # Add folder name
-        grouped.insert(0, 'source_folder', folder)
+        # Add metadata
+        grouped.insert(0, 'classifier', classifier)
+        grouped.insert(0, 'dataset', dataset)
 
-        # Split by pred_label
+        # Print separate tables per prediction label
         for pred_label, pred_df in grouped.groupby('pred_label'):
             print(f"\n--- Prediction Class: {pred_label} ---")
             pred_df_sorted = pred_df.sort_values(by='SIC_mean', ascending=False)
