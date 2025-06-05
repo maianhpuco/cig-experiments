@@ -57,7 +57,7 @@ class CIG(CoreSaliency):
 
             # Forward pass with gradient tracking
             # logits_step = model(x_step_batch)
-            print("x_step_batch", x_step_batch)
+            print("x_step_batch", x_step_batch.shape)
             logits_step = call_model_function(x_step_batch.squeeze(0), model, call_model_args)
  
             if isinstance(logits_step, tuple):
