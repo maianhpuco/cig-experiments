@@ -57,8 +57,13 @@ def main(args):
         if not os.path.exists(score_path):
             print(f"[WARN] Score not found: {score_path}")
             continue
+        attribution_values = np.load(score_path)
+        scores = np.mean(attribution_values, axis=-1)
 
-        scores = np.load(score_path)
+        # scores = np.mean(np.abs(attribution_values), axis=-1).squeeze()
+        # Make sure it's 1D
+        if scores.ndim != 1:
+            raise ValueError(f"[ERROR] Unexpected shape for scores: {scores.shape}")
         clipped_scores = np.clip(scores, np.percentile(scores, 1), np.percentile(scores, 99))
         scaled_scores = (clipped_scores - clipped_scores.min()) / (clipped_scores.max() - clipped_scores.min() + 1e-8)
 
