@@ -43,7 +43,7 @@ def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, sc
 
 def main(args):
     fold_id = args.fold if hasattr(args, "fold") else 1
-    meta_path = os.path.join(args.paths['metadata_plot_dir'], f"meta_fold_{fold_id}.pkl")
+    meta_path = os.path.join(args.paths['metadata_plot_dir'],f"meta_fold_{fold_id}.pkl")
     score_dir = os.path.join(args.paths['attribution_scores_folder'], args.ig_name, f"fold_{fold_id}")
     plot_dir = os.path.join(args.paths['plot_folder'], args.ig_name, f"fold_{fold_id}")
 

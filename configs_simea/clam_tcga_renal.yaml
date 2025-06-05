@@ -12,7 +12,7 @@ paths:
   # attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/tgca_renal" 
   attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores_no_class/tcga_renal/clam"
   attribution_scores_plot: "/home/mvu9/cig_attributions/attr_scores_plot/tcga_renal/clam" 
-  metadata_plot_dir: "/home/mvu9/cig_attributions/metadata_plot/tcga_renal/clam"     
+  metadata_plot_dir: "/home/mvu9/cig_attributions/metadata_plot/tcga_renal/all_clf"     
   plot_folder: "/home/mvu9/cig_attributions/heatmap_plot/tcga_renal/clam" 
 
   # ig_clam_plot_folder: "/home/mvu9/cig_attributions/attr_scores_clam_plot/tcga_renal"   
