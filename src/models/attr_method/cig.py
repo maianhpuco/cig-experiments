@@ -56,7 +56,7 @@ class CIG(CoreSaliency):
             )[0]
 
             if gradients is None:
-                print(f"No gradients at alpha {alpha:.2f}, skipping")
+                print(f"-- No gradients at alpha {alpha:.2f}, skipping")
                 continue
 
             counterfactual_gradients = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
