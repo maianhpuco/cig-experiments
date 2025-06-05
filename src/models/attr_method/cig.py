@@ -101,11 +101,12 @@
 #             print(f"Warning: All attribution values for class {target_class_idx} are zero.")
 
 #         return result
+
 import os
 import numpy as np
 import torch
 from tqdm import tqdm
-from saliency.core.base import CoreSaliency
+from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 
 class CIG(CoreSaliency):
     """
@@ -122,34 +123,32 @@ class CIG(CoreSaliency):
         target_class_idx = call_model_args.get("target_class_idx", 0)
         call_model_function = kwargs.get("call_model_function")
 
-        # Ensure tensors are on the correct device
-        if not isinstance(x_value, torch.Tensor):
-            x_value = torch.tensor(x_value, dtype=torch.float32)
-        x_value = x_value.to(device)
+        # Convert to numpy if input is tensor
+        if isinstance(x_value, torch.Tensor):
+            x_value = x_value.detach().cpu().numpy()
+        if isinstance(baseline_features, torch.Tensor):
+            baseline_features = baseline_features.detach().cpu().numpy()
 
-        if not isinstance(baseline_features, torch.Tensor):
-            baseline_features = torch.tensor(baseline_features, dtype=torch.float32)
-        baseline_features = baseline_features.to(device)
+        attribution_values = np.zeros_like(x_value, dtype=np.float32)
+        alphas = np.linspace(0, 1, x_steps)
 
-        attribution_values = torch.zeros_like(x_value, dtype=torch.float32, device=device)
-
-        alphas = torch.linspace(0, 1, x_steps, device=device)
-        sampled_indices = torch.randint(0, baseline_features.shape[0], (1, x_value.shape[0]), device=device)
+        sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
         x_baseline_batch = baseline_features[sampled_indices]
         x_diff = x_value - x_baseline_batch
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = x_baseline_batch + alpha * x_diff
-            x_step_batch.requires_grad = True
 
-            # Get logits
-            logits_r = call_model_function(x_baseline_batch, model, call_model_args)
+            x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, device=device, requires_grad=True)
+            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, device=device)
+
+            logits_r = call_model_function(x_baseline_torch, model, call_model_args)
             if isinstance(logits_r, dict):
                 logits_r = logits_r.get("logits", list(logits_r.values())[0])
             if isinstance(logits_r, tuple):
                 logits_r = logits_r[0]
 
-            logits_step = call_model_function(x_step_batch, model, call_model_args)
+            logits_step = call_model_function(x_step_batch_torch, model, call_model_args)
             if isinstance(logits_step, dict):
                 logits_step = logits_step.get("logits", list(logits_step.values())[0])
             if isinstance(logits_step, tuple):
@@ -158,15 +157,15 @@ class CIG(CoreSaliency):
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
             loss.backward()
 
-            if x_step_batch.grad is None:
+            if x_step_batch_torch.grad is None:
                 print(f"No gradients at alpha {alpha:.2f}, skipping")
                 continue
 
-            gradients = x_step_batch.grad
-            counterfactual_gradients = gradients.mean(dim=0)
+            grad_logits_diff = x_step_batch_torch.grad.detach().cpu().numpy()
+            counterfactual_gradients = grad_logits_diff.mean(axis=0)
             attribution_values += counterfactual_gradients
 
-        x_diff_mean = x_diff.mean(dim=0)
-        final_attribution = attribution_values * x_diff_mean / x_steps
+        x_diff_mean = x_diff.mean(axis=0)
+        attribution_values *= x_diff_mean
 
-        return final_attribution.detach().cpu().numpy()
+        return attribution_values / x_steps
