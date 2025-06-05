@@ -697,7 +697,7 @@ pictopk_mlp_g_camelyon16:
 		--ig_name g
 
 pictopk_mlp_random_camelyon16:
-	CUDA_VISIBLE_DEVICES=1 python metric_pic_mlp_topk.py \
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
 		--config configs_simea/mlp_camelyon16.yaml \
 		--ckpt_path $(CKPT_MLP_CAMELYON16) \
 		--ig_name random
@@ -743,9 +743,9 @@ pictopk_mlp_random_tcga_renal:
 		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
 		--ig_name random
 
-group_basic_pictopk_mlp_tcga_renal: pictopk_mlp_ig_tcga_renal pictopk_mlp_g_tcga_renal pictopk_mlp_eg_tcga_renal pictopk_mlp_cig_tcga_renal pictopk_mlp_idg_tcga_renal
+group_basic_pictopk_mlp_tcga_renal: pictopk_mlp_ig_tcga_renal pictopk_mlp_g_tcga_renal pictopk_mlp_eg_tcga_renal 
 group_random_pictopk_mlp_tcga: pictopk_mlp_random_camelyon16 pictopk_mlp_random_tcga_renal
-
+group_adv_pictopk_mlp_tcga_renal: pictopk_mlp_cig_tcga_renal pictopk_mlp_idg_tcga_renal 
 
 # === PIC Top-K Targets for TCGA Lung (MLP) ===
 pictopk_mlp_ig_tcga_lung:
@@ -784,7 +784,9 @@ pictopk_mlp_random_tcga_lung:
 		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
 		--ig_name random
 
-group_basic_pictopk_mlp_tcga_lung: pictopk_mlp_ig_tcga_lung pictopk_mlp_g_tcga_lung pictopk_mlp_eg_tcga_lung pictopk_mlp_cig_tcga_lung pictopk_mlp_idg_tcga_lung pictopk_mlp_random_tcga_lung
+group_basic_pictopk_mlp_tcga_lung: pictopk_mlp_ig_tcga_lung pictopk_mlp_g_tcga_lung pictopk_mlp_eg_tcga_lung
+group_adv_pictopk_mlp_tcga_lung: pictopk_mlp_cig_tcga_lung pictopk_mlp_idg_tcga_lung  
+
 # ====================================================== MLP ig method ===============
 #========== IG MLP CAMELYON16 Methods (CUDA 1) ============== 
 mlp_ig_camelyon16:
