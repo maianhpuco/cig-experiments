@@ -33,7 +33,7 @@ class CIG(CoreSaliency):
         x_diff = x_value - baseline_features
         alphas = torch.linspace(0, 1, x_steps + 1, device=device)[1:]  # Skip alpha=0
 
-        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
+        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1)
             x_step_batch = baseline_features + alpha * x_diff
             x_step_batch.requires_grad_(True)
 
@@ -48,19 +48,22 @@ class CIG(CoreSaliency):
 
             # Compute L2 loss between step and reference logits
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
+            loss.backward()
+            gradients = x_step_batch.grad.numpy() 
+            if x_step_batch.grad is None:
+                raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.") 
+            # gradients = torch.autograd.grad(
+            #     outputs=loss,
+            #     inputs=x_step_batch,
+            #     grad_outputs=torch.ones_like(loss),
+            #     retain_graph=False,
+            #     create_graph=False,
+            #     allow_unused=True
+            # )[0]
 
-            gradients = torch.autograd.grad(
-                outputs=loss,
-                inputs=x_step_batch,
-                grad_outputs=torch.ones_like(loss),
-                retain_graph=False,
-                create_graph=False,
-                allow_unused=True
-            )[0]
-
-            if gradients is None:
-                print(f"No gradients at alpha {alpha:.2f}, skipping")
-                continue
+            # if gradients is None:
+            #     print(f"No gradients at alpha {alpha:.2f}, skipping")
+            #     continue
 
             counterfactual_gradients = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
             attribution_values += counterfactual_gradients
