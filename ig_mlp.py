@@ -39,8 +39,9 @@ def load_ig_module(args):
         device = next(model.parameters()).device
         inputs = inputs.to(device).clone().detach().requires_grad_(True)
         model.eval()
+        print("input shape", inputs.shape)
         logits = model(inputs)
-
+        print(logits)
         if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
             class_idx = call_model_args.get("target_class_idx", 0)
             target = logits[:, class_idx]
