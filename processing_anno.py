@@ -50,7 +50,7 @@ def main(args):
         df_xml = extract_coordinates(xml_path, csv_save_path)
         if df_xml is None:
             print(f"[WARN] No valid contour in {xml_file}, skipping.")
-            continue
+            return 
 
         print(f"Saved contour to: {csv_save_path}, shape: {df_xml.shape}")
 
