@@ -10,6 +10,9 @@ paths:
   # for_ig_checkpoint_path_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/mlp_result/result_final_ep200/s_1_checkpoint.pt"
   # attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores/camelyon16"
   attribution_scores_folder: "/home/mvu9/cig_attributions/attr_scores_no_class/camelyon16/mlp" 
+  attribution_scores_plot: "/home/mvu9/cig_attributions/attr_scores_plot/camelyon16/mlp" 
+  metadata_plot_dir: "/home/mvu9/cig_attributions/metadata_plot/camelyon16/mlp"    
+  
   ig_mlp_plot_folder: "/home/mvu9/cig_attributions/attr_scores_mlp_plot/camelyon16"  
   memmap_path: "/home/mvu9/cig_attributions/memmap_tmp_camelyon16"
   slide_dir: "/home/mvu9/datasets/camelyon16/raw_data/camelyon16/images"
