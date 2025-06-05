@@ -105,5 +105,4 @@ if __name__ == "__main__":
 
     extract_slide_metadata(args)
  
-    extract_slide_metadata(args)
 

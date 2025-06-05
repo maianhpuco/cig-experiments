@@ -1,5 +1,6 @@
 dataset_name: 'camelyon16'
 paths:
+  annotation_dir: "/home/mvu9/datasets/camelyon16/raw_data/camelyon16/annotations"
   pt_files: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp"
   data_dir: "/home/mvu9/processing_datasets/processing_camelyon16/features_fp" # some code use pt_files as data_dir
   # save_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_result"
@@ -26,9 +27,12 @@ paths:
   baseline_dir_fold_1: "/home/mvu9/processing_datasets/processing_camelyon16/baseline/baseline_clam/fold_1"  
   predictions_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_predictions"
   metrics_dir: "/home/mvu9/processing_datasets/processing_camelyon16/clam_metrics"
-  # for plotting 
+  # ---------- for plotting 
   slide_root: "/home/mvu9/datasets/camelyon16/raw_data/camelyon16/images"
- 
+  ground_truth_corr_path: "/home/mvu9/processing_datasets/processing_camelyon16/ground_truth_corr"
+  ground_truth_numpy_path: "/home/mvu9/processing_datasets/processing_camelyon16/ground_truth_numpy"
+
+
 fold_number: 5 
 label_dict:
   0: "normal"

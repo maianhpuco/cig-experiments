@@ -152,16 +152,14 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dry_run', type=int, default=0)
-    parser.add_argument('--config', default='configs_simea/clam_camelyon16.yaml')
-    parser.add_argument('--ig_name', default='integrated_gradient')
-    parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'])
-    parser.add_argument('--start_fold', type=int, default=1)
-    parser.add_argument('--end_fold', type=int, default=1)
+    parser.add_argument('--config', type=str, required=True)
+    args_cmd = parser.parse_args()
+
+    with open(args_cmd.config, 'r') as f:
+        config = yaml.safe_load(f)
 
     args = parser.parse_args()
-
-    with open(f'{args.config}', 'r') as f:
+    with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
     for key, val in config.items():
@@ -170,10 +168,4 @@ if __name__ == "__main__":
         else:
             setattr(args, key, val)
 
-    args.dataset_name = config['dataset_name']
-    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-
-    print(" > Start computing contrastive samples for dataset:", args.dataset_name)
-    for fold_id in range(args.start_fold, args.end_fold + 1):
-        args.fold = fold_id
-        main(args)
+    main(args)

@@ -1199,3 +1199,6 @@ plot_tcga_lung_mlp:
 	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name cig
 	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name idg
 	CUDA_VISIBLE_DEVICES=7 python plot.py --config configs_simea/mlp_tcga_lung.yaml --ig_name eg
+
+proc_anno:
+	python processing_anno.py --config configs_simea/clam_camelyon16.yaml
