@@ -7,7 +7,7 @@ from saliency.core.base import INPUT_OUTPUT_GRADIENTS
 import torch
 import torch.nn.functional as F
 
-class ContrastiveGradients(CoreSaliency):
+class CIG(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
 
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
