@@ -849,4 +849,271 @@ group_basic_mlp_tcga_lung: mlp_ig_tcga_lung mlp_g_tcga_lung mlp_eg_tcga_lung mlp
 group_adv_mlp_tcga_lung: mlp_cig_tcga_lung mlp_idg_tcga_lung
 
 
-rerun_cig_clam: clam_cig_camelyon16 
+
+
+
+# === TOP-K NPC Targets for Camelyon16 (MLP) ===
+topknpc_mlp_ig_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name ig
+
+topknpc_mlp_eg_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name eg
+
+topknpc_mlp_idg_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name idg
+
+topknpc_mlp_cig_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name cig
+
+topknpc_mlp_g_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name g
+
+topknpc_mlp_random_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_camelyon16.yaml \
+		--ckpt_path $(CKPT_MLP_CAMELYON16) \
+		--ig_name random
+
+group_basic_topknpc_mlp_camelyon16: topknpc_mlp_ig_camelyon16 topknpc_mlp_g_camelyon16 topknpc_mlp_eg_camelyon16
+group_adv_topknpc_mlp_camelyon16: topknpc_mlp_cig_camelyon16 topknpc_mlp_idg_camelyon16
+group_all_topknpc_mlp_camelyon16: \
+	topknpc_mlp_ig_camelyon16 topknpc_mlp_g_camelyon16 topknpc_mlp_eg_camelyon16 \
+	topknpc_mlp_cig_camelyon16 topknpc_mlp_idg_camelyon16 
+
+
+# === TOP-K NPC Targets for TCGA Renal (MLP) ===
+topknpc_mlp_ig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name ig
+
+topknpc_mlp_eg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name eg
+
+topknpc_mlp_idg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name idg
+
+topknpc_mlp_cig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name cig
+
+topknpc_mlp_g_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name g
+
+topknpc_mlp_random_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_RENAL) \
+		--ig_name random
+
+group_basic_topknpc_mlp_tcga_renal: topknpc_mlp_ig_tcga_renal topknpc_mlp_g_tcga_renal topknpc_mlp_eg_tcga_renal 
+group_adv_topknpc_mlp_tcga_renal: topknpc_mlp_cig_tcga_renal topknpc_mlp_idg_tcga_renal 
+group_all_topknpc_mlp_tcga_renal: \
+	topknpc_mlp_ig_tcga_renal topknpc_mlp_g_tcga_renal topknpc_mlp_eg_tcga_renal \
+	topknpc_mlp_cig_tcga_renal topknpc_mlp_idg_tcga_renal 
+
+
+# === TOP-K NPC Targets for TCGA Lung (MLP) ===
+topknpc_mlp_ig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name ig
+
+topknpc_mlp_eg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name eg
+
+topknpc_mlp_idg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name idg
+
+topknpc_mlp_cig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name cig
+
+topknpc_mlp_g_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name g
+
+topknpc_mlp_random_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_mlp_topk.py \
+		--config configs_simea/mlp_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_MLP_TCGA_LUNG) \
+		--ig_name random
+
+group_basic_topknpc_mlp_tcga_lung: topknpc_mlp_ig_tcga_lung topknpc_mlp_g_tcga_lung topknpc_mlp_eg_tcga_lung
+group_adv_topknpc_mlp_tcga_lung: topknpc_mlp_cig_tcga_lung topknpc_mlp_idg_tcga_lung
+group_all_topknpc_mlp_tcga_lung: \
+	topknpc_mlp_ig_tcga_lung topknpc_mlp_g_tcga_lung topknpc_mlp_eg_tcga_lung \
+	topknpc_mlp_cig_tcga_lung topknpc_mlp_idg_tcga_lung 
+
+
+
+# === TOP-K NPC Targets for Camelyon16 (CLAM) ===
+topknpc_clam_ig_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name ig
+
+topknpc_clam_eg_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name eg
+
+topknpc_clam_idg_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name idg
+
+topknpc_clam_cig_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name cig
+
+topknpc_clam_g_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name g
+
+topknpc_clam_random_camelyon16:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_camelyon16.yaml \
+		--ckpt_path $(CKPT_CLAM_CAMELYON16) \
+		--ig_name random
+
+group_basic_topknpc_clam_camelyon16: topknpc_clam_ig_camelyon16 topknpc_clam_g_camelyon16 topknpc_clam_eg_camelyon16
+group_adv_topknpc_clam_camelyon16: topknpc_clam_cig_camelyon16 topknpc_clam_idg_camelyon16
+group_all_topknpc_clam_camelyon16: \
+	topknpc_clam_ig_camelyon16 topknpc_clam_g_camelyon16 topknpc_clam_eg_camelyon16 \
+	topknpc_clam_cig_camelyon16 topknpc_clam_idg_camelyon16 topknpc_clam_random_camelyon16
+
+
+# === TOP-K NPC Targets for TCGA Renal (CLAM) ===
+topknpc_clam_ig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
+		--ig_name ig
+
+topknpc_clam_eg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
+		--ig_name eg
+
+topknpc_clam_idg_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
+		--ig_name idg
+
+topknpc_clam_cig_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
+		--ig_name cig
+
+topknpc_clam_g_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
+		--ig_name g
+
+topknpc_clam_random_tcga_renal:
+	CUDA_VISIBLE_DEVICES=2 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_renal.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_RENAL) \
+		--ig_name random
+
+group_basic_topknpc_clam_tcga_renal: topknpc_clam_ig_tcga_renal topknpc_clam_g_tcga_renal topknpc_clam_eg_tcga_renal
+group_adv_topknpc_clam_tcga_renal: topknpc_clam_cig_tcga_renal topknpc_clam_idg_tcga_renal
+group_all_topknpc_clam_tcga_renal: \
+	topknpc_clam_ig_tcga_renal topknpc_clam_g_tcga_renal topknpc_clam_eg_tcga_renal \
+	topknpc_clam_cig_tcga_renal topknpc_clam_idg_tcga_renal topknpc_clam_random_tcga_renal
+
+
+# === TOP-K NPC Targets for TCGA Lung (CLAM) ===
+topknpc_clam_ig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
+		--ig_name ig
+
+topknpc_clam_eg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
+		--ig_name eg
+
+topknpc_clam_idg_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
+		--ig_name idg
+
+topknpc_clam_cig_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
+		--ig_name cig
+
+topknpc_clam_g_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
+		--ig_name g
+
+topknpc_clam_random_tcga_lung:
+	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topk.py \
+		--config configs_simea/clam_tcga_lung.yaml \
+		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
+		--ig_name random
+
+group_basic_topknpc_clam_tcga_lung: topknpc_clam_ig_tcga_lung topknpc_clam_g_tcga_lung topknpc_clam_eg_tcga_lung
+group_adv_topknpc_clam_tcga_lung: topknpc_clam_cig_tcga_lung topknpc_clam_idg_tcga_lung
+group_all_topknpc_clam_tcga_lung: \
+	topknpc_clam_ig_tcga_lung topknpc_clam_g_tcga_lung topknpc_clam_eg_tcga_lung \
+	topknpc_clam_cig_tcga_lung topknpc_clam_idg_tcga_lung topknpc_clam_random_tcga_lung
+
+
