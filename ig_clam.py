@@ -249,8 +249,8 @@ if __name__ == "__main__":
     if args.dataset_name =='tcga_renal':
         args.data_dir_map = config['paths']['data_dir'] 
     
-    # args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    args.device = 'cpu'
+    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    # args.device = 'cpu'
     os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
 
     print(" > Start compute IG for dataset: ", args.dataset_name)
