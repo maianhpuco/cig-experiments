@@ -58,7 +58,7 @@ def main(args):
         coords = h5_data["coordinates"] if isinstance(h5_data, dict) else h5_data
 
         mask = check_xy_in_coordinates_fast(df_xml, coords)
-        mask_save_path = os.path.join(args.ground_truth_numpy_dir, f"{base}.npy")
+        mask_save_path = os.path.join(args.paths['ground_truth_numpy_dir'], f"{base}.npy")
         np.save(mask_save_path, mask)
         print(f"Saved mask to: {mask_save_path}, sum={np.sum(mask)}")
         # Load corresponding .pt file
@@ -75,7 +75,7 @@ def main(args):
         else:
             print(f"[WARN] PT file not found: {pt_path}") 
     total_csv = len(os.listdir(args.paths['ground_truth_corr_dir']))
-    total_mask = len(os.listdir(args.ground_truth_numpy_dir))
+    total_mask = len(os.listdir(args.paths['ground_truth_numpy_dir']))
     print(f"\n ✅ Finished.")
     print(f"+ Total annotations processed: {len(valid_annotations)}")
     print(f"+ Total CSVs: {total_csv}")
@@ -102,9 +102,9 @@ if __name__ == "__main__":
     # args.paths['annotation_dir'] = r"{annotation_dir}"
     # args.paths['h5_files'] = r"{h5_files}"
     # args.paths['ground_truth_corr_dir'] = r"{ground_truth_corr_dir}"
-    # args.ground_truth_numpy_dir = r"{ground_truth_numpy_dir}"
+    # args.paths['ground_truth_numpy_dir'] = r"{ground_truth_numpy_dir}"
 
-    for path in [args.paths['ground_truth_corr_dir'], args.ground_truth_numpy_dir]:
+    for path in [args.paths['ground_truth_corr_dir'], args.paths['ground_truth_numpy_dir']]:
         os.makedirs(path, exist_ok=True)
 
     main(args)
