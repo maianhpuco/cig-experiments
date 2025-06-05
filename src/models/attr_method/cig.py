@@ -49,9 +49,10 @@ class CIG(CoreSaliency):
             # Compute L2 loss between step and reference logits
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
             loss.backward()
-            gradients = x_step_batch.grad.numpy() 
+            
             if x_step_batch.grad is None:
                 raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.") 
+            gradients = x_step_batch.grad.numpy() 
             # gradients = torch.autograd.grad(
             #     outputs=loss,
             #     inputs=x_step_batch,
