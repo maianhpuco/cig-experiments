@@ -23,6 +23,7 @@ for base_dir in base_dirs:
         try:
             df = pd.read_csv(file)
             print(df.head(3))
+            print(df.columns)
             method_name = df['IG'].iloc[0].lower()  # Assumes consistent IG name in each file
             df['method'] = method_name
             all_dfs.append(df)
