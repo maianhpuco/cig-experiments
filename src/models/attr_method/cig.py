@@ -125,6 +125,12 @@ def call_model_function(inputs, model, call_model_args=None):
 
     return outputs
 
+import os
+import numpy as np
+import torch
+from tqdm import tqdm
+from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+
 class CIG(CoreSaliency):
     """
     Contrastive Integrated Gradients Attribution for per-class computation.
@@ -156,21 +162,23 @@ class CIG(CoreSaliency):
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = x_baseline_batch + alpha * x_diff
 
-            x_step_batch_torch = torch.tensor(x_step_batch, dtype=torch.float32, device=device, requires_grad=True)
+            x_step_batch_torch = torch.tensor(x_step_batch.copy(), dtype=torch.float32, requires_grad=True).to(device)
             x_step_batch_torch.retain_grad()
-
-            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32, device=device)
 
             if x_step_batch_torch.dim() == 2:
                 x_step_batch_torch = x_step_batch_torch.unsqueeze(0)
+
+            x_baseline_torch = torch.tensor(x_baseline_batch.copy(), dtype=torch.float32).to(device)
             if x_baseline_torch.dim() == 2:
                 x_baseline_torch = x_baseline_torch.unsqueeze(0)
 
-            logits_r = call_model_function(x_baseline_torch, model, call_model_args)
-            if isinstance(logits_r, dict):
-                logits_r = logits_r.get("logits", list(logits_r.values())[0])
-            if isinstance(logits_r, tuple):
-                logits_r = logits_r[0]
+            # Detach logits to ensure they don't hold graph
+            with torch.no_grad():
+                logits_r = call_model_function(x_baseline_torch, model, call_model_args)
+                if isinstance(logits_r, dict):
+                    logits_r = logits_r.get("logits", list(logits_r.values())[0])
+                if isinstance(logits_r, tuple):
+                    logits_r = logits_r[0]
 
             logits_step = call_model_function(x_step_batch_torch, model, call_model_args)
             if isinstance(logits_step, dict):
