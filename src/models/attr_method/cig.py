@@ -41,10 +41,11 @@ class CIG(CoreSaliency):
         alphas = torch.linspace(0, 1, x_steps + 1, device=device)[1:]  # Skip alpha=0
 
         # Precompute reference logits
-        with torch.no_grad():
-            logits_r = call_model_function(baseline_features, model, call_model_args)
-            if isinstance(logits_r, tuple):
-                logits_r = logits_r[0]
+        # with torch.no_grad():
+        # baseline_features.
+        logits_r = call_model_function(baseline_features, model, call_model_args)
+        if isinstance(logits_r, tuple):
+            logits_r = logits_r[0]
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = (baseline_features + alpha * x_diff).detach()
