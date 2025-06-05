@@ -61,12 +61,17 @@ def compute_one_ig(args):
         gt_normal = (gt_mask == 0).astype(np.uint8)
         pred_normal = 1 - pred_mask
 
+        print("> Sum gt_tumor", gt_tumor.sum())
+        print("> Sum gt_normal", gt_normal.sum())
+        
+        print("> Sum gt_tumor", gt_tumor.sum())
+        print("> Sum gt_normal", gt_normal.sum())  
+        
         dice_tumor = dice_score(gt_tumor, pred_mask)
         iou_tumor = iou_score(gt_tumor, pred_mask)
         dice_normal = dice_score(gt_normal, pred_normal)
         iou_normal = iou_score(gt_normal, pred_normal)
-
-        results.append({
+        result = {
             "slide_id": basename,
             "dice_tumor": dice_tumor,
             "iou_tumor": iou_tumor,
@@ -75,7 +80,10 @@ def compute_one_ig(args):
             "threshold": threshold,
             "gt_sum": int(gt_tumor.sum()),
             "pred_sum": int(pred_mask.sum())
-        })
+        }
+        results.append(result)
+        print(result)
+        return 
 
     df_result = pd.DataFrame(results)
     output_dir = os.path.join(args.paths['dice_iou_dir'], f"{args.ig_name}")

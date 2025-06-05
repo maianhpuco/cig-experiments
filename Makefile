@@ -1204,14 +1204,11 @@ proc_anno:
 	python processing_anno.py --config configs_simea/clam_camelyon16.yaml
 
 # proc_anno >> compute_iou_dice_camelyon 16 
-
-dice_iou_clam_camelyon16_g:
+test_dice_iou:
 	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name g
-dice_iou_clam_camelyon16_ig:
+dice_iou_clam_camelyon16:
+	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name g
 	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
-dice_iou_clam_camelyon16_cig:
 	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
-dice_iou_clam_camelyon16_idg:
 	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
-dice_iou_clam_camelyon16_eg:
 	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
