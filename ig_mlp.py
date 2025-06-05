@@ -113,14 +113,17 @@ def main(args):
 
     test_dataset = load_dataset(args, fold_id=args.fold)
     for idx, data in enumerate(test_dataset):
+        
+        features, label = data[:2]
+        features = features.unsqueeze(0) if features.dim() == 2 else features
+        basename = test_dataset.slide_data['slide_id'].iloc[idx]
+        # ---- check if it already exist 
         save_dir = os.path.join(args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{args.fold}') 
         save_path = os.path.join(save_dir, f"{basename}.npy") 
         if args.skip_if_exists and os.path.isfile(save_path):
             print(f"[{idx+1}/{len(test_dataset)}] Skipping {basename} (already exists: {save_path})")
-            continue 
-        features, label = data[:2]
-        features = features.unsqueeze(0) if features.dim() == 2 else features
-        basename = test_dataset.slide_data['slide_id'].iloc[idx]
+            continue  
+        #------ 
         features = features.to(args.device, dtype=torch.float32)
 
         with torch.no_grad():
