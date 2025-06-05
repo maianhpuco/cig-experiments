@@ -3,6 +3,17 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
+import torch.nn.functional as F
+
+import os
+import numpy as np
+import saliency.core as saliency
+from tqdm import tqdm
+from saliency.core.base import CoreSaliency
+from saliency.core.base import INPUT_OUTPUT_GRADIENTS
+import torch
+import torch.nn.functional as F
+from attr_method._common import PreprocessInputs, call_model_function
 
 class ContrastiveGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""
@@ -43,8 +54,8 @@ class ContrastiveGradients(CoreSaliency):
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
 
-            # Compute L2 loss between step and reference logits
-            loss = torch.norm(logits_step - logits_r, p=2) ** 2
+            l2_loss = torch.norm(logits_step - logits_r, p=2) ** 2
+            loss = l2_loss / (l2_loss.item() + 1e-8)
 
             gradients = torch.autograd.grad(
                 outputs=loss,
@@ -65,4 +76,3 @@ class ContrastiveGradients(CoreSaliency):
         x_diff_mean = x_diff.mean(dim=0)
         attribution_values *= x_diff_mean
         return attribution_values.detach().cpu().numpy() / x_steps
- 
