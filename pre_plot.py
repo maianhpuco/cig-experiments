@@ -37,10 +37,10 @@ def extract_slide_metadata(args):
         dataset_name = args.dataset_name
 
         if dataset_name == "camelyon16":
-            slide_path = os.path.join(args.paths.slide_root, f"{basename}.tif")
-            classes = [1]
+            slide_path = os.path.join(args.paths['slide_root'], f"{basename}.tif")
+            
         elif dataset_name in ["tcga_renal", 'tcga_lung']:
-            slide_path = find_slide_path_mapping(basename, args.paths.slide_root)
+            slide_path = find_slide_path_mapping(basename, args.paths['slide_root'])
             if slide_path is None:
                 error_list.append(basename)
                 continue
@@ -79,8 +79,8 @@ def extract_slide_metadata(args):
         })
 
     meta_df = pd.DataFrame(meta_list)
-    os.makedirs(args.paths['metadata_dir'], exist_ok=True)
-    output_path = os.path.join(args.paths['metadata_dir'], f"meta_fold_{fold_id}.pkl")
+    os.makedirs(args.paths['metadata_plot_dir'], exist_ok=True)
+    output_path = os.path.join(args.paths['metadata_plot_dir'], f"meta_fold_{fold_id}.pkl")
     meta_df.to_pickle(output_path)
     
     print(f"\n✅ Metadata saved to: {output_path}")
