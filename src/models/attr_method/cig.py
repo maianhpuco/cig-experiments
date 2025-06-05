@@ -44,6 +44,7 @@ class CIG(CoreSaliency):
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
             x_step_batch = (baseline_features + alpha * x_diff).requires_grad_(True)
+            
             with torch.no_grad():
                 logits_r = call_model_function(baseline_features, model, call_model_args)
                 if isinstance(logits_r, tuple):
@@ -55,12 +56,13 @@ class CIG(CoreSaliency):
 
             # Compute L2 loss between step and reference logits
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
+            print("Leaf:", x_step_batch.is_leaf, "Requires grad:", x_step_batch.requires_grad)
 
             gradients = torch.autograd.grad(
                 outputs=loss,
                 inputs=x_step_batch,
                 grad_outputs=torch.ones_like(loss),
-                retain_graph=False,
+                retain_graph=True,
                 create_graph=False,
                 allow_unused=True
             )[0]
