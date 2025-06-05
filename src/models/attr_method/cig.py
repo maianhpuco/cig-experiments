@@ -97,8 +97,7 @@ class CIG(CoreSaliency):
         #     x_baseline_batch = baseline_features[sampled_indices].unsqueeze(0)  # [1, N, D]
         # except (IndexError, ValueError):
         #     print("Warning: Invalid baseline sampling, using zero baseline")
-            x_baseline_batch = torch.zeros_like(x_value, device=device)  # [1, N, D]
-
+            
         x_diff = x_value - x_baseline_batch  # [1, N, D]
 
         # Check x_diff norm
