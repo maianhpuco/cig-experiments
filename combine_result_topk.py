@@ -33,21 +33,30 @@ for base_dir in base_dirs:
 if all_dfs:
     combined_df = pd.concat(all_dfs, ignore_index=True)
 
-    # Group by source_folder, method, pred_label
-    grouped = (
-        combined_df
-        .groupby(['source_folder', 'method', 'pred_label'])[['AIC', 'SIC']]
-        .agg(['mean', 'std'])
-        .reset_index()
-    )
+    # Split into separate tables per folder
+    for folder, df_group in combined_df.groupby('source_folder'):
+        print(f"\n=== {folder.upper()} ===")
 
-    # Flatten MultiIndex columns
-    grouped.columns = ['source_folder', 'method', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
+        # For camelyon (clam_metrics), drop pred_label == 0
+        if folder == "clam_metrics":
+            df_group = df_group[df_group['pred_label'] != 0]
 
-    # Sort by source_folder, pred_label, then SIC_mean (descending)
-    grouped = grouped.sort_values(by=['source_folder', 'pred_label', 'SIC_mean'], ascending=[True, True, False])
+        grouped = (
+            df_group
+            .groupby(['method', 'pred_label'])[['AIC', 'SIC']]
+            .agg(['mean', 'std'])
+            .reset_index()
+        )
 
-    print("\n=== Grouped by source_folder, method, pred_label (sorted) ===")
-    print(grouped.to_string(index=False))
+        # Flatten MultiIndex columns
+        grouped.columns = ['method', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
+
+        # Add folder name
+        grouped.insert(0, 'source_folder', folder)
+
+        # Sort
+        grouped = grouped.sort_values(by=['pred_label', 'SIC_mean'], ascending=[True, False])
+
+        print(grouped.to_string(index=False))
 else:
     print("No valid result files found.")
