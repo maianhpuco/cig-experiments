@@ -142,21 +142,46 @@ def check_coor(x, y, box):
     ymax, xmax, ymin, xmin = box  
     return xmin <= x <= xmax and ymin <= y <= ymax  # True if inside the bounding box
 
+# def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5):
+#     """
+#     Vectorized function using R-tree for fast lookup.
+#     """
+#     label = np.zeros(len(coordinates_h5), dtype=np.int8)  
+
+#     rtree_index = index.Index((i, (xmin, ymin, xmax, ymax), None) for i, (ymax, xmax, ymin, xmin) in enumerate(coordinates_h5))
+
+#     xy_pairs = np.column_stack((coordinates_xml["X"], coordinates_xml["Y"]))  # Convert to NumPy array for vectorized operations
+
+#     for i, (x, y) in enumerate(xy_pairs):
+#         possible_matches = list(rtree_index.intersection((x, y, x, y)))  
+        
+#         if possible_matches:
+#             label[possible_matches] = 1  # Vectorized assignment
+
+#     return label
+#  a
 def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5):
     """
     Vectorized function using R-tree for fast lookup.
     """
-    label = np.zeros(len(coordinates_h5), dtype=np.int8)  
+    if len(coordinates_h5) == 0:
+        print("[WARN] Empty H5 coordinate list passed to R-tree.")
+        return np.zeros(0, dtype=np.int8)
 
-    rtree_index = index.Index((i, (xmin, ymin, xmax, ymax), None) for i, (ymax, xmax, ymin, xmin) in enumerate(coordinates_h5))
+    label = np.zeros(len(coordinates_h5), dtype=np.int8)
 
-    xy_pairs = np.column_stack((coordinates_xml["X"], coordinates_xml["Y"]))  # Convert to NumPy array for vectorized operations
+    try:
+        rtree_index = index.Index((i, (xmin, ymin, xmax, ymax), None) 
+                                  for i, (ymax, xmax, ymin, xmin) in enumerate(coordinates_h5))
+    except Exception as e:
+        print(f"[ERROR] Failed to create R-tree index: {e}")
+        return label
+
+    xy_pairs = np.column_stack((coordinates_xml["X"], coordinates_xml["Y"]))
 
     for i, (x, y) in enumerate(xy_pairs):
         possible_matches = list(rtree_index.intersection((x, y, x, y)))  
-        
         if possible_matches:
             label[possible_matches] = 1  # Vectorized assignment
 
     return label
- 

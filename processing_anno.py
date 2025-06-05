@@ -56,7 +56,9 @@ def main(args):
 
         h5_data = read_h5_data(h5_path)
         coords = h5_data["coords"] if isinstance(h5_data, dict) else h5_data
-
+        if coords is None or len(coords) == 0:
+            print(f"[SKIP] No coordinates in {h5_path}")
+            return  
         mask = check_xy_in_coordinates_fast(df_xml, coords)
         mask_save_path = os.path.join(args.paths['ground_truth_numpy_dir'], f"{base}.npy")
         np.save(mask_save_path, mask)
