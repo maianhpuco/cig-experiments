@@ -58,6 +58,7 @@ class CIG(CoreSaliency):
 
             # Forward pass with gradient tracking
             logits_step = call_model_function(x_step_batch, model, call_model_args)
+            
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
 
@@ -67,7 +68,10 @@ class CIG(CoreSaliency):
             # Compute contrastive loss
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
             print(f"[Debug] logits_step.requires_grad: {logits_step.requires_grad}")
- 
+            loss.backward()
+            
+            if logits_step.grad is None:
+                raise RuntimeError("Gradients are not being computed! Ensure tensors require gradients.") 
             # Compute gradients
             gradients = torch.autograd.grad(
                 outputs=loss,
