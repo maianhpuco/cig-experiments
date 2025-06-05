@@ -34,12 +34,20 @@ if all_dfs:
     combined_df = pd.concat(all_dfs, ignore_index=True)
 
     # Group by source_folder, method, pred_label
-    grouped = combined_df.groupby(['source_folder', 'method', 'pred_label'])[['AIC', 'SIC']].agg(['mean', 'std']).reset_index()
+    grouped = (
+        combined_df
+        .groupby(['source_folder', 'method', 'pred_label'])[['AIC', 'SIC']]
+        .agg(['mean', 'std'])
+        .reset_index()
+    )
 
     # Flatten MultiIndex columns
     grouped.columns = ['source_folder', 'method', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
 
-    print("\n=== Grouped by source_folder, method, pred_label ===")
+    # Sort by source_folder, pred_label, then SIC_mean (descending)
+    grouped = grouped.sort_values(by=['source_folder', 'pred_label', 'SIC_mean'], ascending=[True, True, False])
+
+    print("\n=== Grouped by source_folder, method, pred_label (sorted) ===")
     print(grouped.to_string(index=False))
 else:
     print("No valid result files found.")
