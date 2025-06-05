@@ -146,17 +146,22 @@ class CIG(CoreSaliency):
         target_class_idx = call_model_args.get("target_class_idx", 0)
         call_model_function = kwargs.get("call_model_function")
 
-        # Convert to numpy if input is tensor
-        if isinstance(x_value, torch.Tensor):
-            x_value = x_value.detach().cpu().numpy()
-        if isinstance(baseline_features, torch.Tensor):
-            baseline_features = baseline_features.detach().cpu().numpy()
+        # Convert x_value and baseline_features to torch tensors early
+        
+        if isinstance(x_value, np.ndarray):
+            x_value = torch.tensor(x_value, dtype=torch.float32).to(device)
+        else:
+            x_value = x_value.detach().clone().to(device).float() 
 
+        if isinstance(baseline_features, np.ndarray):
+            baseline_features = torch.tensor(baseline_features, dtype=torch.float32).to(device)
+        else:
+            baseline_features = baseline_features.detach().clone().to(device).float() 
+            
         attribution_values = np.zeros_like(x_value, dtype=np.float32)
-        alphas = np.linspace(0, 1, x_steps)
+        alphas = np.linspace(0, 1, x_steps)[1:]
 
-        sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
-        x_baseline_batch = baseline_features[sampled_indices]
+        x_baseline_batch = baseline_features
         x_diff = x_value - x_baseline_batch
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
