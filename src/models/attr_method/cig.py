@@ -130,7 +130,7 @@ class CIG(CoreSaliency):
             baseline_features = baseline_features.detach().cpu().numpy()
 
         attribution_values = np.zeros_like(x_value, dtype=np.float32)
-        alphas = np.linspace(0, 1, x_steps)
+        alphas = np.linspace(0, 1, x_steps)[1:]
 
         sampled_indices = np.random.choice(baseline_features.shape[0], (1, x_value.shape[0]), replace=True)
         x_baseline_batch = baseline_features[sampled_indices]
