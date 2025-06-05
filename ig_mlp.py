@@ -38,13 +38,14 @@ def load_ig_module(args):
     def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
         device = next(model.parameters()).device
         inputs = inputs.to(device)
+        
         if not inputs.requires_grad:
             inputs.requires_grad_(True)
 
         model.eval()
-        print("input shape", inputs.shape)
+        # print("input shape", inputs.shape)
         logits = model(inputs)
-        print(logits)
+        # print(logits)
 
         if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
             class_idx = call_model_args.get("target_class_idx", 0)
@@ -173,8 +174,8 @@ if __name__ == "__main__":
     parser.add_argument('--fold_end', type=int, default=1)
     parser.add_argument('--device', type=str, default=None, choices=['cuda', 'cpu'])
     parser.add_argument('--ckpt_path', type=str, required=True)
-    parser.add_argument('--skip_if_exists', type=int, default=1, help='Skip if attribution file already exists')
- 
+    parser.add_argument('--skip_if_exists', type=int, default=0, help='Skip if attribution file already exists')
+   
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
