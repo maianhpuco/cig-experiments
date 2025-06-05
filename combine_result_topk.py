@@ -33,16 +33,16 @@ for base_dir in base_dirs:
 if all_dfs:
     combined_df = pd.concat(all_dfs, ignore_index=True)
 
-    # Split into separate tables per folder
-    for folder, df_group in combined_df.groupby('source_folder'):
+    # Group by folder
+    for folder, folder_df in combined_df.groupby('source_folder'):
         print(f"\n=== {folder.upper()} ===")
 
-        # For camelyon (clam_metrics), drop pred_label == 0
-        if folder == "clam_metrics":
-            df_group = df_group[df_group['pred_label'] != 0]
+        # Exclude class 0 for clam_metrics
+        filtered_df = folder_df if folder != "clam_metrics" else folder_df[folder_df['pred_label'] != 0]
 
+        # Group by method and pred_label
         grouped = (
-            df_group
+            filtered_df
             .groupby(['method', 'pred_label'])[['AIC', 'SIC']]
             .agg(['mean', 'std'])
             .reset_index()
@@ -54,9 +54,10 @@ if all_dfs:
         # Add folder name
         grouped.insert(0, 'source_folder', folder)
 
-        # Sort
-        grouped = grouped.sort_values(by=['pred_label', 'SIC_mean'], ascending=[True, False])
-
-        print(grouped.to_string(index=False))
+        # Split by pred_label
+        for pred_label, pred_df in grouped.groupby('pred_label'):
+            print(f"\n--- Prediction Class: {pred_label} ---")
+            pred_df_sorted = pred_df.sort_values(by='SIC_mean', ascending=False)
+            print(pred_df_sorted.to_string(index=False))
 else:
     print("No valid result files found.")
