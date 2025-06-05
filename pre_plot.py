@@ -12,9 +12,9 @@ from tqdm import tqdm
 sys.path.extend([
     os.path.join("src/evaluation")
 ])
-
-from utils.visualization_utils import rescaling_stat_for_segmentation
-
+from utils_plot import (
+    rescaling_stat_for_segmentation, 
+)
 
 def find_slide_path_mapping(basename, slide_root):
     pattern = os.path.join(slide_root, "*/*", f"{basename}.svs")
