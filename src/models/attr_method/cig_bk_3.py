@@ -5,15 +5,7 @@ from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 import torch.nn.functional as F
 
-import os
-import numpy as np
-import saliency.core as saliency
-from tqdm import tqdm
-from saliency.core.base import CoreSaliency
-from saliency.core.base import INPUT_OUTPUT_GRADIENTS
-import torch
-import torch.nn.functional as F
-from attr_method._common import PreprocessInputs, call_model_function
+import o
 
 class ContrastiveGradients(CoreSaliency):
     """Efficient Integrated Gradients with Counterfactual Attribution"""

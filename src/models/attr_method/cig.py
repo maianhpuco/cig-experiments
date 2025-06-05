@@ -60,23 +60,23 @@ class CIG(CoreSaliency):
             print("Leaf:", x_step_batch.is_leaf, "Requires grad:", x_step_batch.requires_grad)
             print("Leaf:", baseline_features.is_leaf, "Requires grad:", baseline_features.requires_grad)
             print("Loss:", loss.item(), "Requires grad:", loss.requires_grad)
+            print("x_step_batch.grad", x_step_batch.grad)
+        #     gradients = torch.autograd.grad(
+        #         outputs=loss,
+        #         inputs=x_step_batch,
+        #         grad_outputs=torch.ones_like(loss),
+        #         retain_graph=True,
+        #         create_graph=False,
+        #         allow_unused=True
+        #     )[0]
 
-            gradients = torch.autograd.grad(
-                outputs=loss,
-                inputs=x_step_batch,
-                grad_outputs=torch.ones_like(loss),
-                retain_graph=True,
-                create_graph=False,
-                allow_unused=True
-            )[0]
+        #     if gradients is None:
+        #         print(f">>>>> No gradients at alpha {alpha:.2f}, skipping")
+        #         continue
 
-            if gradients is None:
-                print(f">>>>> No gradients at alpha {alpha:.2f}, skipping")
-                continue
+        #     counterfactual_gradients = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
+        #     attribution_values += counterfactual_gradients
 
-            counterfactual_gradients = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
-            attribution_values += counterfactual_gradients
-
-        x_diff_mean = x_diff.mean(dim=0)
-        attribution_values *= x_diff_mean
-        return attribution_values.detach().cpu().numpy() / x_steps
+        # x_diff_mean = x_diff.mean(dim=0)
+        # attribution_values *= x_diff_mean
+        # return attribution_values.detach().cpu().numpy() / x_steps
