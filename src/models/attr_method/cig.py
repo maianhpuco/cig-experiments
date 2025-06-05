@@ -43,26 +43,28 @@ class CIG(CoreSaliency):
         # Precompute reference logits
 
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
-            x_step_batch = (baseline_features + alpha * x_diff).requires_grad_(True)
-            x_step_batch.retain_grad()  # <-- add this line 
-            baseline_features.requires_grad = False  
+            x_step_batch = baseline_features + alpha * x_diff  # [1, N, D]
+            x_step_batch.requires_grad_(True)  # Ensure it's a leaf with grad
+            x_step_batch.retain_grad()
+
+            # Forward pass - no torch.no_grad() here
             logits_r = call_model_function(baseline_features, model, call_model_args)
             if isinstance(logits_r, tuple):
                 logits_r = logits_r[0]
-            logits_r = logits_r.detach()
- 
+            logits_r = logits_r.detach()  # detach so it's not part of graph
+
             logits_step = call_model_function(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
 
-            # Compute L2 loss between step and reference logits
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
             loss.backward()
-            print("Leaf:", x_step_batch.is_leaf, "Requires grad:", x_step_batch.requires_grad)
-            print("Leaf:", baseline_features.is_leaf, "Requires grad:", baseline_features.requires_grad)
-            print("Loss:", loss.item(), "Requires grad:", loss.requires_grad)
-            print("\n >>> x_step_batch.grad", x_step_batch.grad)
-            
+
+            print("Loss:", loss.item())
+            print("x_step_batch.grad is None?", x_step_batch.grad is None)
+            if x_step_batch.grad is not None:
+                print("Grad shape:", x_step_batch.grad.shape)
+
         #     gradients = torch.autograd.grad(
         #         outputs=loss,
         #         inputs=x_step_batch,
