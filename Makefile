@@ -1239,5 +1239,5 @@ rs_topk:
 	python combine_result_topk.py
 
 
-rs_topknpc:
+result:
 	python combine_result_topknpc.py
