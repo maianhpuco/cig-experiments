@@ -91,14 +91,18 @@ def compute_one_slide(args, basename, model):
 
     print("========== LOAD ATTRIBUTION ==========")
     ig_name = args.ig_name
-    attribution_path = os.path.join(
-        args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", f"{basename}.npy"
-    )
-    if not os.path.isfile(attribution_path):
-        raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
-    attribution_values = np.load(attribution_path)
-    saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
-    saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+    if ig_name.lower() == 'random':
+        print("[INFO] Using random saliency map")
+        saliency_map = np.random.rand(features.shape[0]) 
+    else: 
+        attribution_path = os.path.join(
+            args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", f"{basename}.npy"
+        )
+        if not os.path.isfile(attribution_path):
+            raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
+        attribution_values = np.load(attribution_path)
+        saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
+        saliency_map = saliency_map / (saliency_map.max() + 1e-8)
     print(f"  - Saliency map shape: {saliency_map.shape} Stats: mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
 
     tumor_low = np.logspace(np.log10(0.00001), np.log10(0.05), num=7)

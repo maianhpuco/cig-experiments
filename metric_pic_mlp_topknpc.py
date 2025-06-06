@@ -84,14 +84,17 @@ def compute_one_slide(args, basename, model):
     baseline_pred = model(baseline)
     _, baseline_predicted_class = torch.max(baseline_pred, dim=1)
     print(f"> Baseline predicted class: {baseline_predicted_class.item()}")
-
-    ig_name = args.ig_name
-    attribution_path = os.path.join(args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", f"{basename}.npy")
-    if not os.path.isfile(attribution_path):
-        raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
-    attribution_values = np.load(attribution_path)
-    saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
-    saliency_map = saliency_map / (saliency_map.max() + 1e-8)
+    ig_name = args.ig_name 
+    if ig_name.lower() == 'random':
+        print("[INFO] Using random saliency map")
+        saliency_map = np.random.rand(features.shape[0]) 
+    else:
+        attribution_path = os.path.join(args.paths['attribution_scores_folder'], ig_name, f"fold_{fold_id}", f"{basename}.npy")
+        if not os.path.isfile(attribution_path):
+            raise FileNotFoundError(f"Attribution map not found: {attribution_path}")
+        attribution_values = np.load(attribution_path)
+        saliency_map = np.mean(np.abs(attribution_values), axis=-1).squeeze()
+        saliency_map = saliency_map / (saliency_map.max() + 1e-8)
     print(f"  - Saliency map stats: shape={saliency_map.shape}, mean={saliency_map.mean():.6f}, std={saliency_map.std():.6f}")
 
     # Generate saliency thresholds
