@@ -1212,3 +1212,10 @@ dice_iou_clam_camelyon16:
 	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
 	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
 	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
+
+dice_iou_mlp_camelyon16:
+	python metric2_compute_iou_dice.py --config configs_simea/mlp_camelyon16.yaml --ig_name g
+	python metric2_compute_iou_dice.py --config configs_simea/mlp_camelyon16.yaml --ig_name ig
+	python metric2_compute_iou_dice.py --config configs_simea/mlp_camelyon16.yaml --ig_name cig
+	python metric2_compute_iou_dice.py --config configs_simea/mlp_camelyon16.yaml --ig_name idg
+	python metric2_compute_iou_dice.py --config configs_simea/mlp_camelyon16.yaml --ig_name eg
