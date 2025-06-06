@@ -6,7 +6,7 @@ import argparse
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+import yaml
 
 def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, scores,
                         figsize=(10, 10), name="", save_path=None, patch_size=256):
