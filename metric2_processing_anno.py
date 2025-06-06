@@ -48,7 +48,7 @@ def main(args):
         if f.replace(".xml", ".h5") in h5_files and
         f.replace(".xml", ".csv") not in existing_csvs
     ]
-
+    valid_annotations = ann_list  
     print(f"Total files to process: {len(valid_annotations)}")
     if not valid_annotations:
         print("[WARN] No new annotations to process")
