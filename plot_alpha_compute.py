@@ -127,7 +127,6 @@ def get_baseline_features(args, fold_id, basename, features_size):
         baseline = baseline[idx]
     return baseline
 
-
 def save_stacked_attributions(attributions, save_prefix):
     os.makedirs(save_prefix, exist_ok=True)
 
@@ -139,14 +138,19 @@ def save_stacked_attributions(attributions, save_prefix):
 
     # Compute mean over D: [7, N]
     reduced_attr = np.mean(np.abs(alpha_samples), axis=-1)
-    
+
+    # Check if the reduced attribution is all (or nearly all) zero
+    attr_sum = np.sum(reduced_attr)
+    if attr_sum < 1e-6:
+        raise ValueError(f"[ERROR] Attribution matrix appears to be empty (sum={attr_sum:.4e}). Check the attribution pipeline.")
+
     # Save as a single (7, N) matrix
     save_path = os.path.join(save_prefix, "attr_alpha_avg.npy")
     np.save(save_path, reduced_attr)
-    print(f">>>> SAFE THE FILE WITH SHAPE {reduced_attr.shape} AT {save_path} ")
+    print(f">>>> SAVED the file with shape {reduced_attr.shape} and sum {attr_sum:.4f} at {save_path}")
     return reduced_attr
-
-
+ 
+ 
 def main(args):
     fold_id = args.fold
     ig_module, call_model_function = load_ig_module(args)
@@ -189,7 +193,7 @@ def main(args):
         }
 
         attributions = ig_module.GetMask(**kwargs)
-        return 
+
         save_prefix = os.path.join(
             args.paths['attr_score_for_multi_alpha_plot_dir'], f"{args.ig_name}", f"fold_{fold_id}", basename
         )
