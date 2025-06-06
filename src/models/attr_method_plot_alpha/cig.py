@@ -35,6 +35,7 @@ class CIG(CoreSaliency):
 
         baseline_features = baseline_features.unsqueeze(0)  # Shape: [1, N, D]
         attribution_values = torch.zeros_like(x_value, device=device)
+        
         x_diff = x_value - baseline_features
         x_diff_mean = x_diff.mean(dim=0)
 
@@ -44,19 +45,19 @@ class CIG(CoreSaliency):
         alpha_plot = alphas[alpha_indices]  # tensor of 7 selected alphas
         visual_attr_list = []
 
-        # Precompute reference logits
-        with torch.no_grad():
-            logits_r = call_model_function(baseline_features, model, call_model_args)
-            if isinstance(logits_r, tuple):
-                logits_r = logits_r[0]
-
+          
         for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing CIG", ncols=100)):
             x_step_batch = baseline_features + alpha * x_diff  # [1, N, D]
             x_step_batch.requires_grad_(True)
 
+            logits_r = call_model_function(baseline_features, model, call_model_args)
+            if isinstance(logits_r, tuple):
+                logits_r = logits_r[0]
+ 
             logits_step = call_model_function(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
+            
 
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
             loss.backward()
