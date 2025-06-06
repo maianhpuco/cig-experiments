@@ -5,8 +5,6 @@ import time
 import numpy as np
 import torch
 import yaml
-import shutil
-from torch import nn
 from tqdm import tqdm
 
 # Extend path to include model directories
@@ -145,15 +143,21 @@ def main(args):
             features, label, _ = data
 
         features = features.unsqueeze(0) if features.dim() == 2 else features
-        basename = test_dataset.slide_data['slide_id'].iloc[idx]
         features = features.to(args.device)
+        label = int(label)
+        basename = test_dataset.slide_data['slide_id'].iloc[idx]
 
         with torch.no_grad():
             logits = ModelWrapper(model).forward(features)
             probs = torch.softmax(logits, dim=1)
             pred_class = torch.argmax(probs, dim=1).item()
 
+        if pred_class != 1 or label != 1:
+            print(f"[SKIP] Slide {basename} (Label: {label}, Pred: {pred_class})")
+            continue
+
         baseline = get_baseline_features(args, args.fold, basename, features.shape[-2])
+
         kwargs = {
             "x_value": features,
             "call_model_function": call_model_function,
@@ -165,16 +169,15 @@ def main(args):
             "call_model_args": {"target_class_idx": pred_class},
         }
 
-        attributions = ig_module.GetMask(**kwargs)  # shape [7, N, D]
+        attributions = ig_module.GetMask(**kwargs)
         save_prefix = os.path.join(
             args.paths['attr_score_for_multi_alpha_plot_dir'], f"{args.ig_name}", f"fold_{args.fold}", basename
         )
         mean_attr = save_stacked_attributions(attributions, save_prefix)
 
-        # Sanity check
         scores = np.mean(np.abs(mean_attr), axis=-1)
         normalized = min_max_scale(scores)
-        print(f"[INFO] Saved IG for {basename}, shape: {normalized.shape}, sum: {np.sum(normalized):.4f}")
+        print(f"[SAVE] Slide: {basename} | Attr shape: {normalized.shape} | Sum: {np.sum(normalized):.4f}")
 
 
 if __name__ == "__main__":

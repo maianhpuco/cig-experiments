@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
-  
+
 class CIG(CoreSaliency):
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
@@ -13,7 +13,7 @@ class CIG(CoreSaliency):
         call_model_args = kwargs.get("call_model_args", {})
         baseline_features = kwargs.get("baseline_features")  # [N, D]
         x_steps = kwargs.get("x_steps", 50)
-        alpha_plot = kwargs.get("alpha_plot", [])
+        alpha_plot = kwargs.get("alpha_plot", [0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9])
         device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
 
         if isinstance(x_value, np.ndarray):
@@ -30,15 +30,19 @@ class CIG(CoreSaliency):
         baseline_features = baseline_features.unsqueeze(0)  # [1, N, D]
         x_diff = x_value - baseline_features
         alphas = torch.linspace(0, 1, x_steps + 1, device=device)[1:]
-        attribution_values = torch.zeros_like(x_value, device=device)
 
-        alpha_visual_attributions = {float(alpha.item()): [] for alpha in alphas if float(alpha.item()) in alpha_plot}
+        attribution_values = torch.zeros_like(x_value, device=device)
+        alpha_indices = sorted(list(set([
+            int((x_steps) * a) for a in alpha_plot if 0 < a <= 1
+        ])))  # 1-based to x_steps indices
+
+        visual_attr_list = []
 
         logits_r = call_model_function(baseline_features, model, call_model_args)
         if isinstance(logits_r, tuple):
             logits_r = logits_r[0]
 
-        for alpha in tqdm(alphas, desc="Computing CIG", ncols=100):
+        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing CIG", ncols=100)):
             x_step = baseline_features + alpha * x_diff
             x_step.requires_grad_(True)
 
@@ -56,17 +60,15 @@ class CIG(CoreSaliency):
             grads = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
             attribution_values += grads
 
-            alpha_float = float(alpha.item())
-            if alpha_float in alpha_visual_attributions:
+            if step_idx in alpha_indices:
                 intermediate_attr = grads * x_diff.squeeze(0)
-                alpha_visual_attributions[alpha_float].append(intermediate_attr.detach().cpu().numpy())
+                visual_attr_list.append(intermediate_attr.detach().cpu().numpy())
 
         x_diff_mean = x_diff.mean(dim=0)
         final_attr = (attribution_values * x_diff_mean).detach().cpu().numpy() / x_steps
+        stacked_attrs = np.stack(visual_attr_list) if visual_attr_list else np.zeros((0, *final_attr.shape))
 
         return {
-            "full": final_attr,  # [N, D]
-            "alpha_samples": {
-                alpha: np.stack(v) for alpha, v in alpha_visual_attributions.items()
-            }
+            "full": final_attr,         # [N, D]
+            "alpha_samples": stacked_attrs  # [7, N, D]
         }

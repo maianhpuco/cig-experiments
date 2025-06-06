@@ -1,7 +1,6 @@
-import os
 import numpy as np
-from tqdm import tqdm
 import torch
+from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 
 class VanillaGradients(CoreSaliency):
@@ -15,7 +14,7 @@ class VanillaGradients(CoreSaliency):
         model = kwargs.get("model")
         call_model_args = kwargs.get("call_model_args", None)
         baseline_features = kwargs.get("baseline_features")  # [M, D]
-        alpha_plot = kwargs.get("alpha_plot", [])  # List of alphas to extract attribution snapshots
+        alpha_plot = kwargs.get("alpha_plot", [0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9])
         num_alphas = kwargs.get("num_alphas", 50)
         device = kwargs.get("device", "cpu")
 
@@ -32,11 +31,15 @@ class VanillaGradients(CoreSaliency):
         x_baseline = baseline_features[sampled_idx]  # [N, D]
         x_diff = x_value - x_baseline
 
-        alphas = np.linspace(0, 1, num_alphas)
-        attribution_sum = torch.zeros_like(x_value, dtype=torch.float32, device=device)
-        alpha_samples = {}
+        alphas = torch.linspace(0, 1, num_alphas, device=device)
+        alpha_indices = sorted(list(set([
+            int(a * (num_alphas - 1)) for a in alpha_plot if 0 < a < 1
+        ])))
+        visual_attr_list = []
 
-        for alpha in tqdm(alphas, desc="VanillaGrad Alpha Steps", ncols=100):
+        attribution_sum = torch.zeros_like(x_value, dtype=torch.float32, device=device)
+
+        for i, alpha in enumerate(tqdm(alphas, desc="VanillaGrad Alpha Steps", ncols=100)):
             x_interp = x_baseline + alpha * x_diff
             x_interp.requires_grad_(True)
 
@@ -49,18 +52,17 @@ class VanillaGradients(CoreSaliency):
 
             self.format_and_check_call_model_output(call_model_output, x_interp.shape, self.expected_keys)
 
-            gradients = torch.tensor(
-                call_model_output[INPUT_OUTPUT_GRADIENTS],
-                device=device
-            )
-
+            gradients = torch.tensor(call_model_output[INPUT_OUTPUT_GRADIENTS], device=device)
             attribution_sum += gradients
 
-            if np.isclose(alpha, alpha_plot).any():
-                alpha_samples[float(alpha)] = gradients.detach().cpu().numpy()
+            if i in alpha_indices:
+                intermediate_attr = gradients * x_diff
+                visual_attr_list.append(intermediate_attr.detach().cpu().numpy())
 
         averaged_attr = (attribution_sum * x_diff) / num_alphas  # [N, D]
+        stacked_attrs = np.stack(visual_attr_list) if visual_attr_list else np.zeros((0, *averaged_attr.shape))
+
         return {
-            "full": averaged_attr.detach().cpu().numpy(),        # shape: [N, D]
-            "alpha_samples": alpha_samples                       # dict[float] -> [N, D]
+            "full": averaged_attr.detach().cpu().numpy(),        # [N, D]
+            "alpha_samples": stacked_attrs                       # [7, N, D]
         }
