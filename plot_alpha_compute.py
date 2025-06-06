@@ -5,9 +5,10 @@ import time
 import numpy as np
 import torch
 import yaml
+import pandas as pd
 from tqdm import tqdm
 
-# Extend path to include model directories
+# Extend sys.path to include model directories
 sys.path.extend([
     os.path.abspath("src/models"),
     os.path.abspath("src/models/classifiers"),
@@ -56,7 +57,6 @@ def load_ig_module(args):
 
         if not inputs.requires_grad:
             inputs.requires_grad_(True)
-
         if was_batched:
             inputs = inputs.squeeze(0)
 
@@ -132,9 +132,19 @@ def save_stacked_attributions(attributions, save_prefix):
 
 
 def main(args):
+    fold_id = args.fold
     ig_module, call_model_function = load_ig_module(args)
     model = load_clam_model(args, args.ckpt_path, device=args.device)
-    test_dataset = load_dataset(args, fold_id=args.fold)
+    test_dataset = load_dataset(args, fold_id=fold_id)
+
+    # Load prediction dataframe
+    pred_path = os.path.join(args.paths['predictions_dir'], f'test_preds_fold{fold_id}.csv')
+    pred_df = pd.read_csv(pred_path)
+    pred_df = pred_df[(pred_df['true_label'] == 1) & (pred_df['pred_label'] == 1)]
+    slide_ids = set(pred_df['slide_id'].tolist())
+
+    print(f"[INFO] Total slides in test set: {len(test_dataset)}")
+    print(f"[INFO] Slides with pred=1 and label=1: {len(slide_ids)}")
 
     for idx, data in enumerate(test_dataset):
         if args.dataset_name == 'camelyon16':
@@ -144,19 +154,13 @@ def main(args):
 
         features = features.unsqueeze(0) if features.dim() == 2 else features
         features = features.to(args.device)
-        label = int(label)
         basename = test_dataset.slide_data['slide_id'].iloc[idx]
 
-        with torch.no_grad():
-            logits = ModelWrapper(model).forward(features)
-            probs = torch.softmax(logits, dim=1)
-            pred_class = torch.argmax(probs, dim=1).item()
-
-        if pred_class != 1 or label != 1:
-            print(f"[SKIP] Slide {basename} (Label: {label}, Pred: {pred_class})")
+        if basename not in slide_ids:
+            print(f"[SKIP] Slide {basename} not matching (label=1, pred=1)")
             continue
 
-        baseline = get_baseline_features(args, args.fold, basename, features.shape[-2])
+        baseline = get_baseline_features(args, fold_id, basename, features.shape[-2])
 
         kwargs = {
             "x_value": features,
@@ -164,14 +168,13 @@ def main(args):
             "model": model,
             "baseline_features": baseline,
             "x_steps": 50,
-            "num_samples": 7,
             "device": args.device,
-            "call_model_args": {"target_class_idx": pred_class},
+            "call_model_args": {"target_class_idx": 1},
         }
 
         attributions = ig_module.GetMask(**kwargs)
         save_prefix = os.path.join(
-            args.paths['attr_score_for_multi_alpha_plot_dir'], f"{args.ig_name}", f"fold_{args.fold}", basename
+            args.paths['attr_score_for_multi_alpha_plot_dir'], f"{args.ig_name}", f"fold_{fold_id}", basename
         )
         mean_attr = save_stacked_attributions(attributions, save_prefix)
 
