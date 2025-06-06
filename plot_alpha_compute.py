@@ -123,14 +123,22 @@ def get_baseline_features(args, fold_id, basename, features_size):
         baseline = baseline[idx]
     return baseline
 
-def save_stacked_attributions(attributions, save_prefix):
+
+def save_stacked_attributions_updated(attributions, save_prefix):
     os.makedirs(save_prefix, exist_ok=True)
 
-    # attributions: shape [num_steps, N, D] → reduce over D
-    reduced_attr = np.mean(np.abs(attributions), axis=-1)  # shape: [num_steps, N]
+    # Get only the alpha_samples (shape [7, N, D])
+    if isinstance(attributions, dict) and "alpha_samples" in attributions:
+        alpha_samples = attributions["alpha_samples"]  # [7, N, D]
+    else:
+        raise ValueError("Expected dictionary with 'alpha_samples' key")
 
-    save_path = os.path.join(save_prefix, "attr.npy")
-    np.save(save_path, reduced_attr)  # shape: (7, 8000)
+    # Compute mean over D: [7, N]
+    reduced_attr = np.mean(np.abs(alpha_samples), axis=-1)
+
+    # Save as a single (7, N) matrix
+    save_path = os.path.join(save_prefix, "attr_alpha_avg.npy")
+    np.save(save_path, reduced_attr)
 
     return reduced_attr
 
