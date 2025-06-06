@@ -46,8 +46,10 @@ def compute_one_ig(args):
         scores = np.load(score_path).squeeze()
 
         if scores.ndim == 2:
-            scores = np.mean(scores, axis=-1)
-
+            # scores = np.mean(scores, axis=-1)
+            scores = np.mean(np.abs(scores), axis=-1).squeeze()
+ 
+        print(">>>> score shape", scores.shape)
         clipped_scores = np.clip(scores, np.percentile(scores, 1), np.percentile(scores, 99))
         scaled_scores = (clipped_scores - clipped_scores.min()) / (clipped_scores.max() - clipped_scores.min() + 1e-8)
 
