@@ -112,7 +112,12 @@ class_name_map = {
 }
 
 def format_table(df, dataset_name):
-    classes = sorted(df['pred_label'].unique())
+    # Filter classes for Camelyon16 to only include class 1
+    if dataset_name == "Camelyon16":
+        classes = [1]  # Only Tumor class
+    else:
+        classes = sorted(df['pred_label'].unique())
+    
     class_labels = class_name_map.get(dataset_name, {})
     classifiers = ['CLAM', 'MLP']
     methods = ['random', 'g', 'ig', 'idg', 'eg', 'cig']  # Include 'random' in methods list
