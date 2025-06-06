@@ -69,7 +69,8 @@ def main(args):
  
         print(f"Saved mask to: {mask_save_path}, sum={np.sum(mask)}")
         # Load corresponding .pt file
-        
+        print(f"[INFO] Label distribution: 0s = {(label == 0).sum()}, 1s = {(label == 1).sum()}")
+
         pt_path = os.path.join(args.paths['feature_files'], f"{base}.pt")
         if os.path.exists(pt_path):
             features = torch.load(pt_path)

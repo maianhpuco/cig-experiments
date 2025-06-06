@@ -111,30 +111,37 @@ def extract_coordinates(file_path, save_path):
     return df_inside_points
 
  
-def check_xy_in_coordinates(coordinates_xml, coordinates_h5):
+# def check_xy_in_coordinates(coordinates_xml, coordinates_h5):
+#     """
+#     Optimized function using R-tree for fast bounding box lookup.
+#     """
+#     length = coordinates_h5.shape[0]
+#     label = np.zeros(length, dtype=int)  # Efficient integer array for labels
+
+#     # Build R-tree index for fast spatial searching
+#     rtree_index = index.Index()
+#     for i, box in enumerate(coordinates_h5):  
+#         ymax, xmax, ymin, xmin = box  
+#         rtree_index.insert(i, (xmin, ymin, xmax, ymax))  
+
+#     # Iterate efficiently over DataFrame rows
+#     for row in tqdm(coordinates_xml.itertuples(index=False), desc="Checking index:", total=len(coordinates_xml), ncols=100):
+#         x, y = row.X, row.Y
+#         possible_matches = list(rtree_index.intersection((x, y, x, y)))  
+
+#         for box_index in possible_matches:
+#             if check_coor(x, y, coordinates_h5[box_index]): 
+#                 label[box_index] = 1  # Mark as tumor
+
+#     return label 
+
+def check_coor(x, y, box):
     """
-    Optimized function using R-tree for fast bounding box lookup.
+    Checks if (x, y) is inside the given bounding box.
     """
-    length = coordinates_h5.shape[0]
-    label = np.zeros(length, dtype=int)  # Efficient integer array for labels
-
-    # Build R-tree index for fast spatial searching
-    rtree_index = index.Index()
-    for i, box in enumerate(coordinates_h5):  
-        ymax, xmax, ymin, xmin = box  
-        rtree_index.insert(i, (xmin, ymin, xmax, ymax))  
-
-    # Iterate efficiently over DataFrame rows
-    for row in tqdm(coordinates_xml.itertuples(index=False), desc="Checking index:", total=len(coordinates_xml), ncols=100):
-        x, y = row.X, row.Y
-        possible_matches = list(rtree_index.intersection((x, y, x, y)))  
-
-        for box_index in possible_matches:
-            if check_coor(x, y, coordinates_h5[box_index]): 
-                label[box_index] = 1  # Mark as tumor
-
-    return label 
-
+    ymin, xmin, ymax, xmax = box  # ✅ Correct unpacking
+    return xmin <= x <= xmax and ymin <= y <= ymax
+ 
 def check_coor(x, y, box):
     """
     Checks if (x, y) is inside the given bounding box.
@@ -160,10 +167,24 @@ def check_coor(x, y, box):
 
 #     return label
 #  a
+def check_xy_in_coordinates(coordinates_xml, coordinates_h5):
+    length = coordinates_h5.shape[0]
+    label = np.zeros(length, dtype=int)
+
+    rtree_index = index.Index()
+    for i, box in enumerate(coordinates_h5):
+        ymin, xmin, ymax, xmax = box  # ✅ Correct unpacking
+        rtree_index.insert(i, (xmin, ymin, xmax, ymax))
+
+    for row in tqdm(coordinates_xml.itertuples(index=False), desc="Checking index:", total=len(coordinates_xml), ncols=100):
+        x, y = row.X, row.Y
+        possible_matches = list(rtree_index.intersection((x, y, x, y)))
+        for box_index in possible_matches:
+            if check_coor(x, y, coordinates_h5[box_index]):
+                label[box_index] = 1
+
+    return label
 def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5):
-    """
-    Vectorized function using R-tree for fast lookup.
-    """
     if len(coordinates_h5) == 0:
         print("[WARN] Empty H5 coordinate list passed to R-tree.")
         return np.zeros(0, dtype=np.int8)
@@ -172,16 +193,18 @@ def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5):
 
     try:
         rtree_index = index.Index((i, (xmin, ymin, xmax, ymax), None) 
-                                  for i, (ymax, xmax, ymin, xmin) in enumerate(coordinates_h5))
+                                  for i, (ymin, xmin, ymax, xmax) in enumerate(coordinates_h5))  # ✅ Correct
     except Exception as e:
         print(f"[ERROR] Failed to create R-tree index: {e}")
         return label
 
     xy_pairs = np.column_stack((coordinates_xml["X"], coordinates_xml["Y"]))
 
-    for i, (x, y) in enumerate(xy_pairs):
-        possible_matches = list(rtree_index.intersection((x, y, x, y)))  
-        if possible_matches:
-            label[possible_matches] = 1  # Vectorized assignment
+    for x, y in xy_pairs:
+        possible_matches = list(rtree_index.intersection((x, y, x, y)))
+        for box_index in possible_matches:
+            if check_coor(x, y, coordinates_h5[box_index]):
+                label[box_index] = 1
+    print(f"[INFO] Label distribution: 0s = {(label == 0).sum()}, 1s = {(label == 1).sum()}")
 
     return label
