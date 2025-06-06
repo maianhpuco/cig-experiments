@@ -3,9 +3,6 @@ import torch
 from tqdm import tqdm
 from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
 
-
-#  alphas = torch.linspace(0, 1, steps=x_steps + 1, device=device)[1:]  # [1/x_steps, ..., 1]
-#         alpha_indices = np.linspace(0, x_steps - 1, num=7, dtype=int)        # 7 equally spaced indices 
 class CIG(CoreSaliency):
     expected_keys = [INPUT_OUTPUT_GRADIENTS]
 
@@ -17,7 +14,6 @@ class CIG(CoreSaliency):
         baseline_features = kwargs.get("baseline_features")  # [N, D]
         x_steps = kwargs.get("x_steps", 50)
         device = kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
-        alpha_indices = kwargs.get("alpha_indices")
 
         if isinstance(x_value, np.ndarray):
             x_value = torch.tensor(x_value, dtype=torch.float32)
@@ -32,19 +28,22 @@ class CIG(CoreSaliency):
 
         baseline_features = baseline_features.unsqueeze(0)  # [1, N, D]
         x_diff = x_value - baseline_features
+        x_diff_mean = x_diff.mean(dim=0)
 
-        alphas = torch.linspace(0, 1, steps=x_steps + 1, device=device)[1:]  # [1/x_steps, ..., 1]
-        alpha_indices = np.linspace(0, x_steps - 1, num=7, dtype=int)        # 7 equally spaced indices
-        alpha_plot = alphas[alpha_indices]                                   # tensor of 7 alphas
+        alphas = torch.linspace(0, 1, x_steps + 1, device=device)[1:]  # exclude 0
+        alpha_indices = np.linspace(0, x_steps - 1, num=7, dtype=int)
+        alpha_plot = alphas[alpha_indices]  # [7]
 
         attribution_values = torch.zeros_like(x_value, device=device)
         visual_attr_list = []
 
-        logits_r = call_model_function(baseline_features, model, call_model_args)
-        if isinstance(logits_r, tuple):
-            logits_r = logits_r[0]
+        # Detach logits_r to avoid retaining graph
+        with torch.no_grad():
+            logits_r = call_model_function(baseline_features, model, call_model_args)
+            if isinstance(logits_r, tuple):
+                logits_r = logits_r[0]
 
-        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing CIG (dense)", ncols=100)):
+        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing CIG", ncols=100)):
             x_step = baseline_features + alpha * x_diff
             x_step.requires_grad_(True)
 
@@ -57,6 +56,7 @@ class CIG(CoreSaliency):
 
             gradients = x_step.grad
             if gradients is None:
+                print(f"[WARN] No gradients at step {step_idx}, alpha={alpha.item():.3f}")
                 continue
 
             grads = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
@@ -66,12 +66,11 @@ class CIG(CoreSaliency):
                 intermediate_attr = grads * x_diff.squeeze(0)
                 visual_attr_list.append(intermediate_attr.detach().cpu().numpy())
 
-        x_diff_mean = x_diff.mean(dim=0)
         final_attr = (attribution_values * x_diff_mean).detach().cpu().numpy() / x_steps
         stacked_attrs = np.stack(visual_attr_list) if visual_attr_list else np.zeros((0, *final_attr.shape))
 
         return {
-            "full": final_attr,                   # [N, D]
-            "alpha_samples": stacked_attrs,       # [7, N, D]
-            # "alphas_used": alpha_plot.tolist()    # [7] in float
+            "full": final_attr,                    # [N, D]
+            "alpha_samples": stacked_attrs,        # [7, N, D]
+            "alphas_used": alpha_plot.tolist()     # list of 7 floats
         }
