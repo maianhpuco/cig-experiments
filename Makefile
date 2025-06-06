@@ -1232,3 +1232,12 @@ plot_alpha_plot_g:
 	CUDA_VISIBLE_DEVICES=6 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name g 
 plot_alpha_plot_cig:
 	CUDA_VISIBLE_DEVICES=7 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name cig 
+
+
+
+rs_topk:
+	python combine_result_topk.py
+
+
+rs_topknpc:
+	python combine_result_topknpc.py
