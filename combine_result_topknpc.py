@@ -192,9 +192,28 @@ def format_table(df, dataset_name):
     return "\n".join(lines)
 
 #--------- 
+# for dataset in combined_df['dataset'].unique():
+#     df_subset = combined_df[combined_df['dataset'] == dataset]
+#     latex_code = format_table(df_subset, dataset)
+#     print(latex_code)
+#     print("\n\n")  # Optional spacing between tables 
+    
 for dataset in combined_df['dataset'].unique():
     df_subset = combined_df[combined_df['dataset'] == dataset]
-    latex_code = format_table(df_subset, dataset)
+
+    if df_subset.empty:
+        print(f"[WARN] No data for dataset {dataset}")
+        continue
+
+    # Group and compute means and stds
+    grouped = (
+        df_subset
+        .groupby(['classifier', 'method', 'pred_label'])[['AIC', 'SIC']]
+        .agg(['mean', 'std'])
+        .reset_index()
+    )
+    grouped.columns = ['classifier', 'method', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
+
+    latex_code = format_table(grouped, dataset)
     print(latex_code)
-    print("\n\n")  # Optional spacing between tables 
-    
+    print("\n\n")
