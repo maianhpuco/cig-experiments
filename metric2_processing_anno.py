@@ -32,10 +32,10 @@ def reset_directory(path):
 def main(args):
     """Process XML annotations and H5 patches to generate tumor masks."""
     # Validate directories
-    for key, path in args.paths.items():
-        if not os.path.exists(path):
-            print(f"[ERROR] Directory not found: {path} ({key})")
-            return
+    # for key, path in args.paths.items():
+    #     if not os.path.exists(path):
+    #         print(f"[ERROR] Directory not found: {path} ({key})")
+    #         return
 
     # Get XML files
     ann_list = [f for f in os.listdir(args.paths["annotation_dir"]) if f.endswith(".xml")]
