@@ -65,7 +65,7 @@ class CIG(CoreSaliency):
             if gradients is None:
                 print(f"[WARN] No gradients at alpha {alpha:.3f}, skipping")
                 continue
-
+            
             counterfactual_gradients = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
             attribution_values += counterfactual_gradients
 

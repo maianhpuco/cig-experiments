@@ -204,6 +204,7 @@ def main(args):
         } 
 
         attribution_values = ig_module.GetMask(**kwargs)
+        return 
         save_dir = os.path.join(
             args.paths['attribution_scores_folder'], f'{args.ig_name}', f'fold_{args.fold}') 
         os.makedirs(save_dir, exist_ok=True)
