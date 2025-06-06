@@ -38,7 +38,7 @@ all_dfs = []
 
 # Read all CSVs from each base directory
 for base_dir in base_dirs:
-    csv_files = glob.glob(os.path.join(base_dir, "*", "topk_picknpc_results_fold_1.csv"))
+    csv_files = glob.glob(os.path.join(base_dir, "*", "topknpc_pic_results_fold_1.csv"))
     folder_name = os.path.basename(base_dir)
     dataset, classifier = parse_folder(folder_name)
     print(f"[INFO] {folder_name}: found {len(csv_files)} files")
