@@ -1228,5 +1228,5 @@ plot_alpha_compute:
 
 plot_alpha_plot: 
 	CUDA_VISIBLE_DEVICES=5 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig 
-# CUDA_VISIBLE_DEVICES=6 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name g 
-# CUDA_VISIBLE_DEVICES=7 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name cig 
+CUDA_VISIBLE_DEVICES=6 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name g 
+CUDA_VISIBLE_DEVICES=7 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name cig 
