@@ -41,4 +41,5 @@ for clf in classifiers:
 
 # Convert to DataFrame for display
 summary_df = pd.DataFrame(summary)
+print(summary_df)
 
