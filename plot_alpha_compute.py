@@ -189,6 +189,7 @@ def main(args):
         }
 
         attributions = ig_module.GetMask(**kwargs)
+        return 
         save_prefix = os.path.join(
             args.paths['attr_score_for_multi_alpha_plot_dir'], f"{args.ig_name}", f"fold_{fold_id}", basename
         )

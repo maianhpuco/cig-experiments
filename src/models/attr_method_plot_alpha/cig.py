@@ -69,15 +69,15 @@ class CIG(CoreSaliency):
             counterfactual_gradients = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
             attribution_values += counterfactual_gradients
 
-            if step_idx in alpha_indices:
-                intermediate_attr = (counterfactual_gradients * x_diff.squeeze(0)).detach().cpu().numpy().copy()
-                visual_attr_list.append(intermediate_attr)
+            # if step_idx in alpha_indices:
+            #     intermediate_attr = (counterfactual_gradients * x_diff.squeeze(0)).detach().cpu().numpy().copy()
+            #     visual_attr_list.append(intermediate_attr)
 
         final_attr = (attribution_values * x_diff_mean).detach().cpu().numpy() / x_steps
         stacked_attrs = np.stack(visual_attr_list) if visual_attr_list else np.zeros((0, *final_attr.shape))
 
         return {
             "full": final_attr,                    # [N, D]
-            "alpha_samples": stacked_attrs,        # [7, N, D]
+            "alpha_samples": None, #stacked_attrs,        # [7, N, D]
             "alphas_used": alpha_plot.tolist()     # list of 7 floats
         }
