@@ -1205,10 +1205,10 @@ proc_anno:
 
 # proc_anno >> compute_iou_dice_camelyon 16 
 test_dice_iou:
-	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name g
 dice_iou_clam_camelyon16:
-	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name g
-	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
-	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
-	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
-	python compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
+	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name g
+	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
+	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
+	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
+	python metric2_compute_iou_dice.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
