@@ -50,5 +50,5 @@ for clf in classifiers:
 # Convert to DataFrame and drop the helper column
 summary_df = pd.DataFrame(summary)
 summary_df.drop(columns=["avg_dice"], inplace=True)
-
-import ace_tools as tools; tools.display_dataframe_to_user(name="Sorted Dice-IoU Summary", dataframe=summary_df)
+print(summary_df)
+# import ace_tools as tools; tools.display_dataframe_to_user(name="Sorted Dice-IoU Summary", dataframe=summary_df)
