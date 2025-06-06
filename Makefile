@@ -1241,3 +1241,6 @@ rs_topk:
 
 result:
 	python combine_result_topknpc.py
+
+result_iou:
+	python combine_iou.py
