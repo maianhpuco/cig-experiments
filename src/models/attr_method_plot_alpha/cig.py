@@ -43,22 +43,29 @@ class CIG(CoreSaliency):
             if isinstance(logits_r, tuple):
                 logits_r = logits_r[0]
 
-        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing CIG", ncols=100)):
-            x_step = baseline_features + alpha * x_diff
-            x_step.requires_grad_(True)
+        for step_idx, alpha in enumerate(tqdm(alphas, desc="Computing:", ncols=100), start=1):
+            x_step_batch = baseline_features + alpha * x_diff  # [1, N, D]
+            x_step_batch.requires_grad_(True)  # Ensure it's a leaf with grad
+            x_step_batch.retain_grad()
 
-            logits_step = call_model_function(x_step, model, call_model_args)
+            # Forward pass - no torch.no_grad() here
+            logits_r = call_model_function(baseline_features, model, call_model_args)
+            if isinstance(logits_r, tuple):
+                logits_r = logits_r[0]
+            # logits_r = logits_r.detach()  # detach so it's not part of graph
+
+            logits_step = call_model_function(x_step_batch, model, call_model_args)
             if isinstance(logits_step, tuple):
                 logits_step = logits_step[0]
 
             loss = torch.norm(logits_step - logits_r, p=2) ** 2
             loss.backward()
-
-            gradients = x_step.grad
+            gradients = x_step_batch.grad 
+            
             if gradients is None:
-                print(f"[WARN] No gradients at step {step_idx}, alpha={alpha.item():.3f}")
+                print(f">>>>>>>>>>>>>>>>>> No gradients at alpha {alpha:.2f}, skipping")
                 continue
-
+            
             grads = gradients.mean(dim=0) if gradients.dim() > 2 else gradients
             attribution_values += grads
 
