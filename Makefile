@@ -1146,14 +1146,16 @@ plot_camelyon:
 	make plot_camelyon_clam
 	make plot_camelyon_mlp
 
-plot_camelyon_clam:
-	CUDA_VISIBLE_DEVICES=3 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name g
-	CUDA_VISIBLE_DEVICES=3 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
+plot_camelyon_clam_1:
+	CUDA_VISIBLE_DEVICES=1 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name g
 plot_camelyon_clam_2: 
-	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
+	CUDA_VISIBLE_DEVICES=2 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig
 plot_camelyon_clam_3: 
-	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
-	CUDA_VISIBLE_DEVICES=6 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
+	CUDA_VISIBLE_DEVICES=3 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name cig
+plot_camelyon_clam_4: 
+	CUDA_VISIBLE_DEVICES=4 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name idg
+plot_camelyon_clam_5: 
+	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/clam_camelyon16.yaml --ig_name eg
 
 plot_camelyon_mlp:
 	CUDA_VISIBLE_DEVICES=5 python plot.py --config configs_simea/mlp_camelyon16.yaml --ig_name g
