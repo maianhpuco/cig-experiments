@@ -65,11 +65,9 @@ def main(args):
         # np.save(mask_save_path, mask)
         unique, counts = np.unique(mask, return_counts=True)
         label_counts = dict(zip(unique, counts))
-        print(f"Saved mask to: {mask_save_path}, label counts: {label_counts}")
- 
-        print(f"Saved mask to: {mask_save_path}, sum={np.sum(mask)}")
+        print(f"-----> Saved mask to: {mask_save_path}, label counts: {label_counts}")
+        print(f"-----> Saved mask to: {mask_save_path}, sum={np.sum(mask)}")
         # Load corresponding .pt file
-        print(f"[INFO] Label distribution: 0s = {(label == 0).sum()}, 1s = {(label == 1).sum()}")
 
         pt_path = os.path.join(args.paths['feature_files'], f"{base}.pt")
         if os.path.exists(pt_path):
