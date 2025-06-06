@@ -37,7 +37,7 @@ class CIG(CoreSaliency):
         attribution_values = torch.zeros_like(x_value, device=device)
         
         x_diff = x_value - baseline_features
-        x_diff_mean = x_diff.mean(dim=0)
+        # x_diff_mean = x_diff.mean(dim=0)
 
         # Define alphas and index 7 intermediate values
         alphas = torch.linspace(0, 1, x_steps + 1, device=device)[1:]  # Skip alpha=0
@@ -74,11 +74,11 @@ class CIG(CoreSaliency):
             #     intermediate_attr = (counterfactual_gradients * x_diff.squeeze(0)).detach().cpu().numpy().copy()
             #     visual_attr_list.append(intermediate_attr)
 
-        final_attr = (attribution_values * x_diff_mean).detach().cpu().numpy() / x_steps
-        stacked_attrs = np.stack(visual_attr_list) if visual_attr_list else np.zeros((0, *final_attr.shape))
+        # final_attr = (attribution_values * x_diff_mean).detach().cpu().numpy() / x_steps
+        # stacked_attrs = np.stack(visual_attr_list) if visual_attr_list else np.zeros((0, *final_attr.shape))
 
-        return {
-            "full": final_attr,                    # [N, D]
-            "alpha_samples": None, #stacked_attrs,        # [7, N, D]
-            "alphas_used": alpha_plot.tolist()     # list of 7 floats
-        }
+        # return {
+        #     "full": final_attr,                    # [N, D]
+        #     "alpha_samples": None, #stacked_attrs,        # [7, N, D]
+        #     "alphas_used": alpha_plot.tolist()     # list of 7 floats
+        # }
