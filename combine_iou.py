@@ -24,11 +24,13 @@ for clf in classifiers:
             except Exception as e:
                 results[clf][method]["error"] = str(e)
 
-# Prepare summary with mean ± std
+# Prepare summary with mean ± std and sorting
 summary = []
 for clf in classifiers:
+    method_summaries = []
     for method in methods:
         entry = {"classifier": clf, "method": method}
+        dice_values = results[clf][method].get('dice_tumor', [])
         for metric in metric_keys:
             values = results[clf][method].get(metric, [])
             if values:
@@ -37,9 +39,16 @@ for clf in classifiers:
                 entry[metric] = f"{mean:.4f} ± {std:.4f}"
             else:
                 entry[metric] = "---"
-        summary.append(entry)
+        avg_dice = pd.Series(dice_values).mean() if dice_values else -1
+        entry["avg_dice"] = avg_dice  # for sorting
+        method_summaries.append(entry)
+    
+    # Sort methods for this classifier by average dice descending
+    method_summaries.sort(key=lambda x: x["avg_dice"], reverse=True)
+    summary.extend(method_summaries)
 
-# Convert to DataFrame for display
+# Convert to DataFrame and drop the helper column
 summary_df = pd.DataFrame(summary)
-print(summary_df)
+summary_df.drop(columns=["avg_dice"], inplace=True)
 
+import ace_tools as tools; tools.display_dataframe_to_user(name="Sorted Dice-IoU Summary", dataframe=summary_df)
