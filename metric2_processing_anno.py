@@ -24,19 +24,19 @@ def read_h5_data(file_path, dataset_name="coords"):
         print(f"[ERROR] Failed to read {file_path}: {e}")
         return None
 
-def reset_directory(path):
-    """Reset or create directory."""
-    if os.path.exists(path):
-        print(f"Resetting directory: {path}")
-        shutil.rmtree(path)
-    os.makedirs(path)
+# def reset_directory(path):
+#     """Reset or create directory."""
+#     if os.path.exists(path):
+#         print(f"Resetting directory: {path}")
+#         shutil.rmtree(path)
+#     os.makedirs(path)
 
 def main(args):
     """Process XML annotations and H5 patches to generate tumor masks."""
-    for key, path in args.paths.items():
-        if not os.path.exists(path):
-            print(f"[ERROR] Directory not found: {path} ({key})")
-            return
+    # for key, path in args.paths.items():
+    #     if not os.path.exists(path):
+    #         print(f"[ERROR] Directory not found: {path} ({key})")
+    #         return
 
     ann_list = [f for f in os.listdir(args.paths["annotation_dir"]) if f.endswith(".xml")]
     existing_csvs = set(os.listdir(args.paths["ground_truth_corr_dir"]))
@@ -47,7 +47,7 @@ def main(args):
         if f.replace(".xml", ".h5") in h5_files and
         f.replace(".xml", ".csv") not in existing_csvs
     ]
-
+    valid_annotations = ann_list 
     print(f"Total files to process: {len(valid_annotations)}")
     if not valid_annotations:
         print("[WARN] No new annotations to process")
