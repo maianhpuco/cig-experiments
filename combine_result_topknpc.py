@@ -92,11 +92,11 @@ else:
 
 import pandas as pd
 
-# Dummy structure to allow the function definition (data not available in this reset state)
-combined_df = pd.DataFrame(columns=[
-    'dataset', 'classifier', 'method', 'pred_label',
-    'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std'
-])
+# # Dummy structure to allow the function definition (data not available in this reset state)
+# combined_df = pd.DataFrame(columns=[
+#     'dataset', 'classifier', 'method', 'pred_label',
+#     'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std'
+# ])
 
 # Mapping for LaTeX formatting
 latex_method_names = {
