@@ -57,6 +57,8 @@ def plot_all_intermediate_alpha(args):
             continue
 
         alpha_values = np.load(score_path)  # shape [7, N]
+        if alpha_values.ndim == 3 and alpha_values.shape[1] == 1:
+            alpha_values = np.squeeze(alpha_values, axis=1)  # (7, 1, N) -> (7, N)
         if alpha_values.ndim != 2 or alpha_values.shape[0] != 7:
             print(f"[ERROR] Invalid shape {alpha_values.shape} in {score_path}")
             continue
