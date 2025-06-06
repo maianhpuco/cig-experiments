@@ -4,37 +4,41 @@ from collections import defaultdict
 
 # Root directory containing the result CSVs
 root_dir = "/home/mvu9/cig_attributions/dice_iou/camelyon16"
-
-# Classifiers and IG methods
 classifiers = ['clam', 'mlp']
-ig_methods = ['eg', 'ig', 'g', 'cig', 'idg']
+methods = ['eg', 'ig', 'g', 'cig', 'idg']
+metric_keys = ['dice_tumor', 'iou_tumor', 'dice_normal', 'iou_normal']
 
 # Store results
-results = defaultdict(list)
+results = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
-# Loop through each classifier and method
+# Traverse folders and load metrics
 for clf in classifiers:
-    for method in ig_methods:
-        csv_path = os.path.join(root_dir, clf, method, 'dice_iou_fold_1.csv')
+    for method in methods:
+        csv_path = os.path.join(root_dir, clf, method, "dice_iou_fold_1.csv")
         if os.path.exists(csv_path):
             try:
                 df = pd.read_csv(csv_path)
-                # You can change column name if needed (e.g., 'iou' or 'dice')
-                if 'iou' in df.columns:
-                    metric = df['iou'].mean()
-                elif 'dice' in df.columns:
-                    metric = df['dice'].mean()
-                else:
-                    raise ValueError(f"No 'iou' or 'dice' column in {csv_path}")
-                results[clf].append((method, metric))
+                for metric in metric_keys:
+                    if metric in df.columns:
+                        results[clf][method][metric].extend(df[metric].dropna().tolist())
             except Exception as e:
-                print(f"[ERROR] Failed to process {csv_path}: {e}")
-        else:
-            print(f"[WARN] File not found: {csv_path}")
+                results[clf][method]["error"] = str(e)
 
-# Print summary
-print("\n=== Average IoU/Dice per Classifier and Method ===")
+# Prepare summary with mean ± std
+summary = []
 for clf in classifiers:
-    print(f"\nClassifier: {clf}")
-    for method, avg in results[clf]:
-        print(f"  {method.upper():<5} : {avg:.4f}")
+    for method in methods:
+        entry = {"classifier": clf, "method": method}
+        for metric in metric_keys:
+            values = results[clf][method].get(metric, [])
+            if values:
+                mean = pd.Series(values).mean()
+                std = pd.Series(values).std()
+                entry[metric] = f"{mean:.4f} ± {std:.4f}"
+            else:
+                entry[metric] = "---"
+        summary.append(entry)
+
+# Convert to DataFrame for display
+summary_df = pd.DataFrame(summary)
+
