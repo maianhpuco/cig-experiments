@@ -6,7 +6,7 @@ from tqdm import tqdm
 from rtree import index
 import os
 
-PATCH_SIZE = 256  # Patch size in pixels (level 0 resolution)
+PATCH_SIZE = 256  # Configurable patch size (try 224 if needed)
 
 def parse_xml(file_path):
     """Parse XML file and return root element."""
@@ -17,11 +17,11 @@ def parse_xml(file_path):
         print(f"Error parsing {file_path}: {e}")
         return None
 
-def extract_coordinates(file_path, save_path, h5_coords=None):
+def extract_coordinates(file_path, save_path, h5_coords=None, patch_size=PATCH_SIZE):
     """
-    Extract (X, Y) coordinates inside tumor contours from XML annotations.
-    Uses H5 patch coordinates (if provided) as the grid to ensure alignment.
-    Saves coordinates to CSV and returns DataFrame.
+    Extract (X, Y) coordinates inside tumor contours from XML.
+    Uses H5 patch coordinates as the grid to ensure alignment.
+    Saves to CSV and returns DataFrame.
     """
     root = parse_xml(file_path)
     if root is None:
@@ -60,7 +60,7 @@ def extract_coordinates(file_path, save_path, h5_coords=None):
     # Create polygons
     polygons = [Polygon(contour) for contour in contours]
 
-    # Use H5 coordinates as grid if provided, else generate from contour bounds
+    # Use H5 coordinates as grid
     if h5_coords is not None and len(h5_coords) > 0:
         patch_coords = h5_coords  # Shape: (N, 2)
         print(f"Using H5 patch grid: {len(patch_coords)} patches")
@@ -71,10 +71,10 @@ def extract_coordinates(file_path, save_path, h5_coords=None):
         min_y = min(b[1] for b in all_bounds)
         max_x = max(b[2] for b in all_bounds)
         max_y = max(b[3] for b in all_bounds)
-        x_patches = np.arange(np.floor(min_x / PATCH_SIZE) * PATCH_SIZE,
-                             np.ceil(max_x / PATCH_SIZE) * PATCH_SIZE + PATCH_SIZE, PATCH_SIZE)
-        y_patches = np.arange(np.floor(min_y / PATCH_SIZE) * PATCH_SIZE,
-                             np.ceil(max_y / PATCH_SIZE) * PATCH_SIZE + PATCH_SIZE, PATCH_SIZE)
+        x_patches = np.arange(np.floor(min_x / patch_size) * patch_size,
+                             np.ceil(max_x / patch_size) * patch_size + patch_size, patch_size)
+        y_patches = np.arange(np.floor(min_y / patch_size) * patch_size,
+                             np.ceil(max_y / patch_size) * patch_size + patch_size, patch_size)
         patch_coords = np.array([(x, y) for y in y_patches for x in x_patches])
         print(f"Generated grid: {len(patch_coords)} patches")
 
@@ -83,13 +83,19 @@ def extract_coordinates(file_path, save_path, h5_coords=None):
     for i, polygon in enumerate(polygons):
         spatial_index.insert(i, polygon.bounds)
 
-    # Check which patches overlap tumor regions
+    # Check patches for tumor overlap
     with tqdm(total=len(patch_coords), desc="Processing Patches", ncols=100) as pbar:
         for x_start, y_start in patch_coords:
-            patch_center = Point(x_start + PATCH_SIZE / 2, y_start + PATCH_SIZE / 2)
+            # Check if patch region intersects any polygon
+            patch_bbox = Polygon([
+                (x_start, y_start),
+                (x_start + patch_size, y_start),
+                (x_start + patch_size, y_start + patch_size),
+                (x_start, y_start + patch_size)
+            ])
             possible_polygons = [polygons[i] for i in spatial_index.intersection(
-                (x_start, y_start, x_start + PATCH_SIZE, y_start + PATCH_SIZE))]
-            if any(polygon.contains(patch_center) for polygon in possible_polygons):
+                (x_start, y_start, x_start + patch_size, y_start + patch_size))]
+            if any(polygon.intersects(patch_bbox) for polygon in possible_polygons):
                 inside_points.append((x_start, y_start))
             pbar.update(1)
 
@@ -104,9 +110,9 @@ def extract_coordinates(file_path, save_path, h5_coords=None):
         "Y": [p[1] for p in inside_points]
     })
 
-    # Debug: Coordinate range
     print(f"XML coordinates range: X=[{df_inside_points['X'].min()}, {df_inside_points['X'].max()}], "
           f"Y=[{df_inside_points['Y'].min()}, {df_inside_points['Y'].max()}]")
+    print(f"Sample XML points: {df_inside_points[['X', 'Y']].head().to_dict('records')}")
 
     df_inside_points.to_csv(save_path, index=False)
     return df_inside_points
@@ -116,9 +122,9 @@ def check_coor(x, y, box, patch_size=PATCH_SIZE):
     px, py = box
     return px <= x < px + patch_size and py <= y < py + patch_size
 
-def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5, tolerance=256, patch_size=PATCH_SIZE):
+def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5, patch_size=PATCH_SIZE):
     """
-    Match XML coordinates to H5 patches using R-tree with tolerance.
+    Match XML coordinates to H5 patches using R-tree.
     Returns binary mask (1 if patch contains tumor, 0 otherwise).
     """
     if len(coordinates_h5) == 0:
@@ -127,33 +133,29 @@ def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5, tolerance=256,
 
     label = np.zeros(len(coordinates_h5), dtype=np.int8)
 
-    # Debug: H5 coordinate range
     print(f"H5 coordinates range: X=[{coordinates_h5[:,0].min()}, {coordinates_h5[:,0].max()}], "
           f"Y=[{coordinates_h5[:,1].min()}, {coordinates_h5[:,1].max()}]")
+    print(f"Sample H5 coords: {coordinates_h5[:5]}")
 
-    try:
-        rtree_index = index.Index(
-            (i, (x, y, x, y), None) for i, (x, y) in enumerate(coordinates_h5)
-        )
-    except Exception as e:
-        print(f"[ERROR] Failed to create R-tree index: {e}")
-        return label
+    # Build R-tree with patch bounding boxes
+    rtree_index = index.Index()
+    for i, (px, py) in enumerate(coordinates_h5):
+        rtree_index.insert(i, (px, py, px + patch_size, py + patch_size))
 
     xy_pairs = np.column_stack((coordinates_xml["X"], coordinates_xml["Y"]))
     matches_found = 0
     for x, y in xy_pairs:
-        search_bounds = (x - tolerance, y - tolerance, x + tolerance, y + tolerance)
-        possible_matches = list(rtree_index.intersection(search_bounds))
+        possible_matches = list(rtree_index.intersection((x, y, x, y)))
         for box_index in possible_matches:
             if check_coor(x, y, coordinates_h5[box_index], patch_size):
                 label[box_index] = 1
                 matches_found += 1
                 if matches_found <= 5:
                     print(f"Match: XML ({x}, {y}) in patch ({coordinates_h5[box_index][0]}, {coordinates_h5[box_index][1]})")
-            # Debug: Print closest distance for non-matches
             elif matches_found <= 5 and possible_matches:
-                distances = [np.sqrt((x - coordinates_h5[idx][0])**2 + (y - coordinates_h5[idx][1])**2) for idx in possible_matches]
-                print(f"No match: XML ({x}, {y}), {len(possible_matches)} candidates, min distance={min(distances)}")
+                px, py = coordinates_h5[box_index]
+                distance = np.sqrt((x - px)**2 + (y - py)**2)
+                print(f"No match: XML ({x}, {y}), patch ({px}, {py}), distance={distance:.2f}")
 
     print(f"[INFO] Total matches: {matches_found}")
     print(f"[INFO] Label distribution: 0s = {(label == 0).sum()}, 1s = {(label == 1).sum()}")
