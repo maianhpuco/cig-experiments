@@ -80,6 +80,6 @@ class CIG(CoreSaliency):
 
         return {
             "full": final_attr,                    # [N, D]
-            "alpha_samples": None, #stacked_attrs,        # [7, N, D]
+            "alpha_samples": stacked_attrs,        # [7, N, D]
             "alphas_used": alpha_plot.tolist()     # list of 7 floats
         }
