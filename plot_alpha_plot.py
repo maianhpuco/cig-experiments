@@ -1,202 +1,104 @@
 import os
-import sys
-import argparse
 import time
 import numpy as np
-import torch
-import yaml
-import shutil
-from torch import nn
+import pandas as pd
+import argparse
 from tqdm import tqdm
-
-# Extend path to include model directories
-sys.path.extend([
-    os.path.abspath("src/models"),
-    os.path.abspath("src/models/classifiers"),
-])
-
-from clam import load_clam_model
-from saliency.core.base import CoreSaliency, INPUT_OUTPUT_GRADIENTS
-from src.datasets.classification.tcga import return_splits_custom as return_splits_tcga
-from src.datasets.classification.camelyon16 import return_splits_custom as return_splits_camelyon16
-from utils_plot import min_max_scale
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
-class ModelWrapper:
-    def __init__(self, model, model_type='clam'):
-        self.model = model
-        self.model_type = model_type
+def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, scores,
+                        figsize=(10, 10), name="", save_path=None, patch_size=256):
+    cmap = plt.colormaps['coolwarm']
+    norm = plt.Normalize(vmin=np.min(scores), vmax=np.max(scores))
+    fig, ax = plt.subplots(figsize=figsize)
+    white_background = np.ones((new_height, new_width, 3))
+    ax.imshow(white_background)
+    ax.axis('off')
 
-    def forward(self, input):
-        if input.dim() == 3:
-            input = input.squeeze(0)
-        if self.model_type == 'clam':
-            output = self.model(input, [input.shape[0]])
-            logits = output[0] if isinstance(output, tuple) else output
-        else:
-            logits = self.model(input)
-        return logits
+    for i, coord in enumerate(coordinates):
+        x, y = np.array(coord).astype('int')
+        scaled_x = x * scale_x
+        scaled_y = y * scale_y
+        scaled_patch_w = patch_size * scale_x
+        scaled_patch_h = patch_size * scale_y
+        color = cmap(norm(scores[i]))
+        rect = patches.Rectangle((scaled_x, scaled_y), scaled_patch_w, scaled_patch_h,
+                                 linewidth=0.0, edgecolor=color, facecolor=color)
+        ax.add_patch(rect)
 
-
-def load_ig_module(args):
-    def get_module_by_name(name):
-        print(f"Loading IG method: {name}")
-        if name == 'ig':
-            from attr_method.ig import IG as AttrMethod
-        elif name == 'g':
-            from attr_method.g import VanillaGradients as AttrMethod
-        elif name == 'cig':
-            from attr_method.cig import CIG as AttrMethod
-        else:
-            raise ValueError(f"Unsupported IG method: {name}")
-        return AttrMethod()
-
-    def call_model_function(inputs, model, call_model_args=None, expected_keys=None):
-        device = next(model.parameters()).device
-        was_batched = inputs.dim() == 3
-        inputs = inputs.to(device)
-
-        if not inputs.requires_grad:
-            inputs.requires_grad_(True)
-
-        if was_batched:
-            inputs = inputs.squeeze(0)
-
-        model.eval()
-        model_wrapper = ModelWrapper(model, model_type='clam')
-        logits = model_wrapper.forward(inputs)
-
-        if expected_keys and INPUT_OUTPUT_GRADIENTS in expected_keys:
-            class_idx = call_model_args.get("target_class_idx", 0)
-            target = logits[:, class_idx]
-            grads = torch.autograd.grad(
-                outputs=target,
-                inputs=inputs,
-                grad_outputs=torch.ones_like(target),
-                retain_graph=False,
-                create_graph=False
-            )[0]
-            grads_np = grads.detach().cpu().numpy()
-            if was_batched or grads_np.ndim == 2:
-                grads_np = np.expand_dims(grads_np, axis=0)
-            return {INPUT_OUTPUT_GRADIENTS: grads_np}
-
-        return logits
-
-    return get_module_by_name(args.ig_name), call_model_function
+    plt.title(name, fontsize=10, fontweight='bold')
+    if save_path:
+        save_dir = os.path.dirname(save_path)
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        print(f"✅ Saved heatmap to {save_path}")
+    plt.close(fig)
 
 
-def load_dataset(args, fold_id):
-    if args.dataset_name == 'camelyon16':
-        csv_path = os.path.join(args.paths['split_folder'], f'fold_{fold_id}.csv')
-        label_dict = {'normal': 0, 'tumor': 1}
-        _, _, test_dataset = return_splits_camelyon16(
-            csv_path=csv_path,
-            data_dir=args.paths['pt_files'],
-            label_dict=label_dict,
-            seed=42,
-            print_info=True
-        )
-    else:
-        train_csv = os.path.join(args.paths['split_folder'], f'fold_{fold_id}', 'train.csv')
-        val_csv = os.path.join(args.paths['split_folder'], f'fold_{fold_id}', 'val.csv')
-        test_csv = os.path.join(args.paths['split_folder'], f'fold_{fold_id}', 'test.csv')
-        test_dataset = return_splits_tcga(
-            train_csv,
-            val_csv,
-            test_csv,
-            data_dir_map=args.paths['data_dir'],
-            label_dict=args.label_dict,
-            seed=42,
-            print_info=True
-        )[2]
-    return test_dataset
+def plot_all_intermediate_alpha(args):
+    fold_id = args.fold if hasattr(args, "fold") else 1
+    meta_path = os.path.join(args.paths['metadata_plot_dir'], f"meta_fold_{fold_id}.pkl")
+    score_dir = os.path.join(args.paths['multi_alpha_plot_dir'], args.ig_name, f"fold_{fold_id}")
+    plot_dir = os.path.join(args.paths['plot_folder'], args.ig_name + "_multi_alpha", f"fold_{fold_id}")
 
+    print(f"[INFO] Loading metadata from: {meta_path}")
+    meta_df = pd.read_pickle(meta_path)
+    print(f"[INFO] Loaded {len(meta_df)} entries.")
 
-def get_baseline_features(args, fold_id, basename, features_size):
-    baseline_path = os.path.join(args.paths[f'baseline_dir_fold_{fold_id}'], f"{basename}.pt")
-    if not os.path.isfile(baseline_path):
-        raise FileNotFoundError(f"Baseline not found: {baseline_path}")
-    baseline = torch.load(baseline_path).to(args.device)
-    if baseline.dim() == 3:
-        baseline = baseline.squeeze(0)
-    if baseline.shape[0] != features_size:
-        idx = torch.randint(0, baseline.shape[0], (features_size,))
-        baseline = baseline[idx]
-    return baseline
+    total_start = time.time()
+    for _, row in tqdm(meta_df.iterrows(), total=len(meta_df), desc="Plotting all alpha steps"):
+        slide_id = row['slide_id']
+        score_path = os.path.join(score_dir, slide_id, "attr_alpha_avg.npy")
 
+        if not os.path.exists(score_path):
+            print(f"[WARN] Score not found: {score_path}")
+            continue
 
-def save_stacked_attributions(attributions, save_prefix):
-    os.makedirs(save_prefix, exist_ok=True)
-    for i in range(attributions.shape[0]):
-        np.save(os.path.join(save_prefix, f"step_{i}.npy"), attributions[i])
-    return np.mean(attributions, axis=0)
+        alpha_values = np.load(score_path)  # shape [7, N]
+        if alpha_values.ndim != 2 or alpha_values.shape[0] != 7:
+            print(f"[ERROR] Invalid shape {alpha_values.shape} in {score_path}")
+            continue
 
+        for i in range(7):
+            alpha_score = alpha_values[i]  # [N]
 
-def main(args):
-    ig_module, call_model_function = load_ig_module(args)
-    model = load_clam_model(args, args.ckpt_path, device=args.device)
-    test_dataset = load_dataset(args, fold_id=args.fold)
+            # Normalize per alpha
+            clipped = np.clip(alpha_score, np.percentile(alpha_score, 1), np.percentile(alpha_score, 99))
+            scaled = (clipped - clipped.min()) / (clipped.max() - clipped.min() + 1e-8)
 
-    for idx, data in enumerate(test_dataset):
-        if args.dataset_name == 'camelyon16':
-            features, label = data
-        else:
-            features, label, _ = data
+            alpha_plot_dir = os.path.join(plot_dir, f"alpha_{i+1}")
+            save_path = os.path.join(alpha_plot_dir, f"{slide_id}.png")
 
-        features = features.unsqueeze(0) if features.dim() == 2 else features
-        basename = test_dataset.slide_data['slide_id'].iloc[idx]
-        features = features.to(args.device)
+            plot_heatmap_nobbox(
+                scale_x=row['scale_x'],
+                scale_y=row['scale_y'],
+                new_height=row['new_height'],
+                new_width=row['new_width'],
+                coordinates=row['coords'],
+                scores=scaled,
+                save_path=save_path,
+                name=f"{slide_id} | α-{i+1}"
+            )
 
-        with torch.no_grad():
-            logits = ModelWrapper(model).forward(features)
-            probs = torch.softmax(logits, dim=1)
-            pred_class = torch.argmax(probs, dim=1).item()
-
-        baseline = get_baseline_features(args, args.fold, basename, features.shape[-2])
-        kwargs = {
-            "x_value": features,
-            "call_model_function": call_model_function,
-            "model": model,
-            "baseline_features": baseline,
-            "x_steps": 50,
-            "num_samples": 7,
-            "device": args.device,
-            "call_model_args": {"target_class_idx": pred_class},
-        }
-
-        attributions = ig_module.GetMask(**kwargs)  # shape [7, N, D]
-        save_prefix = os.path.join(
-            args.paths['attr_score_for_multi_alpha_plot_dir'], f"{args.ig_name}", f"fold_{args.fold}", basename
-        )
-        mean_attr = save_stacked_attributions(attributions, save_prefix)
-
-        # Sanity check
-        scores = np.mean(np.abs(mean_attr), axis=-1)
-        normalized = min_max_scale(scores)
-        print(f"[INFO] Saved IG for {basename}, shape: {normalized.shape}, sum: {np.sum(normalized):.4f}")
+    print(f"\n✅ All alpha plots done. Total time: {time.time() - total_start:.2f} seconds")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', required=True)
-    parser.add_argument('--ig_name', required=True)
-    parser.add_argument('--fold', type=int, default=1)
-    parser.add_argument('--device', type=str, default=None)
-    parser.add_argument('--ckpt_path', required=True)
+    parser.add_argument('--config', required=True, help='Path to YAML config file')
+    parser.add_argument('--ig_name', required=True, help='Attribution method name (e.g., cig, ig)')
+    parser.add_argument('--fold', type=int, default=1, help='Fold ID')
     args = parser.parse_args()
 
+    # Load YAML config
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
-
     for key, val in config.items():
         if key == 'paths':
             args.paths = val
         else:
             setattr(args, key, val)
 
-    args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
-    os.makedirs(args.paths['attribution_scores_folder'], exist_ok=True)
-
-    print(f"[START] Computing {args.ig_name} attributions for fold {args.fold} on {args.dataset_name}")
-    main(args)
+    plot_all_intermediate_alpha(args)

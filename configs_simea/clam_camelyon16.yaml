@@ -36,7 +36,7 @@ paths:
   ground_truth_numpy_dir: "/home/mvu9/processing_datasets/processing_camelyon16/ground_truth_numpy"
   # ========= 
   attr_score_for_multi_alpha_plot_dir: "/home/mvu9/cig_attributions/attr_score_for_multi_alpha_plot/camelyon16/clam"    
-
+  multi_alpha_plot_dir: "/home/mvu9/cig_attributions/multi_alpha_plot/camelyon16/clam"       
 fold_number: 5 
 label_dict:
   0: "normal"
