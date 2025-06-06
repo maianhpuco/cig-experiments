@@ -83,7 +83,7 @@ def compute_one_ig(args):
         }
         results.append(result)
         print(result)
-        return 
+        # return 
 
     df_result = pd.DataFrame(results)
     output_dir = os.path.join(args.paths['dice_iou_dir'], f"{args.ig_name}")
