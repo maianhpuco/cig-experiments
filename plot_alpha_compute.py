@@ -123,12 +123,16 @@ def get_baseline_features(args, fold_id, basename, features_size):
         baseline = baseline[idx]
     return baseline
 
-
 def save_stacked_attributions(attributions, save_prefix):
     os.makedirs(save_prefix, exist_ok=True)
-    for i in range(attributions.shape[0]):
-        np.save(os.path.join(save_prefix, f"step_{i}.npy"), attributions[i])
-    return np.mean(attributions, axis=0)
+
+    # attributions: shape [num_steps, N, D] → reduce over D
+    reduced_attr = np.mean(np.abs(attributions), axis=-1)  # shape: [num_steps, N]
+
+    save_path = os.path.join(save_prefix, "attr.npy")
+    np.save(save_path, reduced_attr)  # shape: (7, 8000)
+
+    return reduced_attr
 
 
 def main(args):
