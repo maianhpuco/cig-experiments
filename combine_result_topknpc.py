@@ -2,25 +2,89 @@ import os
 import pandas as pd
 import glob
 
-# Define the parent directory containing subdirectories for each method
-base_dir = "/home/mvu9/processing_datasets/processing_camelyon16/clam_metrics"
+# Define base directories
+base_dirs = [
+    "/home/mvu9/processing_datasets/processing_camelyon16/clam_metrics",
+    "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_renal_metrics",
+    "/home/mvu9/processing_datasets/processing_tcga_256/clam_tcga_lung_metrics",
+    "/home/mvu9/processing_datasets/processing_camelyon16/mlp_metrics",
+    "/home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_lung_metrics",
+    "/home/mvu9/processing_datasets/processing_tcga_256/mlp_tcga_renal_metrics",
+]
 
-# Pattern to match all result CSVs
+def parse_folder(folder_name):
+    folder_name = folder_name.lower()
+    if "camelyon16" in folder_name or "clam_metrics" in folder_name or "mlp_metrics" in folder_name:
+        dataset = "Camelyon16"
 
-csv_files = glob.glob(os.path.join(base_dir, "*", "topknpc_pic_results_fold_1.csv"))
-print(csv_files)
-# Load and concatenate all CSVs
+    elif "renal" in folder_name:
+        dataset = "TCGA-RCC"
+    elif "lung" in folder_name:
+        dataset = "TCGA-Lung"
+    else:
+        dataset = "Camelyon16"  # fallback if unrecognized
+
+    if "clam" in folder_name:
+        classifier = "CLAM"
+    elif "mlp" in folder_name:
+        classifier = "MLP"
+    else:
+        classifier = "unknown"
+
+    return dataset, classifier
+
+
 all_dfs = []
-for file in csv_files:
-    print(f"processing {file}")
-    df = pd.read_csv(file)
-    df['method'] = df['IG'].str.lower()  # Normalize method name
-    all_dfs.append(df)
 
-combined_df = pd.concat(all_dfs, ignore_index=True)
+# Read all CSVs from each base directory
+for base_dir in base_dirs:
+    csv_files = glob.glob(os.path.join(base_dir, "*", "topk_picknpc_results_fold_1.csv"))
+    folder_name = os.path.basename(base_dir)
+    dataset, classifier = parse_folder(folder_name)
+    print(f"[INFO] {folder_name}: found {len(csv_files)} files")
 
-# Group by method and compute mean and std for AIC and SIC
-summary = combined_df.groupby('method')[['AIC', 'SIC']].agg(['mean', 'std']).reset_index()
-summary_sorted = summary.sort_values(by=('SIC', 'mean'), ascending=False)
-print(summary)
-print(summary_sorted)
+    for file in csv_files:
+        try:
+            df = pd.read_csv(file)
+            df['method'] = df['IG'].str.lower()
+            df['source_folder'] = folder_name
+            df['dataset'] = dataset
+            df['classifier'] = classifier
+            all_dfs.append(df)
+        except Exception as e:
+            print(f"[WARN] Failed to read {file}: {e}")
+
+# Combine and group
+if all_dfs:
+    combined_df = pd.concat(all_dfs, ignore_index=True)
+
+    # Loop over dataset/classifier pairs
+    for (dataset, classifier), folder_df in combined_df.groupby(['dataset', 'classifier']):
+        print(f"\n=== DATASET: {dataset.upper()} | CLASSIFIER: {classifier.upper()} ===")
+
+        # Special rule: exclude class 0 for camelyon16 using clam
+        if dataset == "camelyon16" and classifier == "clam":
+            folder_df = folder_df[folder_df['pred_label'] != 0]
+
+        # Group by method and pred_label
+        grouped = (
+            folder_df
+            .groupby(['method', 'pred_label'])[['AIC', 'SIC']]
+            .agg(['mean', 'std'])
+            .reset_index()
+        )
+
+        # Flatten MultiIndex columns
+        grouped.columns = ['method', 'pred_label', 'AIC_mean', 'AIC_std', 'SIC_mean', 'SIC_std']
+
+        # Add metadata
+        grouped.insert(0, 'classifier', classifier)
+        grouped.insert(0, 'dataset', dataset)
+
+        # Print separate tables per prediction label
+        for pred_label, pred_df in grouped.groupby('pred_label'):
+            print(f"\n--- Prediction Class: {pred_label} ---")
+            pred_df_sorted = pred_df.sort_values(by='SIC_mean', ascending=False)
+            print(pred_df_sorted.to_string(index=False))
+else:
+    print("No valid result files found.")
