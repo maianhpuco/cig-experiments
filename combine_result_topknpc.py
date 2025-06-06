@@ -227,3 +227,6 @@ for dataset in combined_df['dataset'].unique():
     latex_code = format_table(grouped, dataset)
     print(latex_code)
     print("\n\n")
+    
+    
+print(combined_df)
