@@ -101,7 +101,7 @@ def main(args):
             print(f"[WARN] PT file not found: {pt_path}")
 
         processed += 1
-        return 
+        # return 
     total_csv = len(os.listdir(args.paths["ground_truth_corr_dir"]))
     total_mask = len(os.listdir(args.paths["ground_truth_numpy_dir"]))
     print(f"\n✅ Finished.")
