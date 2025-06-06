@@ -68,7 +68,8 @@ def main(args):
         # Clean shape: [N, D] or [N]
         attribution_values = attribution_values.squeeze()
         if attribution_values.ndim == 2:
-            scores = np.mean(attribution_values, axis=-1)
+            scores = np.mean(np.abs(attribution_values), axis=-1).squeeze() 
+            # scores = np.mean(attribution_values, axis=-1)
         elif attribution_values.ndim == 1:
             scores = attribution_values
         else:
