@@ -14,7 +14,8 @@ paths:
   attribution_scores_plot: "/home/mvu9/cig_attributions/attr_scores_plot/camelyon16/clam"   
   metadata_plot_dir: "/home/mvu9/cig_attributions/metadata_plot/camelyon16/all_clf"    
   plot_folder: "/home/mvu9/cig_attributions/heatmap_plot/camelyon16/clam" 
-  gt_plot: "/home/mvu9/cig_attributions/gt_plot/camelyon16/all_clf"      
+  gt_plot: "/home/mvu9/cig_attributions/gt_plot/camelyon16/all_clf"  
+  gt_heatmap_plot: "/home/mvu9/cig_attributions/gt_heatmap_plot/camelyon16/all_clf"      
   dice_iou_dir: "/home/mvu9/cig_attributions/dice_iou/camelyon16/clam"    
 
 

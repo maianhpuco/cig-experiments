@@ -1244,3 +1244,7 @@ result:
 
 result_iou:
 	python combine_iou.py
+
+
+plot_gt_heatmap:
+	CUDA_VISIBLE_DEVICES=5 python plot_gt_heatmap.py --config configs_simea/clam_camelyon16.yaml 
