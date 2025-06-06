@@ -93,7 +93,8 @@ latex_method_names = {
     "ig": "IG",
     "idg": "IDG",
     "eg": "EG",
-    "cig": "\\textbf{CIG (ours)}"
+    "cig": "\\textbf{CIG (ours)}",
+    "random": "Random"
 }
 
 def format_val(val):
@@ -114,7 +115,7 @@ def format_table(df, dataset_name):
     classes = sorted(df['pred_label'].unique())
     class_labels = class_name_map.get(dataset_name, {})
     classifiers = ['CLAM', 'MLP']
-    methods = ['g', 'ig', 'idg', 'eg', 'cig']
+    methods = ['random', 'g', 'ig', 'idg', 'eg', 'cig']  # Include 'random' in methods list
     
     lines = []
     table_env = "table*" if dataset_name == "TCGA-RCC" else "table"
@@ -145,8 +146,6 @@ def format_table(df, dataset_name):
         lines.append("        & & " + " & ".join(["AIC~↑ & SIC~↑"] * len(classes)) + " \\\\")
 
     lines.append("        \\midrule")
-    lines.append("        \\multicolumn{2}{c|}{\\textbf{Random}} " + "& --- & --- " * len(classes) + "\\\\")
-    lines.append("        \\midrule")
 
     # Process each classifier
     for clf in classifiers:
@@ -154,7 +153,7 @@ def format_table(df, dataset_name):
         if clf_df.empty:
             continue
 
-        # Find max values for AIC and SIC for each class
+        # Find max values for AIC and SIC for each class, including random
         max_aic = {}
         max_sic = {}
         for c in classes:
@@ -166,8 +165,26 @@ def format_table(df, dataset_name):
                 max_aic[c] = None
                 max_sic[c] = None
 
+        # Add Random row
+        random_df = clf_df[clf_df['method'] == 'random']
+        random_vals = []
+        for c in classes:
+            sub_df = random_df[random_df['pred_label'] == c]
+            if not sub_df.empty:
+                aic_mean, aic_std = sub_df[['AIC_mean', 'AIC_std']].values[0]
+                sic_mean, sic_std = sub_df[['SIC_mean', 'SIC_std']].values[0]
+                bold_aic = aic_mean == max_aic[c] and aic_mean is not None
+                bold_sic = sic_mean == max_sic[c] and sic_mean is not None
+                random_vals.append(format_val_with_std(aic_mean, aic_std, bold_aic))
+                random_vals.append(format_val_with_std(sic_mean, sic_std, bold_sic))
+            else:
+                random_vals += ["---", "---"]
+        lines.append(f"        \\multicolumn{{2}}{{c|}}{{\\textbf{{Random}}}} & " + " & ".join(random_vals) + " \\\\")
+        lines.append("        \\midrule")
+
+        # Add other methods
         lines.append(f"        \\multirow{{5}}{{*}}{{{clf}}}")
-        for method in methods:
+        for method in methods[1:]:  # Skip 'random'
             method_df = clf_df[clf_df['method'] == method]
             row_vals = []
             for c in classes:
@@ -227,6 +244,3 @@ for dataset in combined_df['dataset'].unique():
     latex_code = format_table(grouped, dataset)
     print(latex_code)
     print("\n\n")
-    
-    
-print(combined_df)
