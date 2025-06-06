@@ -1105,7 +1105,7 @@ topknpc_clam_g_tcga_lung:
 		--ig_name g
 
 topknpc_clam_random_tcga_lung:
-	CUDA_VISIBLE_DEVICES=3 python metric_pic_clam_topknpc.py \
+	CUDA_VISIBLE_DEVICES=4 python metric_pic_clam_topknpc.py \
 		--config configs_simea/clam_tcga_lung.yaml \
 		--ckpt_path=$(CKPT_CLAM_TCGA_LUNG) \
 		--ig_name random
