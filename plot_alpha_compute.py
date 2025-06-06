@@ -48,7 +48,7 @@ def load_ig_module(args):
             from attr_method_plot_alpha.g import VanillaGradients as AttrMethod
             print("Using Integrated Gradients (IG) method")
         elif name == 'cig':
-            from attr_method.cig import CIG as AttrMethod
+            from attr_method_plot_alpha.cig import CIG as AttrMethod
             print("Using Cumulative Integrated Gradients (CIG) method")
         else:
             raise ValueError(f"Unsupported IG method: {name}")
