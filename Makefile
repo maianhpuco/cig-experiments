@@ -1220,9 +1220,13 @@ dice_iou_mlp_camelyon16:
 	python metric2_compute_iou_dice.py --config configs_simea/mlp_camelyon16.yaml --ig_name idg
 	python metric2_compute_iou_dice.py --config configs_simea/mlp_camelyon16.yaml --ig_name eg
 
-plot_alpha_compute_ig: 
+plot_alpha_compute: 
 	CUDA_VISIBLE_DEVICES=5 python plot_alpha_compute.py --config configs_simea/clam_camelyon16.yaml --ig_name ig --ckpt_path $(CKPT_CLAM_CAMELYON16)
-plot_alpha_compute_g: 
 	CUDA_VISIBLE_DEVICES=6 python plot_alpha_compute.py --config configs_simea/clam_camelyon16.yaml --ig_name g --ckpt_path $(CKPT_CLAM_CAMELYON16) 
-plot_alpha_compute_cig: 
 	CUDA_VISIBLE_DEVICES=7 python plot_alpha_compute.py --config configs_simea/clam_camelyon16.yaml --ig_name cig --ckpt_path $(CKPT_CLAM_CAMELYON16) 
+
+
+plot_alpha_plot: 
+	CUDA_VISIBLE_DEVICES=5 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name ig --ckpt_path $(CKPT_CLAM_CAMELYON16)
+	# CUDA_VISIBLE_DEVICES=6 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name g --ckpt_path $(CKPT_CLAM_CAMELYON16) 
+	# CUDA_VISIBLE_DEVICES=7 python plot_alpha_plot.py --config configs_simea/clam_camelyon16.yaml --ig_name cig --ckpt_path $(CKPT_CLAM_CAMELYON16)  

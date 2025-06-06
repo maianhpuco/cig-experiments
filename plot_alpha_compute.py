@@ -208,9 +208,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', required=True)
     parser.add_argument('--ig_name', required=True)
-    parser.add_argument('--fold', type=int, default=1)
-    parser.add_argument('--device', type=str, default=None)
-    parser.add_argument('--ckpt_path', required=True)
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
