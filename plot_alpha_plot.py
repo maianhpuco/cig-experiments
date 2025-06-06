@@ -40,8 +40,8 @@ def plot_heatmap_nobbox(scale_x, scale_y, new_height, new_width, coordinates, sc
 def plot_all_intermediate_alpha(args):
     fold_id = args.fold if hasattr(args, "fold") else 1
     meta_path = os.path.join(args.paths['metadata_plot_dir'], f"meta_fold_{fold_id}.pkl")
-    score_dir = os.path.join(args.paths['multi_alpha_plot_dir'], args.ig_name, f"fold_{fold_id}")
-    plot_dir = os.path.join(args.paths['plot_folder'], args.ig_name + "_multi_alpha", f"fold_{fold_id}")
+    score_dir = os.path.join(args.paths['attr_score_for_multi_alpha_plot_dir'], args.ig_name, f"fold_{fold_id}")
+    plot_dir = os.path.join(args.paths['multi_alpha_plot_dir'], args.ig_name, f"fold_{fold_id}")
 
     print(f"[INFO] Loading metadata from: {meta_path}")
     meta_df = pd.read_pickle(meta_path)
