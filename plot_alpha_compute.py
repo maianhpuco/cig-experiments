@@ -124,7 +124,7 @@ def get_baseline_features(args, fold_id, basename, features_size):
     return baseline
 
 
-def save_stacked_attributions_updated(attributions, save_prefix):
+def save_stacked_attributions(attributions, save_prefix):
     os.makedirs(save_prefix, exist_ok=True)
 
     # Get only the alpha_samples (shape [7, N, D])
@@ -135,11 +135,11 @@ def save_stacked_attributions_updated(attributions, save_prefix):
 
     # Compute mean over D: [7, N]
     reduced_attr = np.mean(np.abs(alpha_samples), axis=-1)
-
+    
     # Save as a single (7, N) matrix
     save_path = os.path.join(save_prefix, "attr_alpha_avg.npy")
     np.save(save_path, reduced_attr)
-
+    print(f">>>> SAFE THE FILE WITH SHAPE {reduced_attr.shape} AT {save_path} ")
     return reduced_attr
 
 
