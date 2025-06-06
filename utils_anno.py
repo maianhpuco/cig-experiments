@@ -3,154 +3,133 @@ import pandas as pd
 import numpy as np
 from shapely.geometry import Polygon, Point
 from tqdm import tqdm
-from rtree import index  # R-tree for fast spatial lookup
-from joblib import Parallel, delayed
-from tqdm_joblib import tqdm_joblib  # Ensures tqdm updates correctly with joblib 
-import os 
-import time 
-import multiprocessing
- 
-PATCH_SIZE = 256  
+from rtree import index
+import os
+
+PATCH_SIZE = 256  # Patch size in pixels (level 0 resolution)
 
 def parse_xml(file_path):
-    """ Parse XML file and return root element. """
+    """Parse XML file and return root element."""
     try:
         tree = ET.parse(file_path)
-        root = tree.getroot()
-        return root
+        return tree.getroot()
     except ET.ParseError as e:
         print(f"Error parsing {file_path}: {e}")
         return None
 
-def downscale_coordinates(contour, scale_factor):
-    """ Downscale contour coordinates for faster processing. """
-    return [(x / scale_factor, y / scale_factor) for x, y in contour]
-
-def upscale_coordinates(points, scale_factor):
-    """ Upscale points back to original size. """
-    return [(int(x * scale_factor), int(y * scale_factor)) for x, y in points]
-
 def extract_coordinates(file_path, save_path):
     """
-    Fast extraction of (X, Y) coordinates **inside** multiple contours using downscaling and R-tree.
+    Extract (X, Y) coordinates inside tumor contours from XML annotations.
+    Works in original resolution (level 0) without downscaling.
+    Saves coordinates to CSV and returns DataFrame.
     """
     root = parse_xml(file_path)
     if root is None:
-        return None  # Skip if parsing failed
+        print(f"[WARN] Failed to parse {file_path}")
+        return None
 
     print(f"Processing XML: {file_path}")
 
-    # Extract multiple contours
+    # Extract contours
     contours = []
-    for annotation in root.findall(".//Annotation"):  # Adjust based on XML structure
+    for annotation in root.findall(".//Annotation"):
         contour = []
         for coordinate in annotation.findall(".//Coordinate"):
             x = coordinate.attrib.get("X")
             y = coordinate.attrib.get("Y")
             if x and y:
-                contour.append((float(x), float(y)))
-
-        if contour:
+                try:
+                    contour.append((float(x), float(y)))
+                except ValueError:
+                    continue
+        if len(contour) > 2:  # Minimum 3 points for a polygon
             if contour[0] != contour[-1]:
-                contour.append(contour[0])  # Ensure the contour is closed
+                contour.append(contour[0])  # Close the contour
             contours.append(contour)
 
     if not contours:
-        return None  # No valid contours found
+        print(f"[WARN] No valid contours in {file_path}")
+        return None
 
-    # Downscale each contour separately
-    downscaled_contours = [downscale_coordinates(contour, PATCH_SIZE) for contour in contours]
+    # Debug: Print contour details
+    print(f"Number of contours: {len(contours)}")
+    for i, contour in enumerate(contours):
+        poly = Polygon(contour)
+        print(f"Contour {i}: points={len(contour)}, area={poly.area:.2f}, bounds={poly.bounds}")
 
-    # Create multiple polygons
-    polygons = [Polygon(contour) for contour in downscaled_contours if len(contour) > 2]
+    # Create polygons
+    polygons = [Polygon(contour) for contour in contours]
 
-    # Generate downscaled grid (treat each patch as a "pixel")
+    # Get bounds for grid generation
     all_bounds = [polygon.bounds for polygon in polygons]
     min_x = min(b[0] for b in all_bounds)
     min_y = min(b[1] for b in all_bounds)
     max_x = max(b[2] for b in all_bounds)
     max_y = max(b[3] for b in all_bounds)
 
-    x_patches = np.arange(np.floor(min_x), np.ceil(max_x))
-    y_patches = np.arange(np.floor(min_y), np.ceil(max_y))
+    # Generate grid at patch resolution (level 0)
+    x_patches = np.arange(np.floor(min_x / PATCH_SIZE) * PATCH_SIZE,
+                         np.ceil(max_x / PATCH_SIZE) * PATCH_SIZE + PATCH_SIZE, PATCH_SIZE)
+    y_patches = np.arange(np.floor(min_y / PATCH_SIZE) * PATCH_SIZE,
+                         np.ceil(max_y / PATCH_SIZE) * PATCH_SIZE + PATCH_SIZE, PATCH_SIZE)
 
     inside_points = []
-
-    # Create an R-tree index to speed up spatial queries
     spatial_index = index.Index()
     for i, polygon in enumerate(polygons):
         spatial_index.insert(i, polygon.bounds)
 
-    # Use tqdm to track progress
-    with tqdm(total=len(x_patches) * len(y_patches), desc="Processing Patches", ncols=100) as pbar:
+    # Check patch centers for containment
+    total_patches = len(x_patches) * len(y_patches)
+    with tqdm(total=total_patches, desc="Processing Patches", ncols=100) as pbar:
         for x_start in x_patches:
             for y_start in y_patches:
-                patch_point = Point(x_start, y_start)
-
-                # Only check polygons that intersect the bounding box
-                possible_polygons = [polygons[i] for i in spatial_index.intersection((x_start, y_start, x_start, y_start))]
-                
-                if any(polygon.contains(patch_point) for polygon in possible_polygons):
-                    inside_points.append((x_start, y_start))  # Save downscaled points
-                
+                # Use patch center to check if patch overlaps tumor
+                patch_center = Point(x_start + PATCH_SIZE / 2, y_start + PATCH_SIZE / 2)
+                possible_polygons = [polygons[i] for i in spatial_index.intersection(
+                    (x_start, y_start, x_start + PATCH_SIZE, y_start + PATCH_SIZE))]
+                if any(polygon.contains(patch_center) for polygon in possible_polygons):
+                    inside_points.append((x_start, y_start))
                 pbar.update(1)
 
-    # Upscale the points back to original resolution
-    original_size_points = upscale_coordinates(inside_points, PATCH_SIZE)
+    if not inside_points:
+        print(f"[WARN] No points found inside contours for {file_path}")
+        return None
 
     # Convert to DataFrame
     df_inside_points = pd.DataFrame({
-        "File": file_path.split("/")[-1],
-        "X": [p[0] for p in original_size_points],
-        "Y": [p[1] for p in original_size_points]
+        "File": os.path.basename(file_path),
+        "X": [p[0] for p in inside_points],
+        "Y": [p[1] for p in inside_points]
     })
-    
-    basename = os.path.splitext(os.path.basename(file_path))[0]  # Correctly get file basename
+
+    # Debug: Print coordinate range
+    print(f"XML coordinates range: X=[{df_inside_points['X'].min()}, {df_inside_points['X'].max()}], "
+          f"Y=[{df_inside_points['Y'].min()}, {df_inside_points['Y'].max()}]")
+
     df_inside_points.to_csv(save_path, index=False)
-    
     return df_inside_points
 
-def check_coor(x, y, box):
+def check_coor(x, y, box, patch_size=PATCH_SIZE):
     """
-    Checks if (x, y) is inside the given bounding box.
-    Format is [x, y], representing top-left corner of the patch.
+    Check if point (x, y) is inside a patch defined by top-left corner (px, py).
     """
-    px, py = box  # Each patch is a single point (top-left corner)
-    return px <= x < px + 256 and py <= y < py + 256
+    px, py = box
+    return px <= x < px + patch_size and py <= y < py + patch_size
 
-
-def check_xy_in_coordinates(coordinates_xml, coordinates_h5):
+def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5, tolerance=10, patch_size=PATCH_SIZE):
     """
-    Classic version: Iterate through XML and find corresponding H5 patches (using full loops + R-tree).
-    coordinates_h5 should be Nx2 array: [x, y] for each patch.
-    """
-    length = coordinates_h5.shape[0]
-    label = np.zeros(length, dtype=int)
-
-    rtree_index = index.Index()
-    for i, (x, y) in enumerate(coordinates_h5):
-        rtree_index.insert(i, (x, y, x, y))
-
-    for row in tqdm(coordinates_xml.itertuples(index=False), desc="Checking index:", total=len(coordinates_xml), ncols=100):
-        x, y = row.X, row.Y
-        possible_matches = list(rtree_index.intersection((x, y, x, y)))
-        for idx in possible_matches:
-            if check_coor(x, y, coordinates_h5[idx]):
-                label[idx] = 1
-
-    return label
-
-
-def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5):
-    """
-    Optimized vectorized version for matching tumor coordinates from XML to H5 patches.
-    H5 coordinates: [x, y] patch centers (or top-left corners), Nx2
+    Match XML coordinates to H5 patches using R-tree with tolerance.
+    Returns binary mask (1 if patch contains tumor, 0 otherwise).
     """
     if len(coordinates_h5) == 0:
-        print("[WARN] Empty H5 coordinate list passed to R-tree.")
+        print("[WARN] Empty H5 coordinate list")
         return np.zeros(0, dtype=np.int8)
 
     label = np.zeros(len(coordinates_h5), dtype=np.int8)
+
+    # Debug: Print H5 coordinate range
+    print(f"H5 coordinates range: X=[{coordinates_h5[:,0].min()}, {coordinates_h5[:,0].max()}], "
+          f"Y=[{coordinates_h5[:,1].min()}, {coordinates_h5[:,1].max()}]")
 
     try:
         rtree_index = index.Index(
@@ -161,12 +140,19 @@ def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5):
         return label
 
     xy_pairs = np.column_stack((coordinates_xml["X"], coordinates_xml["Y"]))
-
+    matches_found = 0
     for x, y in xy_pairs:
-        possible_matches = list(rtree_index.intersection((x, y, x, y)))
+        # Search with tolerance
+        search_bounds = (x - tolerance, y - tolerance, x + tolerance, y + tolerance)
+        possible_matches = list(rtree_index.intersection(search_bounds))
         for box_index in possible_matches:
-            if check_coor(x, y, coordinates_h5[box_index]):
+            if check_coor(x, y, coordinates_h5[box_index], patch_size):
                 label[box_index] = 1
+                matches_found += 1
+                # Debug: Print first few matches
+                if matches_found <= 5:
+                    print(f"Match: XML ({x}, {y}) in patch ({coordinates_h5[box_index][0]}, {coordinates_h5[box_index][1]})")
 
+    print(f"[INFO] Total matches: {matches_found}")
     print(f"[INFO] Label distribution: 0s = {(label == 0).sum()}, 1s = {(label == 1).sum()}")
     return label
