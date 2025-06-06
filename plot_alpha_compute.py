@@ -37,15 +37,19 @@ class ModelWrapper:
         return logits
 
 
+
 def load_ig_module(args):
     def get_module_by_name(name):
         print(f"Loading IG method: {name}")
         if name == 'ig':
             from attr_method_plot_alpha.ig import IG as AttrMethod
+            print("Using Integrated Gradients (IG) method")
         elif name == 'g':
             from attr_method_plot_alpha.g import VanillaGradients as AttrMethod
+            print("Using Integrated Gradients (IG) method")
         elif name == 'cig':
             from attr_method_plot_alpha.cig import CIG as AttrMethod
+            print("Using Cumulative Integrated Gradients (CIG) method")
         else:
             raise ValueError(f"Unsupported IG method: {name}")
         return AttrMethod()
@@ -54,9 +58,10 @@ def load_ig_module(args):
         device = next(model.parameters()).device
         was_batched = inputs.dim() == 3
         inputs = inputs.to(device)
-
+        
         if not inputs.requires_grad:
-            inputs.requires_grad_(True)
+            inputs.requires_grad_(True) 
+            
         if was_batched:
             inputs = inputs.squeeze(0)
 
@@ -82,7 +87,6 @@ def load_ig_module(args):
         return logits
 
     return get_module_by_name(args.ig_name), call_model_function
-
 
 def load_dataset(args, fold_id):
     if args.dataset_name == 'camelyon16':
