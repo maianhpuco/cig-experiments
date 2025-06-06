@@ -6,7 +6,7 @@ from tqdm import tqdm
 from rtree import index
 import os
 
-PATCH_SIZE = 256  # Configurable: try 224 to match earlier code
+PATCH_SIZE = 256  # Configurable patch size (try 224 if needed)
 
 def parse_xml(file_path):
     """Parse XML file and return root element."""
@@ -20,8 +20,7 @@ def parse_xml(file_path):
 def extract_coordinates(file_path, save_path, h5_coords=None, patch_size=PATCH_SIZE):
     """
     Extract (X, Y) coordinates inside tumor contours from XML.
-    Labels patches whose centers are strictly inside contours.
-    Uses H5 patch coordinates as the grid.
+    Uses H5 patch coordinates as the grid to ensure alignment.
     Saves to CSV and returns DataFrame.
     """
     root = parse_xml(file_path)
@@ -84,13 +83,19 @@ def extract_coordinates(file_path, save_path, h5_coords=None, patch_size=PATCH_S
     for i, polygon in enumerate(polygons):
         spatial_index.insert(i, polygon.bounds)
 
-    # Check patch centers for strict containment
+    # Check patches for tumor overlap
     with tqdm(total=len(patch_coords), desc="Processing Patches", ncols=100) as pbar:
         for x_start, y_start in patch_coords:
-            patch_center = Point(x_start + patch_size / 2, y_start + patch_size / 2)
+            # Check if patch region intersects any polygon
+            patch_bbox = Polygon([
+                (x_start, y_start),
+                (x_start + patch_size, y_start),
+                (x_start + patch_size, y_start + patch_size),
+                (x_start, y_start + patch_size)
+            ])
             possible_polygons = [polygons[i] for i in spatial_index.intersection(
                 (x_start, y_start, x_start + patch_size, y_start + patch_size))]
-            if any(polygon.contains(patch_center) for polygon in possible_polygons):
+            if any(polygon.intersects(patch_bbox) for polygon in possible_polygons):
                 inside_points.append((x_start, y_start))
             pbar.update(1)
 
@@ -119,8 +124,7 @@ def check_coor(x, y, box, patch_size=PATCH_SIZE):
 
 def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5, patch_size=PATCH_SIZE):
     """
-    Match XML coordinates to H5 patches.
-    Since df_xml uses h5_coords, points should match exactly.
+    Match XML coordinates to H5 patches using R-tree.
     Returns binary mask (1 if patch contains tumor, 0 otherwise).
     """
     if len(coordinates_h5) == 0:
@@ -133,16 +137,25 @@ def check_xy_in_coordinates_fast(coordinates_xml, coordinates_h5, patch_size=PAT
           f"Y=[{coordinates_h5[:,1].min()}, {coordinates_h5[:,1].max()}]")
     print(f"Sample H5 coords: {coordinates_h5[:5]}")
 
-    # Create a dictionary for fast lookup
-    h5_coord_set = {(x, y) for x, y in coordinates_h5}
+    # Build R-tree with patch bounding boxes
+    rtree_index = index.Index()
+    for i, (px, py) in enumerate(coordinates_h5):
+        rtree_index.insert(i, (px, py, px + patch_size, py + patch_size))
+
+    xy_pairs = np.column_stack((coordinates_xml["X"], coordinates_xml["Y"]))
     matches_found = 0
-    for x, y in coordinates_xml[["X", "Y"]].itertuples(index=False):
-        if (x, y) in h5_coord_set:
-            idx = np.where((coordinates_h5[:, 0] == x) & (coordinates_h5[:, 1] == y))[0][0]
-            label[idx] = 1
-            matches_found += 1
-            if matches_found <= 5:
-                print(f"Match: XML ({x}, {y}) in patch ({x}, {y})")
+    for x, y in xy_pairs:
+        possible_matches = list(rtree_index.intersection((x, y, x, y)))
+        for box_index in possible_matches:
+            if check_coor(x, y, coordinates_h5[box_index], patch_size):
+                label[box_index] = 1
+                matches_found += 1
+                if matches_found <= 5:
+                    print(f"Match: XML ({x}, {y}) in patch ({coordinates_h5[box_index][0]}, {coordinates_h5[box_index][1]})")
+            elif matches_found <= 5 and possible_matches:
+                px, py = coordinates_h5[box_index]
+                distance = np.sqrt((x - px)**2 + (y - py)**2)
+                print(f"No match: XML ({x}, {y}), patch ({px}, {py}), distance={distance:.2f}")
 
     print(f"[INFO] Total matches: {matches_found}")
     print(f"[INFO] Label distribution: 0s = {(label == 0).sum()}, 1s = {(label == 1).sum()}")
