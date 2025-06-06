@@ -41,11 +41,11 @@ def load_ig_module(args):
     def get_module_by_name(name):
         print(f"Loading IG method: {name}")
         if name == 'ig':
-            from attr_method_plot.ig import IG as AttrMethod
+            from attr_method_plot_alpha.ig import IG as AttrMethod
         elif name == 'g':
-            from attr_method_plot.g import VanillaGradients as AttrMethod
+            from attr_method_plot_alpha.g import VanillaGradients as AttrMethod
         elif name == 'cig':
-            from attr_method_plot.cig import CIG as AttrMethod
+            from attr_method_plot_alpha.cig import CIG as AttrMethod
         else:
             raise ValueError(f"Unsupported IG method: {name}")
         return AttrMethod()
